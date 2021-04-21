@@ -131,6 +131,8 @@ namespace OriginFramework
 
         // Create all (sub)menus.
         CreateSubmenus();
+
+        Debug.WriteLine("Initialized");
       }
       #endregion
 

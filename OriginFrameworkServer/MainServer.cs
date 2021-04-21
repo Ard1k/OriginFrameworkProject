@@ -12,6 +12,21 @@ namespace OriginFrameworkServer
 {
     public class MainServer : BaseScript
     {
+
+    public MainServer()
+    {
+      EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
+    }
+
+    private void OnResourceStart(string resourceName)
+    {
+      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+
+      while (SettingsManager.Settings == null)
+        Delay(0);
+    }
+
+
     [EventHandler("ofw:GetPlayerCompanyData")]
     private void GetPlayerCompanyBag([FromSource] Player source, int playerId, NetworkCallbackDelegate callback)
     {

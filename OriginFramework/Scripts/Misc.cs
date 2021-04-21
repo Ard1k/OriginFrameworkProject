@@ -92,7 +92,7 @@ namespace OriginFramework
         }
       }
 
-      await Delay(1000);
+      await Delay(1000); //zkontrolovat
     }
     #endregion
 

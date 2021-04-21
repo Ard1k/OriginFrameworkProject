@@ -7,14 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OriginFramework
+namespace OriginFrameworkServer
 {
 	public static class SettingsManager
 	{
 		private static SettingsBag _settings;
 		public static SettingsBag Settings
 		{
-			get 
+			get
 			{
 				if (_settings == null)
 				{
@@ -26,7 +26,7 @@ namespace OriginFramework
 					}
 					catch (Exception ex)
 					{
-						Debug.WriteLine("OFW - settings load exception: " + ex.ToString());
+						Console.WriteLine("OFW - settings load exception: " + ex.ToString());
 						_settings = new SettingsBag();
 					}
 				}

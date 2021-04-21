@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Scripts\Checkpointer.cs" />
+    <Compile Include="Scripts\TestJob.cs" />
     <Compile Include="Scripts\Misc.cs" />
     <Compile Include="Scripts\DrifterAndBooster.cs" />
     <Compile Include="Scripts\Main.cs" />
@@ -67,9 +68,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OriginFrameworkData\OriginFrameworkShared.csproj">
+    <ProjectReference Include="..\OriginFrameworkData\OriginFrameworkData.csproj">
       <Project>{90058298-e7cc-4a07-805f-677181941308}</Project>
-      <Name>OriginFrameworkShared</Name>
+      <Name>OriginFrameworkData</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

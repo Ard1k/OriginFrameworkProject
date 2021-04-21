@@ -11,6 +11,7 @@ namespace OriginFrameworkData.DataBags
 		public int MenuKey { get; set; } = 344;
 		public bool MenuAlignRight { get; set; } = false;
 		public bool LoadHeistIsland { get; set; } = false;
+		public bool TestJobActive { get; set; } = false;
 
 		public SettingsBag() { }
 	}

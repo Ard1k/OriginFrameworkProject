@@ -31,11 +31,6 @@ namespace OriginFrameworkServer
 
     public VSql()
     {
-      //var numberOfUpdatedRows = await ExecuteAsync(query, parameters);
-      //var isSucceed = await TransactionAsync(queries.Select(query => query.ToString()).ToList(), parameters);
-      //var result = await FetchScalarAsync(query, parameters);
-      //var result = await FetchAllAsync(query, parameters);
-
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
     }
 
@@ -213,11 +208,8 @@ namespace OriginFrameworkServer
       {
         connectionString = temp;
       }
-
       
       wasInit = true;
-
-      Debug.WriteLine($"OFW: VSql initialized");
     }
   }
 }

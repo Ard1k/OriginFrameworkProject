@@ -1,5 +1,6 @@
 {
   "MenuKey": 344,
   "LoadHeistIsland": true,
-  "MenuAlignRight": false
+  "MenuAlignRight": false,
+  "TestJobActive": true
 }

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OriginFramework", "OriginFr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OriginFrameworkServer", "OriginFrameworkServer\OriginFrameworkServer.csproj", "{ADF38295-9558-4D89-B698-455914E9B89D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OriginFrameworkShared", "OriginFrameworkData\OriginFrameworkShared.csproj", "{90058298-E7CC-4A07-805F-677181941308}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OriginFrameworkData", "OriginFrameworkData\OriginFrameworkData.csproj", "{90058298-E7CC-4A07-805F-677181941308}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
