@@ -161,7 +161,7 @@ namespace OriginFramework
     public static void Error(string message, bool blink = true, bool saveToBrief = true)
     {
       Custom("~r~~h~Error~h~~s~: " + message, blink, saveToBrief);
-      Debug.Write("[vMenu] [ERROR] " + message + "\n");
+      Debug.Write("[OFW] [ERROR] " + message + "\n");
     }
 
     /// <summary>

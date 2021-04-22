@@ -29,7 +29,7 @@ namespace OriginFramework
 
 		#region Menu static variables
 		public static Menu OriginMainMenu { get; set; }
-    public static CompanyMain CompanyMainMenu { get; set; }
+    public static Group GroupMenu { get; set; }
     public static About AboutMenu { get; set; }
     public static Tools ToolsMenu { get; set; }
     #endregion
@@ -41,12 +41,12 @@ namespace OriginFramework
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
     }
 
-    private void OnClientResourceStart(string resourceName)
+    private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       while (SettingsManager.Settings == null)
-        Delay(0);
+        await Delay(0);
 
       MenuController.MenuAlignment = SettingsManager.Settings.MenuAlignRight ? MenuController.MenuAlignmentOption.Right : MenuController.MenuAlignmentOption.Left;
       MenuToggleKey = (Control)SettingsManager.Settings.MenuKey;
@@ -164,13 +164,21 @@ namespace OriginFramework
     /// </summary>
     private void CreateSubmenus()
     {
-      CompanyMainMenu = new CompanyMain();
-      Menu menu1 = CompanyMainMenu.GetMenu();
-      MenuItem button1 = new MenuItem("Company", "Company info and management")
+      GroupMenu = new Group();
+      Menu menu1 = GroupMenu.GetMenu();
+      MenuItem button1 = new MenuItem("Group", "Organize group")
       {
         Label = "→→→"
       };
       AddMenu(OriginMainMenu, menu1, button1);
+      OriginMainMenu.OnItemSelect += async (sender, item, index) =>
+      {
+        if (item == button1)
+        {
+          await GroupMenu.RefreshMenu();
+          menu1.RefreshIndex();
+        }
+      };
 
       ToolsMenu = new Tools();
       Menu menu2 = ToolsMenu.GetMenu();

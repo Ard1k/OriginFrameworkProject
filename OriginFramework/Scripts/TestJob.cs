@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static CitizenFX.Core.Native.API;
 
+
 namespace OriginFramework
 {
   public class TestJob : BaseScript
@@ -19,12 +20,12 @@ namespace OriginFramework
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
     }
 
-    private void OnClientResourceStart(string resourceName)
+    private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       while (SettingsManager.Settings == null)
-        Delay(0);
+        await Delay(0);
 
       if (!SettingsManager.Settings.TestJobActive)
         return;
@@ -48,8 +49,6 @@ namespace OriginFramework
         Debug.WriteLine("netVeh: " + currentNetVehicle);
         Debug.WriteLine("closestVehicle: " + closestVehicle);
       }
-
-      
     }
 
 
@@ -99,66 +98,69 @@ namespace OriginFramework
       if (closestVehicle > 0)
       {
         var veh = (Vehicle)Vehicle.FromHandle(closestVehicle);
-        DrawMarker(0, veh.Position.X, veh.Position.Y, veh.Position.Z + 2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 2f, 2f, 2f, 255, 0, 255, 255, true, false, 2, false, null, null, false);
+        if (veh != null)
+        {
+          DrawMarker(0, veh.Position.X, veh.Position.Y, veh.Position.Z + 2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 2f, 2f, 2f, 255, 0, 255, 255, true, false, 2, false, null, null, false);
 
-        //doorIndex: 0 = Front Left 1 = Front Right 2 = Back Left 3 = Back Right 4 = Hood 5 = Trunk 6 = Trunk2
+          //doorIndex: 0 = Front Left 1 = Front Right 2 = Back Left 3 = Back Right 4 = Hood 5 = Trunk 6 = Trunk2
 
-        if (veh.Doors.HasDoor(VehicleDoorIndex.Trunk))
-        {
-          var door = veh.Doors[VehicleDoorIndex.Trunk];
-          int color_red = 0;
-          int color_green = 0;
-          if (door.IsOpen || door.IsBroken)
+          if (veh.Doors.HasDoor(VehicleDoorIndex.Trunk))
           {
-            color_red = 0;
-            color_green = 255;
-          }
-          else
-          {
-            color_red = 255;
-            color_green = 0;
-          }
+            var door = veh.Doors[VehicleDoorIndex.Trunk];
+            int color_red = 0;
+            int color_green = 0;
+            if (door.IsOpen || door.IsBroken)
+            {
+              color_red = 0;
+              color_green = 255;
+            }
+            else
+            {
+              color_red = 255;
+              color_green = 0;
+            }
 
-          var bootBone = veh.Bones["boot"];
-          if (bootBone != null)
-          {
-            DrawMarker(0, bootBone.Position.X, bootBone.Position.Y, bootBone.Position.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.2f, 0.2f, 0.2f, color_red, color_green, 0, 255, true, false, 2, false, null, null, false);
+            var bootBone = veh.Bones["boot"];
+            if (bootBone != null)
+            {
+              DrawMarker(0, bootBone.Position.X, bootBone.Position.Y, bootBone.Position.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.2f, 0.2f, 0.2f, color_red, color_green, 0, 255, true, false, 2, false, null, null, false);
+            }
+            var tailLBone = veh.Bones["taillight_l"];
+            if (tailLBone != null)
+            {
+              DrawMarker(0, tailLBone.Position.X, tailLBone.Position.Y, tailLBone.Position.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.2f, 0.2f, 0.2f, 255, 0, 0, 255, true, false, 2, false, null, null, false);
+            }
+            var tailRBone = veh.Bones["taillight_r"];
+            if (tailRBone != null)
+            {
+              DrawMarker(0, tailRBone.Position.X, tailRBone.Position.Y, tailRBone.Position.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.2f, 0.2f, 0.2f, 255, 0, 0, 255, true, false, 2, false, null, null, false);
+            }
           }
-          var tailLBone = veh.Bones["taillight_l"];
-          if (tailLBone != null)
+          if (veh.Doors.HasDoor(VehicleDoorIndex.Hood))
           {
-            DrawMarker(0, tailLBone.Position.X, tailLBone.Position.Y, tailLBone.Position.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.2f, 0.2f, 0.2f, 255, 0, 0, 255, true, false, 2, false, null, null, false);
+            var dPos = GetEntryPositionOfDoor(veh.Handle, 4);
+            DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
           }
-          var tailRBone = veh.Bones["taillight_r"];
-          if (tailRBone != null)
+          if (veh.Doors.HasDoor(VehicleDoorIndex.FrontLeftDoor))
           {
-            DrawMarker(0, tailRBone.Position.X, tailRBone.Position.Y, tailRBone.Position.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.2f, 0.2f, 0.2f, 255, 0, 0, 255, true, false, 2, false, null, null, false);
+            var dPos = GetEntryPositionOfDoor(veh.Handle, 0);
+            DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
           }
-        }
-        if (veh.Doors.HasDoor(VehicleDoorIndex.Hood))
-        {
-          var dPos = GetEntryPositionOfDoor(veh.Handle, 4);
-          DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
-        }
-        if (veh.Doors.HasDoor(VehicleDoorIndex.FrontLeftDoor))
-        {
-          var dPos = GetEntryPositionOfDoor(veh.Handle, 0);
-          DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
-        }
-        if (veh.Doors.HasDoor(VehicleDoorIndex.FrontRightDoor))
-        {
-          var dPos = GetEntryPositionOfDoor(veh.Handle, 1);
-          DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
-        }
-        if (veh.Doors.HasDoor(VehicleDoorIndex.BackLeftDoor))
-        {
-          var dPos = GetEntryPositionOfDoor(veh.Handle, 2);
-          DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
-        }
-        if (veh.Doors.HasDoor(VehicleDoorIndex.BackRightDoor))
-        {
-          var dPos = GetEntryPositionOfDoor(veh.Handle, 3);
-          DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
+          if (veh.Doors.HasDoor(VehicleDoorIndex.FrontRightDoor))
+          {
+            var dPos = GetEntryPositionOfDoor(veh.Handle, 1);
+            DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
+          }
+          if (veh.Doors.HasDoor(VehicleDoorIndex.BackLeftDoor))
+          {
+            var dPos = GetEntryPositionOfDoor(veh.Handle, 2);
+            DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
+          }
+          if (veh.Doors.HasDoor(VehicleDoorIndex.BackRightDoor))
+          {
+            var dPos = GetEntryPositionOfDoor(veh.Handle, 3);
+            DrawMarker(0, dPos.X, dPos.Y, dPos.Z + 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.5f, 0.5f, 0.5f, 0, 0, 255, 255, true, false, 2, false, null, null, false);
+          }
         }
       }
 

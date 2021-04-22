@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Scripts\Checkpointer.cs" />
+    <Compile Include="Scripts\GroupManager.cs" />
     <Compile Include="Scripts\TestJob.cs" />
     <Compile Include="Scripts\Misc.cs" />
     <Compile Include="Scripts\DrifterAndBooster.cs" />
@@ -53,7 +54,7 @@
     <Compile Include="Menus\About.cs" />
     <Compile Include="Menus\Tools.cs" />
     <Compile Include="Menus\DynamicMenu.cs" />
-    <Compile Include="Menus\CompanyMain.cs" />
+    <Compile Include="Menus\Group.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsManager.cs" />

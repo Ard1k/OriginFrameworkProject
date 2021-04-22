@@ -60,6 +60,7 @@ namespace OriginFramework
       if (timeMinuteCounter > 60000)
       {
         timeMinuteCounter = 0;
+        Debug.WriteLine("Dynamic menu cleanup now!");
 
         if (!MenuController.IsAnyMenuOpen() && DynamicMenu.OwnedMenus.Count > 0)
         {
@@ -71,8 +72,6 @@ namespace OriginFramework
             MenuController.Menus.Remove(it);
         }
       }
-
-      await Delay(1000); //zkontrolovat
     }
     #endregion
 
@@ -81,12 +80,12 @@ namespace OriginFramework
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
     }
 
-    private void OnClientResourceStart(string resourceName)
+    private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       while (SettingsManager.Settings == null)
-        Delay(0);
+        await Delay(0);
 
       Tick += DynamicMenuCleanup;
 

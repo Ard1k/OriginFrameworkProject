@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using static CitizenFX.Core.Native.API;
+using OriginFrameworkData.DataBags;
 
 namespace OriginFrameworkServer
 {
@@ -18,12 +19,12 @@ namespace OriginFrameworkServer
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
     }
 
-    private void OnResourceStart(string resourceName)
+    private async void OnResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       while (SettingsManager.Settings == null)
-        Delay(0);
+        await Delay(0);
     }
 
 
@@ -41,14 +42,6 @@ namespace OriginFrameworkServer
       };
 
       _ = callback(JsonConvert.SerializeObject(bag));
-    }
-
-    [EventHandler("ofw:GetPlayerPrincipals")]
-    private void GetPlayerPrincipals([FromSource] Player source, int playerId, NetworkCallbackDelegate callback)
-    {
-      
-
-      _ = callback();
     }
 
     [EventHandler("ofw:TestDB")]

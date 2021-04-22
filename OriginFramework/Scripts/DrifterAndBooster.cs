@@ -22,12 +22,12 @@ namespace OriginFramework
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
     }
 
-    private void OnClientResourceStart(string resourceName)
+    private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       while (SettingsManager.Settings == null)
-        Delay(0);
+        await Delay(0);
 
       Tick += OnTick;
     }
