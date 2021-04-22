@@ -3,9 +3,11 @@ using Newtonsoft.Json;
 using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CitizenFX.Core.Native.API;
 
 namespace OriginFramework
 {
@@ -20,9 +22,8 @@ namespace OriginFramework
 				{
 					try
 					{
-						var resName = CitizenFX.Core.Native.API.GetCurrentResourceName();
-						var file = CitizenFX.Core.Native.Function.Call<string>(CitizenFX.Core.Native.Hash.LOAD_RESOURCE_FILE, resName, "config.json");
-						_settings = JsonConvert.DeserializeObject<SettingsBag>(file);
+						var read = LoadResourceFile(CitizenFX.Core.Native.API.GetCurrentResourceName(), "config.json");
+						_settings = JsonConvert.DeserializeObject<SettingsBag>(read);
 					}
 					catch (Exception ex)
 					{

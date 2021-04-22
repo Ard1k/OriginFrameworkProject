@@ -13,26 +13,6 @@ namespace OriginFramework
 	public class Misc : BaseScript
 	{
 		#region island loader
-		public static bool? _confLoadIsland = null;
-    public static bool ConfLoadIsland
-    {
-      get
-      {
-        if (_confLoadIsland != null)
-          return (bool)_confLoadIsland;
-
-        var temp = CitizenFX.Core.Native.API.GetResourceMetadata(CitizenFX.Core.Native.API.GetCurrentResourceName(), "loadisland", 0);
-        bool tempBool = false;
-
-        if (bool.TryParse(temp, out tempBool))
-          _confLoadIsland = tempBool;
-        else
-          _confLoadIsland = false;
-
-        return (bool)_confLoadIsland;
-      }
-    }
-
     public bool islandLoaded = false;
 
     private async Task IslandLoader()
@@ -111,7 +91,10 @@ namespace OriginFramework
       Tick += DynamicMenuCleanup;
 
       if (SettingsManager.Settings.LoadHeistIsland)
+      {
+        Debug.WriteLine("Island loading enabled");
         Tick += IslandLoader;
+      }
     }
 
     
