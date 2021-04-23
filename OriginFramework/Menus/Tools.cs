@@ -14,8 +14,8 @@ namespace OriginFramework.Menus
 {
   public class Tools
   {
-    Menu toolsMenu = new Menu("Tools", "");
-    Menu checkpointTool = new Menu("Checkpoint tool");
+    Menu toolsMenu = new Menu("OriginRP", "Tools");
+    Menu checkpointTool = new Menu("OriginRP", "Checkpoint tool");
     MenuCheckboxItem driftItem = new MenuCheckboxItem("Shift drift", "Press SHIFT to drift your car.", false);
     MenuCheckboxItem boostItem = new MenuCheckboxItem("Shift boost", "Press SHIFT to boost your car.", false);
 
@@ -29,8 +29,10 @@ namespace OriginFramework.Menus
       MenuItem checkpointToolItem = new MenuItem("Checkpoint tool", "Create checkpoint definition to clickboard");
       checkpointToolItem.Label = "→→→";
       toolsMenu.AddMenuItem(checkpointToolItem);
-      
-      toolsMenu.RefreshIndex();
+      MenuCheckboxItem drawEntityInfoItem = new MenuCheckboxItem("Draw entity info", "Draws info on all entities", Misc.IsEntityInfoEnabled);
+      toolsMenu.AddMenuItem(drawEntityInfoItem);
+      MenuCheckboxItem markClosestVehAndTrunkItem = new MenuCheckboxItem("Mark closes vehicle trunk", "Draws marker over closest vehicle and marker over trunk colored depending on trunk open state", Misc.IsClosestVehicleTrunkInfoEnabled);
+      toolsMenu.AddMenuItem(markClosestVehAndTrunkItem);
 
       MenuController.BindMenuItem(toolsMenu, checkpointTool, checkpointToolItem);
 
@@ -60,7 +62,6 @@ namespace OriginFramework.Menus
 
       #endregion
 
-      #region drift
       toolsMenu.OnCheckboxChange += (sender, item, index, _checked) =>
       {
         if (item == driftItem)
@@ -104,8 +105,19 @@ namespace OriginFramework.Menus
             DrifterAndBooster.DisableBooster();
           }
         }
+
+        if (item == drawEntityInfoItem)
+        {
+          Misc.IsEntityInfoEnabled = _checked;
+          SetResourceKvpInt(KvpManager.getKvpString(KvpEnum.MiscDrawEntityInfo), _checked ? 1 : 0);
+        }
+
+        if (item == markClosestVehAndTrunkItem)
+        {
+          Misc.IsClosestVehicleTrunkInfoEnabled = _checked;
+          SetResourceKvpInt(KvpManager.getKvpString(KvpEnum.ShowClosesVehicleTrunkInfo), _checked ? 1 : 0);
+        }
       };
-      #endregion
 
       isInitialized = true;
     }

@@ -14,6 +14,7 @@ namespace OriginFrameworkServer
   public class GroupServer : BaseScript
   {
     private int lastGroupIndex = 0;
+    private const int securitySalt = 54898745; //uff, je to stupidni, ale aspon neco :D
     private Dictionary<int, int> DictionaryPlayerInGroup = new Dictionary<int, int>();
 
     public GroupServer()
@@ -42,7 +43,7 @@ namespace OriginFrameworkServer
     {
       var spH = int.Parse(source.Handle);
 
-      Debug.WriteLine($"triggered ofw_grp:CreateGroup [Handle{spH}]");
+      Debug.WriteLine($"triggered ofw_grp:CreateGroup [Handle: {spH}]");
 
       if (DictionaryPlayerInGroup.ContainsKey(spH))
       {
@@ -54,6 +55,97 @@ namespace OriginFrameworkServer
       DictionaryPlayerInGroup.Add(spH, newGroupIndex);
 
       source.TriggerEvent("ofw_grp:NotifySuccess", "Party created!");
+      SendGroupToSource(source, true);
+    }
+
+    [EventHandler("ofw_grp:InviteToGroup")]
+    private void InviteToGroup([FromSource] Player source, int targetPlayerID)
+    {
+      var spH = int.Parse(source.Handle);
+
+      Debug.WriteLine($"triggered ofw_grp:InviteToGroup [Handle: {spH}][TargetPlayer: {targetPlayerID}]");
+
+      if (DictionaryPlayerInGroup.ContainsKey(targetPlayerID))
+      {
+        source.TriggerEvent("ofw_grp:NotifyError", "Player is already in a party!");
+        return;
+      }
+
+      if (!DictionaryPlayerInGroup.ContainsKey(spH))
+      {
+        source.TriggerEvent("ofw_grp:NotifyError", "You are not in a group!");
+        return;
+      }
+
+      var groupID = DictionaryPlayerInGroup[spH];
+      if (groupID <= 0)
+      {
+        Debug.WriteLine("OFW ERROR: 489742214 - group not found after validation!");
+        source.TriggerEvent("ofw_grp:NotifyError", "You are not in a group!");
+        return;
+      }
+
+      var memberCount = DictionaryPlayerInGroup.Where(g => g.Value == groupID)?.Count();
+      if (memberCount != null && memberCount.Value >= 4)
+      {
+        source.TriggerEvent("ofw_grp:NotifyError", "Group is full");
+        return;
+      }
+
+      var targetPlayer = Players.Where(p => p.Handle == targetPlayerID.ToString()).FirstOrDefault();
+      if (targetPlayer == null)
+      {
+        Debug.WriteLine("OFW ERROR: 544548778814 - cannot find player object!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Internal server error");
+        return;
+      }
+
+      targetPlayer.TriggerEvent("ofw_grp:ConfirmGroupInvite", (spH + securitySalt));
+    }
+
+    [EventHandler("ofw_grp:ConfirmGroupInviteResponse")]
+    private void ConfirmGroupInviteResponse([FromSource] Player source, int inviteSenderHash, bool accepted)
+    {
+      var senderH = inviteSenderHash - securitySalt;
+      var sourceId = int.Parse(source.Handle);
+
+      Debug.WriteLine($"triggered ofw_grp:InviteToGroup [OriginalSender: {senderH}][AcceptingPlayer: {source.Handle}]");
+      
+      var senderPlayer = Players.Where(p => p.Handle == senderH.ToString()).FirstOrDefault();
+      if (senderPlayer == null)
+      {
+        Debug.WriteLine("OFW ERROR: 878548778814 - cannot find player object!");
+        return;
+      }
+
+      if (!accepted)
+      {
+        senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Player is not waiting for invite!");
+        return;
+      }
+
+      if (!DictionaryPlayerInGroup.ContainsKey(senderH))
+      {
+        Debug.WriteLine("ofw_grp:ConfirmGroupInviteResponse - inviting player doesnt have a group!");
+        return;
+      }
+
+      var groupId = DictionaryPlayerInGroup[senderH];
+
+      if (groupId <= 0)
+      {
+        Debug.WriteLine("ofw_grp:ConfirmGroupInviteResponse - invalid group ID");
+        return;
+      }
+
+      if (DictionaryPlayerInGroup.ContainsKey(sourceId))
+      {
+        source.TriggerEvent("ofw_grp:NotifyError", "Invited player has already a group!");
+        return;
+      }
+
+      DictionaryPlayerInGroup.Add(sourceId, groupId);
+      senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Invite accepted!");
       SendGroupToSource(source, true);
     }
 

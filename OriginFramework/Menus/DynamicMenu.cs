@@ -59,7 +59,7 @@ namespace OriginFramework.Menus
       if (dynDef == null)
         return null;
 
-      Menu _menu = new Menu(dynDef.Name);
+      Menu _menu = new Menu("OriginRP", dynDef.Name);
       MenuController.AddMenu(_menu);
       OwnedMenus.Add(_menu);
 

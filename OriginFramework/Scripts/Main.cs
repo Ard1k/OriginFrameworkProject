@@ -13,17 +13,19 @@ namespace OriginFramework
   public class Main : BaseScript
   {
     public static string _version = null;
-    public static string Version 
-    { 
-      get 
+    public static string Version
+    {
+      get
       {
         if (_version != null)
           return _version;
 
         _version = CitizenFX.Core.Native.API.GetResourceMetadata(CitizenFX.Core.Native.API.GetCurrentResourceName(), "version", 0);
         return _version;
-      } 
+      }
     }
+
+    public static PlayerList LocalPlayers { get; protected set; }
 
     public static Control MenuToggleKey { get { return MenuController.MenuToggleKey; } private set { MenuController.MenuToggleKey = value; } }
 
@@ -38,6 +40,8 @@ namespace OriginFramework
 
     public Main()
     {
+      LocalPlayers = Players;
+
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
     }
 
@@ -123,7 +127,7 @@ namespace OriginFramework
         }
 
         // Create the main menu.
-        OriginMainMenu = new Menu(Game.Player.Name, "Main Menu");
+        OriginMainMenu = new Menu("OriginRP", "Main Menu");
 
         // Add the main menu to the menu pool.
         MenuController.AddMenu(OriginMainMenu);

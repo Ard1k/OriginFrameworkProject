@@ -17,6 +17,7 @@ namespace OriginFramework
     public static bool IsWaitingForGroup { get; set; } = false;
     public static GroupBag Group { get; set; }
 
+    #region Tick tasks
     private async Task GroupDisplay()
     {
       if (IsWaitingForGroup || (Group != null && Group.IsInAGroup))
@@ -29,40 +30,58 @@ namespace OriginFramework
       }
     }
 
-    private async Task ProcessGroupDistance()
+		private async Task ProcessGroupDistance()
     {
+      var myPos = Game.PlayerPed.Position;
+      var myPedNetId = Game.PlayerPed.NetworkId;
+      var players = Players.ToList();
+
       if (Group != null && Group.Members != null)
       {
         for (int i = 0; i < Group.Members.Length; i++)
         {
-          var p = Group.Members[i];
+          var member = Group.Members[i];
+          
+          if (member.NetPedID == myPedNetId)
+          {
+            member.IsInRange = true;
+            member.Distance = 0f;
+            continue;
+          }
 
-          if (i == 0)
+          var memberPed = NetToPed(member.NetPedID);
+
+          if (memberPed <= 0)
           {
-            p.Distance = 0f;
-            p.IsInRange = true;
+            member.IsInRange = false;
+            member.Distance = 999f;
+            continue;
           }
-          if (i == 1)
-          {
-            p.Distance = 999f;
-            p.IsInRange = false;
-          }
-          if (i == 2)
-          {
-            p.Distance = 999f;
-          }
-          if (i == 3)
-          {
-            p.Distance = 150.34568f;
-            p.IsInRange = true;
-          }
+
+          var memberCoords = GetEntityCoords(memberPed, true);
+
+          member.IsInRange = true;
+          member.Distance = Vector3.Distance(myPos, memberCoords);
         }
       }
 
       await Delay(500);
     }
 
-    private void RefreshGroupInfo(string groupJson)
+    private float timeMinuteCounter = 0;
+    private async Task PeriodicGroupRefresh()
+    {
+      timeMinuteCounter += (GetFrameTime() * 1000);
+      if (timeMinuteCounter > 60000)
+      {
+        TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
+      }
+    }
+
+		#endregion
+
+		#region event handlers
+		private void RefreshGroupInfo(string groupJson)
     {
       Group = JsonConvert.DeserializeObject<GroupBag>(groupJson);
     }
@@ -76,7 +95,24 @@ namespace OriginFramework
     {
       Notify.Info(message);
     }
+    private void ConfirmGroupInvite(int requestingPlayerHash)
+    {
+      TriggerServerEvent("ofw_grp:ConfirmGroupInviteResponse", requestingPlayerHash, IsWaitingForGroup);
+    }
+    private async void OnClientResourceStart(string resourceName)
+    {
+      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
+      while (SettingsManager.Settings == null)
+        await Delay(0);
+
+      Tick += GroupDisplay;
+      Tick += ProcessGroupDistance;
+      Tick += PeriodicGroupRefresh;
+    }
+    #endregion
+
+    #region private metody
     private void DrawGroup()
     {
       float x = 0.995f;
@@ -124,25 +160,17 @@ namespace OriginFramework
       EndTextCommandDisplayText(x, y);
     }
 
+    #endregion
+
     public GroupManager()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
       EventHandlers["ofw_grp:RefreshGroupInfo"] += new Action<string>(RefreshGroupInfo);
       EventHandlers["ofw_grp:NotifyError"] += new Action<string>(NotifyError);
       EventHandlers["ofw_grp:NotifySuccess"] += new Action<string>(NotifySuccess);
+      EventHandlers["ofw_grp:ConfirmGroupInvite"] += new Action<int>(ConfirmGroupInvite);
 
       TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
-    }
-
-    private async void OnClientResourceStart(string resourceName)
-    {
-      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
-
-      while (SettingsManager.Settings == null)
-        await Delay(0);
-
-      Tick += GroupDisplay;
-      Tick += ProcessGroupDistance;
     }
 
     

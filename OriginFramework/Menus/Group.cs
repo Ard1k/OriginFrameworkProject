@@ -25,7 +25,7 @@ namespace OriginFramework.Menus
 
     private void CreateMenu()
     {
-      groupMenu = new Menu("Group", "");
+      groupMenu = new Menu("OriginRP", "Group");
       createItem = new MenuItem("Create group", "Create new group");
       stopWaitItem = new MenuItem("Stop waiting for invite", "Stop waiting for invite");
       startWaitItem = new MenuItem("Wait for invite", "Set your status as waiting for invite");
@@ -46,34 +46,47 @@ namespace OriginFramework.Menus
           Debug.WriteLine($"GroupMenu: ProcessingOnClick, triggering server event ofw_grp:CreateGroup");
           TriggerServerEvent("ofw_grp:CreateGroup");
         }
-        if (item == inviteItem)
+        else if (item == inviteItem)
         {
-          var mDefSub = new DynamicMenuDefinition
-          {
-            Name = "TestSub",
-            Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "TestSub1" }, new DynamicMenuItem { TextLeft = "TestSub2" }, new DynamicMenuItem { TextLeft = "TestSub3" } }
-          };
+          var localPlayers = Main.LocalPlayers.ToList();
 
-          var mDef = new DynamicMenuDefinition
-          {
-            Name = "Testmain",
-            Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "Test1" }, new DynamicMenuItem { TextLeft = "Test2" }, new DynamicMenuItem { TextLeft = "TestSub", Submenu = mDefSub }, new DynamicMenuItem { TextLeft = "Test3" } }
-          };
+          var dynMenuItems = new List<DynamicMenuItem>();
 
-          var menu = new DynamicMenu(mDef);
-          MenuController.CloseAllMenus();
-          menu.Menu.OpenMenu();
+          foreach (var p in localPlayers)
+          {
+            if (p.ServerId == Game.Player.ServerId)
+              continue;
+
+            dynMenuItems.Add(new DynamicMenuItem { TextLeft = $"{p.Name} ID:{p.ServerId}", OnClick = () => { TriggerServerEvent("ofw_grp:InviteToGroup", p.ServerId); MenuController.CloseAllMenus(); } });
+          }
+
+          if (dynMenuItems.Count <= 0)
+          {
+            Notify.Info("No players nearby");
+          }
+          else
+          {
+            var dynMenuDef = new DynamicMenuDefinition
+            {
+              Name = "Invite",
+              Items = dynMenuItems
+            };
+
+            var dynMenu = new DynamicMenu(dynMenuDef);
+            MenuController.CloseAllMenus();
+            dynMenu.Menu.OpenMenu();
+          }
         }
-        if (item == startWaitItem)
+        else if (item == startWaitItem)
         {
           if (GroupManager.Group == null || !GroupManager.Group.IsInAGroup)
             GroupManager.IsWaitingForGroup = true;
         }
-        if (item == stopWaitItem)
+        else if (item == stopWaitItem)
         {
           GroupManager.IsWaitingForGroup = false;
         }
-        if (item == leaveItem)
+        else if (item == leaveItem)
         {
           TriggerServerEvent("ofw_grp:LeaveGroup");
         }
@@ -100,7 +113,8 @@ namespace OriginFramework.Menus
       }
       else
       {
-        toFilter.Add(inviteItem);
+        if (GroupManager.Group != null && GroupManager.Group.Members != null && GroupManager.Group.Members.Length < 4)
+          toFilter.Add(inviteItem);
         toFilter.Add(leaveItem);
       }
 
