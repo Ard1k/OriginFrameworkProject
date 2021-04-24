@@ -14,6 +14,7 @@ namespace OriginFrameworkServer
 	public static class SettingsManager
 	{
 		private static SettingsBag _settings;
+
 		public static SettingsBag Settings
 		{
 			get
@@ -31,7 +32,6 @@ namespace OriginFrameworkServer
 						_settings = new SettingsBag();
 					}
 				}
-
 				return _settings;
 			}
 		}

@@ -1,16 +1,17 @@
-﻿using CitizenFX.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OriginFramework
+namespace OriginFrameworkData
 {
 	public enum KvpEnum : int
 	{
 		MiscDrawEntityInfo = 1,
-		ShowClosesVehicleTrunkInfo = 2
+		ShowClosesVehicleTrunkInfo = 2,
+
+		ServerPersistenVehicleDB = 1000
 	}
 
 	public class KvpManager
@@ -21,7 +22,8 @@ namespace OriginFramework
 			{
 				case KvpEnum.MiscDrawEntityInfo: return "drawentityinfo";
 				case KvpEnum.ShowClosesVehicleTrunkInfo: return "closesvehtrnkinfo";
-				default: Debug.WriteLine($"Unknown kvp: {kvp}"); return "undefined";
+				case KvpEnum.ServerPersistenVehicleDB: return "server_persvehdb";
+				default: return "undefined";
 			}
 		}
 	}

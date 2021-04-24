@@ -43,7 +43,9 @@
   <ItemGroup>
     <Compile Include="DataBags\CompanyBags.cs" />
     <Compile Include="DataBags\GroupBags.cs" />
+    <Compile Include="DataBags\PersistentVehiclesBags.cs" />
     <Compile Include="DataBags\SettingsBag.cs" />
+    <Compile Include="KvpEnum.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

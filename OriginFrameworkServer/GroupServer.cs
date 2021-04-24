@@ -190,7 +190,6 @@ namespace OriginFrameworkServer
 
       if (groupId <= 0)
       {
-        Debug.WriteLine($"SendGroupToSource: Player not in group, returning empty [Handle{source?.Handle ?? "null"}]");
         source.TriggerEvent("ofw_grp:RefreshGroupInfo", JsonConvert.SerializeObject(new GroupBag { IsInAGroup = false }));
         return;
       }

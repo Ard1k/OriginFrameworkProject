@@ -2,6 +2,7 @@
 using CitizenFX.Core.UI;
 using MenuAPI;
 using OriginFramework.Menus;
+using OriginFrameworkData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -285,28 +286,33 @@ namespace OriginFramework
 
           //doorIndex: 0 = Front Left 1 = Front Right 2 = Back Left 3 = Back Right 4 = Hood 5 = Trunk 6 = Trunk2
 
-          if (veh.Doors.HasDoor(VehicleDoorIndex.Trunk))
+          bool hasDoor = veh.Doors.HasDoor(VehicleDoorIndex.Trunk);
+          var door = veh.Doors[VehicleDoorIndex.Trunk];
+          int color_red = 0;
+          int color_green = 0;
+          if (!hasDoor || door.IsOpen || door.IsBroken)
           {
-            var door = veh.Doors[VehicleDoorIndex.Trunk];
-            int color_red = 0;
-            int color_green = 0;
-            if (door.IsOpen || door.IsBroken)
-            {
-              color_red = 0;
-              color_green = 255;
-            }
-            else
-            {
-              color_red = 255;
-              color_green = 0;
-            }
-
-            var bootBone = veh.Bones["boot"];
-            if (bootBone != null)
-            {
-              DrawMarker(0, bootBone.Position.X, bootBone.Position.Y, bootBone.Position.Z + 1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.4f, 0.4f, 0.4f, color_red, color_green, 0, 255, true, false, 2, false, null, null, false);
-            }
+            color_red = 0;
+            color_green = 255;
           }
+          else
+          {
+            color_red = 255;
+            color_green = 0;
+          }
+
+          var x = veh.Position.X;
+          var y = veh.Position.Y;
+          var z = veh.Position.Z;
+          
+          if (hasDoor)
+          {
+            var bootBone = veh.Bones["boot"];
+            x = bootBone.Position.X;
+            y = bootBone.Position.Y;
+            z = bootBone.Position.Z;
+          }
+          DrawMarker(0, x, y, z + 1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 0.4f, 0.4f, 0.4f, color_red, color_green, 0, 255, true, false, 2, false, null, null, false);
         }
       }
     }

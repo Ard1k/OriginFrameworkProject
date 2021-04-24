@@ -16,7 +16,9 @@ namespace OriginFrameworkServer
   public class VSql : BaseScript
   {
     private static string connectionString;
-    private static bool wasInit;
+    private static bool wasInit = false;
+    private static bool tablesEnsured = false;
+    public static bool IsReadyToUse {get { return (tablesEnsured && wasInit); } }
 
     private class DbConnection : IDisposable
     {
@@ -35,13 +37,20 @@ namespace OriginFrameworkServer
     }
 
     // delegate method
-    private void OnResourceStart(string resourceName)
+    private async void OnResourceStart(string resourceName)
     {
       if (GetCurrentResourceName() != resourceName) return;
 
       VSql.Init();
+      await EnsureDB_cfw_jsondata_table();
+
+      tablesEnsured = true;
     }
 
+    private Task<int> EnsureDB_cfw_jsondata_table()
+    {
+      return VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `cfw_jsondata` (`key` varchar(60) NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`key`)) DEFAULT CHARSET=latin1;", null);
+    }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }
 

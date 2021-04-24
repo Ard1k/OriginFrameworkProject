@@ -64,7 +64,20 @@ namespace OriginFramework
           args = new[] { "[CarSpawner]", $"I wish I could spawn this {(args.Count > 0 ? $"{args[0]} or" : "")} adder but my owner was too lazy. :(" + CitizenFX.Core.Native.API.GetCurrentResourceName() }
         });
 
+      }), false);
 
+      RegisterCommand("mcar", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        var ped = Game.PlayerPed;
+        Debug.WriteLine("S: " + source + "P: " + ped?.Heading);
+        RequestModel((uint)GetHashKey(args[0].ToString()));
+        CreateVehicle((uint)GetHashKey(args[0].ToString()), ped.Position.X, ped.Position.Y, ped.Position.Z, ped.Heading, true, true);
+
+        BaseScript.TriggerEvent("chat:addMessage", new
+        {
+          color = new[] { 255, 0, 0 },
+          args = new[] { "[CarSpawner]", $"wtf" }
+        });
       }), false);
 
       RegisterCommand("testdynmenu", new Action<int, List<object>, string>((source, args, raw) =>

@@ -68,13 +68,14 @@ namespace OriginFramework
       await Delay(500);
     }
 
-    private float timeMinuteCounter = 0;
+    private float timeCounter = 0;
     private async Task PeriodicGroupRefresh()
     {
-      timeMinuteCounter += (GetFrameTime() * 1000);
-      if (timeMinuteCounter > 60000)
+      timeCounter += (GetFrameTime() * 1000);
+      if (timeCounter > 12000)
       {
         TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
+        timeCounter = 0;
       }
     }
 
