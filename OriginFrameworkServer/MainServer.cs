@@ -41,33 +41,14 @@ namespace OriginFrameworkServer
       while (SettingsManager.Settings == null)
         await Delay(0);
 
-      //RegisterCommand("supercar", new Action<int, List<object>, string>((source, args, raw) =>
-      //{
-      //  // native "CREATE_VEHICLE"
-      //  // hash "0xAF35D0D2583051B0"
-      //  // jhash(0xDD75460A)
+      RegisterCommand("printidents", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        var plr = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
 
-      //  // arguments {
-      //  //  Hash "modelHash",
-      //  //	float "x",
-      //  //	float "y",
-      //  //	float "z",
-      //  //	float "heading",
-      //  //	BOOL "isNetwork",
-      //  //	BOOL "p6",
-      //  //}
-      //  // returns "Vehicle"
-      //  if (args == null || args.Count <= 0)
-      //    return;
+        var id = OIDServer.GetOriginServerID(plr);
 
-      //  var ped = Ped.FromPlayerHandle(source.ToString());
-
-      //  var pos = ped.Position;
-      //  int vehResult = CitizenFX.Core.Native.Function.Call<int>(Hash.CREATE_VEHICLE, GetHashKey(args[0].ToString()), pos.X, pos.Y, pos.Z, ped.Heading, true, false);
-      //  Debug.WriteLine("vehResult: " + vehResult);
-      //  lastSuperVeh = new Vehicle(vehResult);
-      //  Debug.WriteLine("vehCreated: " + lastSuperVeh);
-      //}), false);
+        Debug.WriteLine("returned ID: " + id + " SID: " + source);
+      }), false);
 
       //Tick += TickTask;
     }
