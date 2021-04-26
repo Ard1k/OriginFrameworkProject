@@ -137,8 +137,8 @@ namespace OriginFramework
         if (v.IsOnScreen)
         {
           int model = GetEntityModel(v.Handle);
-          int netID = NetworkGetNetworkIdFromEntity(v.Handle);
           var isNetworked = NetworkGetEntityIsNetworked(v.Handle);
+          int netID = isNetworked ? NetworkGetNetworkIdFromEntity(v.Handle) : -1;
           int netOwnerLocalId = NetworkGetEntityOwner(v.Handle);
           int playerServerId = -1;
           string playerName = "---";
@@ -170,8 +170,8 @@ namespace OriginFramework
         if (p.IsOnScreen)
         {
           int model = GetEntityModel(p.Handle);
-          int netID = NetworkGetNetworkIdFromEntity(p.Handle);
           var isNetworked = NetworkGetEntityIsNetworked(p.Handle);
+          int netID = isNetworked ? NetworkGetNetworkIdFromEntity(p.Handle) : -1;
           int netOwnerLocalId = NetworkGetEntityOwner(p.Handle);
           int playerServerId = -1;
           string playerName = "---";
@@ -203,8 +203,8 @@ namespace OriginFramework
         if (p.IsOnScreen)
         {
           int model = GetEntityModel(p.Handle);
-          int netID = NetworkGetNetworkIdFromEntity(p.Handle);
           var isNetworked = NetworkGetEntityIsNetworked(p.Handle);
+          int netID = isNetworked ? NetworkGetNetworkIdFromEntity(p.Handle) : -1;
           var controllingPlayerIndex = NetworkGetPlayerIndexFromPed(p.Handle);
           var controllingPlayerServerID = GetPlayerServerId(controllingPlayerIndex);
           var controllingPlayerString = controllingPlayerServerID > 0 ? controllingPlayerServerID.ToString() : "---";

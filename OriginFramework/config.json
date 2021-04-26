@@ -2,5 +2,58 @@
   "MenuKey": 344,
   "LoadHeistIsland": true,
   "MenuAlignRight": false,
-  "TestJobActive": false
+  "TestJobActive": true,
+  "NPCRespawnDistance": 50,
+  "NPCs": [
+    {
+      "UniqueName": "T01",
+      "VisibleName": "Pepega Fangho",
+      "ModelName": "a_m_y_gay_02",
+      "WeaponModelName": "weapon_smg",
+      "IsPositionFrozen": false,
+      "IsInvincible": false,
+      "CanDropWeapon": false,
+      "HasNoColissions": false,
+      "Group": 1000,
+      "Position": {
+        "X": 216.813,
+        "Y": -871.2925,
+        "Z": 29.5505,
+        "Heading": 285.002
+      }
+    },
+    {
+      "UniqueName": "T02",
+      "VisibleName": "Pepega zmrazena",
+      "ModelName": "cs_bankman",
+      "WeaponModelName": "weapon_smg",
+      "IsPositionFrozen": true,
+      "IsInvincible": false,
+      "CanDropWeapon": false,
+      "HasNoColissions": false,
+      "Group": 1000,
+      "Position": {
+        "X": 218.81,
+        "Y": -874.55,
+        "Z": 29.55,
+        "Heading": 300.002
+      }
+    },
+    {
+      "UniqueName": "T03",
+      "VisibleName": "Pepega nesmrtelna",
+      "ModelName": "csb_money",
+      "IsPositionFrozen": true,
+      "IsInvincible": true,
+      "CanDropWeapon": false,
+      "HasNoColissions": true,
+      "Group": 1000,
+      "Position": {
+        "X": 219.67,
+        "Y": -877.5,
+        "Z": 29.55,
+        "Heading": -45.002
+      }
+    }
+  ]
 }

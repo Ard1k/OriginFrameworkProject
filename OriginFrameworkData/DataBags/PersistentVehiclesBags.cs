@@ -13,7 +13,8 @@ namespace OriginFrameworkData.DataBags
 
 	public class PersistentVehicleBag
 	{
-		public int LocalID { get; set; }
+		public int GlobalVehID { get; set; }
+		public bool IsServerRestored { get; set; }
 		public int NetID { get; set; }
 		public int ModelHash { get; set; }
 		public VehiclePosBag LastKnownPos { get; set; }

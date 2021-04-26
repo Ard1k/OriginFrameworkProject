@@ -12,6 +12,8 @@ namespace OriginFrameworkData.DataBags
 		public bool MenuAlignRight { get; set; } = false;
 		public bool LoadHeistIsland { get; set; } = false;
 		public bool TestJobActive { get; set; } = false;
+		public NPCDefinitionBag[] NPCs { get; set; } = new NPCDefinitionBag[0];
+		public float NPCRespawnDistance { get; set; } = 20f;
 
 		public SettingsBag() { }
 	}

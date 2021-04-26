@@ -66,7 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GroupServer.cs" />
-    <Compile Include="LuxuryDeliveryJobServer.cs" />
+    <Compile Include="NPCServer.cs" />
     <Compile Include="OIDServer.cs" />
     <Compile Include="PersistentVehiclesServer.cs" />
     <Compile Include="MainServer.cs" />

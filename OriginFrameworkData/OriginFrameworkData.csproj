@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="DataBags\CompanyBags.cs" />
     <Compile Include="DataBags\GroupBags.cs" />
+    <Compile Include="DataBags\NPC.cs" />
     <Compile Include="DataBags\OIDBag.cs" />
     <Compile Include="DataBags\PersistentVehiclesBags.cs" />
     <Compile Include="DataBags\SettingsBag.cs" />
