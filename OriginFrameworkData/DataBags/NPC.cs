@@ -21,6 +21,7 @@ namespace OriginFrameworkData.DataBags
 		public NPCPosBag Position { get; set; }
 		public bool IsSpawning { get; set; }
 		public int Group { get; set; } = -1;
+		public Action<int, string> OnInteraction { get; set; }
 	}
 
 	public class NPCPosBag

@@ -13,8 +13,11 @@ namespace OriginFramework
 {
   public class NPCClient : BaseScript
   {
-    private NPCDefinitionBag[] NPCs = null;
+    public static NPCDefinitionBag[] NPCs { get; private set; } = null;
     private Dictionary<int, uint> DictionaryGroupPGroupGTA = new Dictionary<int, uint>();
+
+    public static Control NPCInteractionKey { get; private set; } = Control.Context;
+    private string NPCInteractionKeyString = " ~INPUT_CONTEXT~ ";
 
     public NPCClient()
     {
@@ -28,6 +31,8 @@ namespace OriginFramework
 
       while (SettingsManager.Settings == null)
         await Delay(0);
+
+      AddTextEntry("OFW_NPC_INTERACT", $"Stiskni {NPCInteractionKeyString} pro interakci");
 
       string ret = null;
       bool completed = false;
@@ -66,6 +71,9 @@ namespace OriginFramework
         if (i.SpawnedNetID <= 0)
           continue;
 
+        if (!NetworkDoesEntityExistWithNetworkId(i.SpawnedNetID))
+          continue;
+
         var pid = NetworkGetEntityFromNetworkId(i.SpawnedNetID);
 
         if (pid <= 0)
@@ -100,7 +108,7 @@ namespace OriginFramework
           }
           else
           {
-            AddRelationshipGroup("1", ref gtaGroup);
+            AddRelationshipGroup(i.Group.ToString(), ref gtaGroup);
             Debug.WriteLine("CreatedGroup " + gtaGroup);
             if (gtaGroup > 0)
               DictionaryGroupPGroupGTA.Add(i.Group, gtaGroup);
@@ -134,6 +142,9 @@ namespace OriginFramework
         if (i.SpawnedNetID <= 0)
           continue;
 
+        if (!NetworkDoesEntityExistWithNetworkId(i.SpawnedNetID))
+          continue;
+
         var pid = NetworkGetEntityFromNetworkId(i.SpawnedNetID);
 
         if (pid <= 0)
@@ -146,6 +157,15 @@ namespace OriginFramework
         {
           if (!string.IsNullOrEmpty(i.VisibleName) && HasEntityClearLosToEntity(Game.PlayerPed.Handle, pid, 17)) //Hoodne draha operace, co na to vykon scriptu?
             DrawNpcName(ped.Position, distance, i.VisibleName);
+        }
+
+        if (distance < 2 && i.OnInteraction != null)
+        {
+          DisplayHelpTextThisFrame("OFW_NPC_INTERACT", false);
+          if (IsControlJustPressed(0, (int)NPCInteractionKey))
+          {
+            i.OnInteraction(pid, i.VisibleName);
+          }
         }
       }
     }
@@ -160,6 +180,26 @@ namespace OriginFramework
         if (i.UniqueName == npcName)
           i.SpawnedNetID = netID;
       }
+    }
+
+    public static bool IsNpcInRange(NPCDefinitionBag npc, Vector3 ppos)
+    {
+      if (!NetworkDoesEntityExistWithNetworkId(npc.SpawnedNetID))
+        return false;
+
+      var pid = NetworkGetEntityFromNetworkId(npc.SpawnedNetID);
+
+      if (pid <= 0)
+        return false;
+
+      var ped = new Ped(pid);
+
+      var dist = Vector3.Distance(ped.Position, ppos);
+      Debug.WriteLine($"Dist: {dist}");
+      if (dist <= 2)
+        return true;
+      else
+        return false;
     }
 
     private void DrawNpcName(Vector3 pos, float distance, string name)

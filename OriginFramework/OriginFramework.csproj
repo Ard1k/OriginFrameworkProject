@@ -46,8 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Scripts\Checkpointer.cs" />
+    <Compile Include="Scripts\LuxuryCarDelivery.cs" />
     <Compile Include="Scripts\GroupManager.cs" />
     <Compile Include="Scripts\NPCClient.cs" />
+    <Compile Include="Scripts\GenericTextureRenderer.cs" />
     <Compile Include="Scripts\TestJob.cs" />
     <Compile Include="Scripts\Misc.cs" />
     <Compile Include="Scripts\DrifterAndBooster.cs" />
@@ -83,8 +85,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="stream\ofw_renderer_1.gfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="stream\ofw_renderer_2.gfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

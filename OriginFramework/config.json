@@ -54,6 +54,23 @@
         "Z": 29.55,
         "Heading": -45.002
       }
+    },
+    {
+      "UniqueName": "LuxuryCarDelivery_01",
+      "VisibleName": "Zlodejicek",
+      "ModelName": "cs_siemonyetarian",
+      "WeaponModelName": "weapon_pistol",
+      "IsPositionFrozen": false,
+      "IsInvincible": false,
+      "CanDropWeapon": false,
+      "HasNoColissions": false,
+      "Group": 1,
+      "Position": {
+        "X": -167.1228,
+        "Y": -2681.3179,
+        "Z": 5.1217,
+        "Heading": -89.06
+      }
     }
   ]
 }

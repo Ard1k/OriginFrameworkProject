@@ -29,7 +29,7 @@ namespace OriginFramework.Menus
       if (it == null)
         return;
 
-      var mItem = new MenuItem(it.TextLeft ?? "???", it.TextRight);
+      var mItem = new MenuItem(it.TextLeft ?? "???", it.TextDescription);
       if (it.TextRight != null)
         mItem.Label = it.TextRight;
 
@@ -59,7 +59,7 @@ namespace OriginFramework.Menus
       if (dynDef == null)
         return null;
 
-      Menu _menu = new Menu("OriginRP", dynDef.Name);
+      Menu _menu = new Menu(dynDef.MainName ?? "OriginRP", dynDef.Name);
       MenuController.AddMenu(_menu);
       OwnedMenus.Add(_menu);
 
@@ -78,6 +78,7 @@ namespace OriginFramework.Menus
   public class DynamicMenuDefinition
   {
     public string Name { get; set; }
+    public string MainName { get; set; }
     public IEnumerable<DynamicMenuItem> Items { get; set; }
   }
 
