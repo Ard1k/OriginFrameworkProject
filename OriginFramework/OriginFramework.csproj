@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Scripts\Checkpointer.cs" />
+    <Compile Include="Scripts\VehicleClient.cs" />
     <Compile Include="Scripts\LuxuryCarDelivery.cs" />
     <Compile Include="Scripts\GroupManager.cs" />
     <Compile Include="Scripts\NPCClient.cs" />

@@ -48,7 +48,7 @@ namespace OriginFrameworkServer
         if (i.IsSpawning)
           continue;
 
-        if (i.SpawnedNetID <= 0)
+        if (i.SpawnedNetID <= 0 && (i.NextRespawn == null || i.NextRespawn < DateTime.Now))
         {
           await SpawnPed(i);
           continue;
@@ -61,7 +61,23 @@ namespace OriginFrameworkServer
           var ped = new Ped(pid);
           var health = GetEntityHealth(pid);
           var dist = Vector3.Distance(ped.Position, new Vector3(i.Position.X, i.Position.Y, i.Position.Z));
-          if (health <= 0 || dist > respawnDistance)
+          if (health <= 0)
+          {
+            DeleteEntity(pid);
+            if (i.RespawnTimeMinutes == 0)
+            {
+              await SpawnPed(i);
+            }
+            else if (i.RespawnTimeMinutes < 0)
+            {
+              i.NextRespawn = DateTime.MaxValue;
+            }
+            else
+            {
+              i.NextRespawn = DateTime.Now.AddMinutes(i.RespawnTimeMinutes);
+            }
+          }
+          else if (dist > respawnDistance)
           {
             DeleteEntity(pid);
             await SpawnPed(i);

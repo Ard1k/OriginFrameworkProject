@@ -80,6 +80,11 @@ namespace OriginFramework
           continue; 
 
         var ped = new Ped(pid);
+        if (GetPedMaxHealth(pid) < 2000)
+        {
+          SetPedMaxHealth(pid, 2000);
+          ped.Health = 2000;
+        }
         SetPedDropsWeaponsWhenDead(pid, i.CanDropWeapon);
         SetPedCombatAttributes(pid, 5, true);
         SetPedCombatAttributes(pid, 46, true);

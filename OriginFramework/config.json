@@ -64,6 +64,7 @@
       "IsInvincible": false,
       "CanDropWeapon": false,
       "HasNoColissions": false,
+      "RespawnTimeMinutes": 1,
       "Group": 1,
       "Position": {
         "X": -167.1228,

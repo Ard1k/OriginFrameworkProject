@@ -13,6 +13,8 @@ namespace OriginFrameworkData.DataBags
 		public string VisibleName { get; set; }
 		public string ModelName { get; set; }
 		public string WeaponModelName { get; set; }
+		public int RespawnTimeMinutes { get; set; }
+		public DateTime? NextRespawn { get; set; }
 		public bool IsPositionFrozen { get; set; }
 		public bool IsInvincible { get; set; }
 		public bool CanDropWeapon { get; set; }

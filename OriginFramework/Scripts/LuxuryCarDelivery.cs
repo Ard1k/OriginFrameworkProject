@@ -14,6 +14,8 @@ namespace OriginFramework
 {
   public class LuxuryCarDelivery : BaseScript
   {
+    //car pos: -710.0746 641.9553 154.3442 349.0895
+
     private Dictionary<string, bool> JobNpcList = new Dictionary<string, bool> { { "LuxuryCarDelivery_01", false }, { "kokos", false } };
     private Control actionKey = Control.Context;
 
