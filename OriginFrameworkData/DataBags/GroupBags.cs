@@ -20,5 +20,6 @@ namespace OriginFrameworkData.DataBags
 		public bool IsOnline { get; set; }
 		public float Distance { get; set; }
 		public bool IsInRange { get; set; }
+		public bool IsInQuestRange { get; set; }
 	}
 }

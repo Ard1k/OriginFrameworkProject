@@ -16,9 +16,11 @@ namespace OriginFrameworkServer
   {
     private static int index = 10000;
     public static List<OIDBag> OriginServerIdentifiers { get; private set; } = new List<OIDBag>();
+    public static PlayerList ServerPlayers = null;
 
     public OIDServer()
     {
+      ServerPlayers = Players;
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
     }
 
@@ -28,6 +30,21 @@ namespace OriginFrameworkServer
 
       while (SettingsManager.Settings == null)
         await Delay(0);
+
+    }
+
+    [EventHandler("ofw_oid:GetMyOriginID")]
+    private void GetMyOriginID([FromSource] Player source, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        Debug.WriteLine("ofw_oid:GetMyOriginID: This event can't be called from server!");
+        callback(-1);
+      }
+
+      var playerOID = GetOriginServerID(source);
+
+      _ = callback(playerOID);
     }
 
     public static int GetOriginServerID(Player p)
@@ -56,6 +73,18 @@ namespace OriginFrameworkServer
 
       Debug.WriteLine($"OID: Created new OID:[{newOID.OID}] License:[{newOID.License}]");
       return newOID.OID;
+    }
+
+    public static int[] GetOIDsFromServerIds(Player[] players)
+    {
+      List<int> oids = new List<int>();
+
+      foreach (var p in players)
+      {
+        oids.Add(GetOriginServerID(p));
+      }
+
+      return oids.ToArray();
     }
   }
 }

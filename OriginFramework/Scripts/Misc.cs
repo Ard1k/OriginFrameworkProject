@@ -63,7 +63,7 @@ namespace OriginFramework
       if (timeMinuteCounter > 60000)
       {
         timeMinuteCounter = 0;
-        Debug.WriteLine("Dynamic menu cleanup now!");
+        //Debug.WriteLine("Dynamic menu cleanup now!");
 
         if (!MenuController.IsAnyMenuOpen() && DynamicMenu.OwnedMenus.Count > 0)
         {

@@ -26,6 +26,7 @@ namespace OriginFramework
     }
 
     public static PlayerList LocalPlayers { get; protected set; }
+    public static int MyOriginId { get; set; } = -1;
 
     public static Control MenuToggleKey { get { return MenuController.MenuToggleKey; } private set { MenuController.MenuToggleKey = value; } }
 
@@ -54,6 +55,27 @@ namespace OriginFramework
 
       MenuController.MenuAlignment = SettingsManager.Settings.MenuAlignRight ? MenuController.MenuAlignmentOption.Right : MenuController.MenuAlignmentOption.Left;
       MenuToggleKey = (Control)SettingsManager.Settings.MenuKey;
+
+      Debug.WriteLine($"Waiting for oid...");
+      int oid = -1;
+      bool oid_returned = false;
+
+      Func<int, bool> OIDCallback = (soid) =>
+      {
+        oid = soid;
+        oid_returned = true;
+        return true;
+      };
+
+      TriggerServerEvent("ofw_oid:GetMyOriginID", OIDCallback);
+
+      while (!oid_returned)
+      {
+        await Delay(0);
+      }
+
+      MyOriginId = oid;
+      Debug.WriteLine($"OID retrieved: {oid}");
 
       #region register commands
       RegisterCommand("testik", new Action<int, List<object>, string>((source, args, raw) =>

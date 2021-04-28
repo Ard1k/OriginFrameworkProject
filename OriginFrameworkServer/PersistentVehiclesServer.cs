@@ -69,62 +69,10 @@ namespace OriginFrameworkServer
       //Tick += PeriodicSave;
     }
 
-    [EventHandler("ofw_veh:Test")]
-    private async void Test([FromSource] Player source, string model, Vector3 pos, float heading, NetworkCallbackDelegate callback)
-    {
-      int ret = -1;
-      bool completed = false;
-
-      Func<int, bool> CallbackFunction = (data) =>
-      {
-        ret = data;
-        completed = true;
-        return true;
-      };
-
-      TriggerEvent("ofw_veh:SpawnServerVehicleFromServer", model, pos, heading, CallbackFunction);
-
-      while (!completed)
-      {
-        await Delay(0);
-      }
-
-
-      _ = callback(ret);
-    }
-
     [EventHandler("ofw_veh:SpawnServerVehicle")]
     private async void SpawnServerVehicle([FromSource] Player source, string model, Vector3 pos, float heading, NetworkCallbackDelegate callback)
     {
       Debug.WriteLine("SRC: " + (source.ToString() ?? "no source"));
-      //TODO pokud playerId > 0, tak najit jeho data, jinak z Player
-
-      var vehID = SpawnPersistentVehicle(GetHashKey(model), pos, heading);
-
-      int frameCounter = 0;
-      while (!DoesEntityExist(vehID))
-      {
-        await Delay(100);
-        frameCounter++;
-        if (frameCounter > 200)
-        {
-          Debug.WriteLine("OFW_VEH: Vehicle server spawn timeout!");
-          _ = callback(-1);
-          return;
-        }
-      }
-
-      var veh = new Vehicle(vehID);
-      data.Vehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, LastKnownPos = new VehiclePosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model });
-
-      _ = callback(veh.NetworkId);
-    }
-
-    [EventHandler("ofw_veh:SpawnServerVehicleFromServer")]
-    private async void SpawnServerVehicleFromServer([FromSource] Player source, string model, Vector3 pos, float heading, CallbackDelegate callback)
-    {
-      if (source == null)
-        Debug.WriteLine("SRC is null!");
       //TODO pokud playerId > 0, tak najit jeho data, jinak z Player
 
       var vehID = SpawnPersistentVehicle(GetHashKey(model), pos, heading);

@@ -15,7 +15,7 @@ namespace OriginFrameworkServer
   {
     private int lastGroupIndex = 0;
     private const int securitySalt = 54898745; //uff, je to stupidni, ale aspon neco :D
-    private Dictionary<int, int> DictionaryPlayerInGroup = new Dictionary<int, int>();
+    private static Dictionary<int, int> DictionaryPlayerInGroup = new Dictionary<int, int>();
 
     public GroupServer()
     {
@@ -232,6 +232,18 @@ namespace OriginFrameworkServer
         Debug.WriteLine($"SendGroupToSource: Sending only for source [Handle{source?.Handle ?? "null"}]");
         source.TriggerEvent("ofw_grp:RefreshGroupInfo", JsonConvert.SerializeObject(bag));
       }
+    }
+
+    public static int[] GetAllGroupMembersServerID(int pServerId)
+    {
+      if (!DictionaryPlayerInGroup.ContainsKey(pServerId))
+      {
+        return null;
+      }
+
+      int groupId = DictionaryPlayerInGroup[pServerId];
+
+      return DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).ToArray();
     }
   }
 }

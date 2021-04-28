@@ -12,10 +12,11 @@ using static CitizenFX.Core.Native.API;
 
 namespace OriginFramework
 {
-	public class GroupManager : BaseScript
-	{
+  public class GroupManager : BaseScript
+  {
     public static bool IsWaitingForGroup { get; set; } = false;
     public static GroupBag Group { get; set; }
+    private const float questDistance = 20f;
 
     #region Tick tasks
     private async Task GroupDisplay()
@@ -62,6 +63,8 @@ namespace OriginFramework
 
           member.IsInRange = true;
           member.Distance = Vector3.Distance(myPos, memberCoords);
+          if (member.Distance <= questDistance)
+            member.IsInQuestRange = true;
         }
       }
 
@@ -135,9 +138,9 @@ namespace OriginFramework
             continue;
 
           if (i < 2)
-            s1.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (!p.IsOnline) ? "~r~" : (!p.IsInRange) ? "~c~" : "~g~", p.ServerPlayerID, p.DisplayName, p.Distance);
+            s1.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (p.IsInQuestRange) ? "~g~" : (p.IsInRange) ? "~o~" : "~r~", p.ServerPlayerID, p.DisplayName, p.Distance);
           else
-            s2.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (!p.IsOnline) ? "~r~" : (!p.IsInRange) ? "~c~" : "~g~", p.ServerPlayerID, p.DisplayName, p.Distance);
+            s2.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (p.IsInQuestRange) ? "~g~" : (p.IsInRange) ? "~o~" : "~r~", p.ServerPlayerID, p.DisplayName, p.Distance);
         }
       }
       else if (IsWaitingForGroup)
@@ -159,6 +162,26 @@ namespace OriginFramework
       AddTextComponentString2(s2.ToString());
 
       EndTextCommandDisplayText(x, y);
+    }
+
+    #endregion
+
+    #region public metody
+    public static bool CheckGroupInQuestDistance(Vector3 pos)
+    {
+      if (Group == null || Group.Members == null || Group.Members.Length <= 0)
+        return true;
+
+      foreach (var m in Group.Members)
+      {
+        if (m.Distance > questDistance)
+        {
+          Notify.Alert("Clenove party jsou moc daleko!");
+          return false;
+        }
+      }
+
+      return true;
     }
 
     #endregion

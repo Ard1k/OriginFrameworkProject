@@ -19,7 +19,7 @@ namespace OriginFramework.Menus
     public DynamicMenu(DynamicMenuDefinition menuDefinition)
     {
       this.Menu = BuildMenu(menuDefinition);
-      Notify.Info("Existing menus: " + MenuController.Menus.Count.ToString());
+      //Notify.Info("Existing menus: " + MenuController.Menus.Count.ToString());
     }
 
     public static List<Menu> OwnedMenus { get; set; } = new List<Menu>();

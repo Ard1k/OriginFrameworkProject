@@ -177,7 +177,7 @@ namespace OriginFramework
 
     private async void UpdateNPCNetID(string npcName, int netID)
     {
-      if (NPCs == null)
+      while (NPCs == null)
         await Delay(100);
 
       foreach (var i in NPCs)

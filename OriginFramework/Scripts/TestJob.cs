@@ -59,39 +59,6 @@ namespace OriginFramework
 
       }), false);
 
-      RegisterCommand("ttveh", new Action<int, List<object>, string>(async (source, args, raw) =>
-      {
-        int ret = -1;
-        bool completed = false;
-
-        BaseScript.TriggerEvent("chat:addMessage", new
-        {
-          color = new[] { 255, 0, 0 },
-          args = new[] { "Test" }
-        });
-
-        Func<int, bool> CallbackFunction = (data) =>
-        {
-          ret = data;
-          completed = true;
-          return true;
-        };
-
-        BaseScript.TriggerServerEvent("ofw_veh:Test", args[0], Game.PlayerPed.Position, Game.PlayerPed.Heading, CallbackFunction);
-
-        while (!completed)
-        {
-          await Delay(0);
-        }
-
-        BaseScript.TriggerEvent("chat:addMessage", new
-        {
-          color = new[] { 255, 0, 0 },
-          args = new[] { "NetID: " + ret }
-        });
-
-      }), false);
-
       Tick += OnTick;
     }
 

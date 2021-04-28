@@ -12,8 +12,9 @@ using CitizenFX.Core.Native;
 
 namespace OriginFrameworkServer
 {
-    public class MainServer : BaseScript
-    {
+  public class MainServer : BaseScript
+  {
+    public static Random rngGen = new Random();
 
     public MainServer()
     {
