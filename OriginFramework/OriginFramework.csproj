@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OfwFunctions.cs" />
     <Compile Include="Scripts\Checkpointer.cs" />
     <Compile Include="Scripts\VehicleClient.cs" />
     <Compile Include="Scripts\LuxuryCarDelivery.cs" />

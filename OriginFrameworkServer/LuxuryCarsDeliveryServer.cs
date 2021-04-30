@@ -20,13 +20,14 @@ namespace OriginFrameworkServer
       {
         Targets = new LCDTargetVehicleBag[]
         {
-          new LCDTargetVehicleBag { Identifier = "Car1", Position = new PosBag { X = -710.0746f, Y = 641.9553f, Z = 154.3442f, Heading = 349.0895f } }
+          new LCDTargetVehicleBag { Identifier = "Car1", ModelName = "t20", Position = new PosBag { X = -710.0746f, Y = 641.9553f, Z = 154.3442f, Heading = 349.0895f } }
         },
         DeliverySpot = new PosBag { X = -162.0009f, Y = -2707.5093f, Z = 5.0071f, Heading = 267.0062f }
       }
     };
 
     private List<LCDJobStateBag> JobStates = new List<LCDJobStateBag>();
+    private bool spawningLock = false;
 
     public LuxuryCarsDeliveryServer()
     {
@@ -59,6 +60,75 @@ namespace OriginFrameworkServer
       var jobState = JobStates.Where(j => j.PlayersOnJob.Contains(oidSource)).FirstOrDefault();
 
       _ = callback(jobState != null ? JsonConvert.SerializeObject(jobState) : null);
+    }
+
+    //TriggerServerEvent("ofw_lcd:SpawnJobCar", v.Identifier, CallbackFunction);
+    [EventHandler("ofw_lcd:SpawnJobCar")]
+    private async void SpawnJobCar([FromSource] Player source, string identifier, int blockingNetID, NetworkCallbackDelegate callback)
+    {
+      Debug.WriteLine("Car spawn request recieved");
+      while (spawningLock)
+      {
+        await Delay(0);
+      }
+      spawningLock = true;
+
+      Debug.WriteLine("Past spawn lock");
+
+      //todoSpawnCar
+      //Zkontolovat, jestli uz v serverstate nemam pro auto netID. Kdyz ne, spawnu. Kdyz jo, tak ho rovnou vratim. Nemusim pak delat zadny harakiri.
+
+      int oidSource = OIDServer.GetOriginServerID(source);
+      if (oidSource == -1)
+        Debug.WriteLine("ofw_lcd:SpawnJobCar: unresolved player oid");
+
+      if (blockingNetID > 0 && !PersistentVehiclesServer.IsVehicleKnown(blockingNetID))
+      {
+        //Fuj no... ale chova se to jinak kdyz mazu server entitu udelanou serverem a kdyz mazu random entitu
+        try { DeleteEntity(NetworkGetEntityFromNetworkId(blockingNetID)); } catch { }
+        try { DeleteEntity(blockingNetID); } catch { }
+      }
+
+      var jobState = JobStates.Where(j => j.PlayersOnJob.Contains(oidSource)).FirstOrDefault();
+
+      if (jobState != null && jobState.TargetVehicles != null)
+      {
+        var vehBag = jobState.TargetVehicles.Where(v => v.Identifier == identifier).FirstOrDefault();
+        Debug.WriteLine("Vehicle found");
+        if (vehBag != null)
+        {
+          if (vehBag.NetID > 0)
+          {
+            Debug.WriteLine("NetID exists");
+            _ = callback(vehBag.NetID);
+          }
+          else
+          {
+            int ret = -1;
+            bool completed = false;
+
+            Func<int, bool> CallbackFunction = (data) =>
+            {
+              ret = data;
+              completed = true;
+              return true;
+            };
+            Debug.WriteLine("Spawning vehicle");
+            TriggerEvent("ofw_veh:SpawnServerVehicle", vehBag.ModelName, new Vector3(vehBag.Position.X, vehBag.Position.Y, vehBag.Position.Z), vehBag.Position.Heading, CallbackFunction);
+
+            while (!completed)
+            {
+              await Delay(0);
+            }
+            Debug.WriteLine("Vehicle spawned");
+            
+            vehBag.NetID = ret;
+            _ = callback(ret);
+          }
+        }
+      }
+      _ = callback(-1);
+      spawningLock = false;
     }
 
     [EventHandler("ofw_lcd:StartJob")]
@@ -112,5 +182,48 @@ namespace OriginFrameworkServer
       }
     }
 
+    [EventHandler("ofw_lcd:DeliverVehicle")]
+    private async void DeliverVehicle([FromSource] Player source, int netID, NetworkCallbackDelegate callback)
+    {
+      int oidSource = OIDServer.GetOriginServerID(source);
+      if (oidSource == -1)
+      {
+        Debug.WriteLine("ofw_lcd:DeliverVehicle: unresolved player oid, cannot deliver");
+        _ = callback(false);
+        return;
+      }
+
+      var jobState = JobStates.Where(j => j.PlayersOnJob.Contains(oidSource)).FirstOrDefault();
+
+      if (jobState != null && jobState.TargetVehicles != null)
+      {
+        var vehBag = jobState.TargetVehicles.Where(v => v.NetID == netID).FirstOrDefault();
+
+        if (vehBag != null)
+        {
+          // TODO: Validace na pozici i ze strany serveru... ale asi fuck it? :D
+          vehBag.Delivered = true;
+
+          //Fuj no... ale chova se to jinak kdyz mazu server entitu udelanou serverem a kdyz mazu random entitu
+          try { DeleteEntity(NetworkGetEntityFromNetworkId(netID)); } catch {}
+          try { DeleteEntity(netID); } catch { }
+          
+          var members = GroupServer.GetAllGroupMembersServerID(Int32.Parse(source.Handle));
+          if (members == null || members.Length <= 0)
+            members = new int[] { Int32.Parse(source.Handle) };
+
+          var players = Players.Where(p => members.Contains(int.Parse(p.Handle))).ToArray();
+          foreach (var p in players)
+          {
+            p.TriggerEvent("ofw_lcd:VehicleDeliveredUpdate", vehBag.Identifier);
+          }
+
+          _ = callback(true);
+          return;
+        }
+      }
+
+      _ = callback(false);
+    }
   }
 }

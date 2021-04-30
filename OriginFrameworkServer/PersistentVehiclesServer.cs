@@ -14,7 +14,7 @@ namespace OriginFrameworkServer
 {
   public class PersistentVehiclesServer : BaseScript
   {
-    private PersistentVehicleDatabaseBag data = null;
+    private static PersistentVehicleDatabaseBag data = null;
     private bool isFirstTick = true;
 
     public PersistentVehiclesServer()
@@ -70,10 +70,13 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_veh:SpawnServerVehicle")]
-    private async void SpawnServerVehicle([FromSource] Player source, string model, Vector3 pos, float heading, NetworkCallbackDelegate callback)
+    private async void SpawnServerVehicle([FromSource] Player source, string model, Vector3 pos, float heading, CallbackDelegate callback)
     {
-      Debug.WriteLine("SRC: " + (source.ToString() ?? "no source"));
-      //TODO pokud playerId > 0, tak najit jeho data, jinak z Player
+      if (source != null)
+      {
+        Debug.WriteLine("SpawnServerVehicle can't be called from client! SRC: " + (source.ToString()));
+        return;
+      }
 
       var vehID = SpawnPersistentVehicle(GetHashKey(model), pos, heading);
 
@@ -82,8 +85,9 @@ namespace OriginFrameworkServer
       {
         await Delay(100);
         frameCounter++;
-        if (frameCounter > 200)
+        if (frameCounter > 300)
         {
+          
           Debug.WriteLine("OFW_VEH: Vehicle server spawn timeout!");
           _ = callback(-1);
           return;
@@ -99,6 +103,20 @@ namespace OriginFrameworkServer
     private async void OnResourceStop(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+    }
+
+    public static bool IsVehicleKnown(int netID)
+    {
+      if (data == null || data.Vehicles == null)
+        return false;
+
+      for (int i = 0; i < data.Vehicles.Count; i++)
+      {
+        if (data.Vehicles[i].NetID == netID)
+          return true;
+      }
+
+      return false;
     }
 
     private async Task VehicleManagerTick()

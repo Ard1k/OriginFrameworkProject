@@ -33,10 +33,10 @@ namespace OriginFrameworkServer
       NPCs = SettingsManager.Settings.NPCs;
       respawnDistance = SettingsManager.Settings.NPCRespawnDistance;
 
-      foreach (var n in NPCs)
-      {
-        await SpawnPed(n);
-      }
+      //foreach (var n in NPCs)
+      //{
+      //  await SpawnPed(n);
+      //}
 
       Tick += TakeCareOfNPC;
     }
@@ -89,7 +89,7 @@ namespace OriginFrameworkServer
         }
       }
 
-      await Delay(20000);
+      await Delay(5000);
     }
 
     private async void OnResourceStop(string resourceName)

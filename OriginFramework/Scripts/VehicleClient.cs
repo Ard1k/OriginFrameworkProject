@@ -68,7 +68,7 @@ namespace OriginFramework
         if (testsFrozen)
           break;
 
-        var blocked = IsParkingSpotblocked(i.Vec, i.Heading);
+        var blocked = GetParkingSpotBlockingEntity(i.Vec, i.Heading) > 0;
         ShapeBoxDraw(i.Vec, i.Heading, blocked);
       }
     }
@@ -80,12 +80,12 @@ namespace OriginFramework
 
     }
 
-    private bool IsParkingSpotblocked(Vector3 center, float heading)
+    public static int GetParkingSpotBlockingEntity(Vector3 center, float heading)
     {
-      return IsParkingSpotblocked(center, heading, 2.3f, 4.5f, 2.0f);
+      return GetParkingSpotBlockingEntity(center, heading, 2.3f, 4.5f, 2.0f);
     }
 
-    private bool IsParkingSpotblocked(Vector3 center, float heading, float width, float length, float height)
+    public static int GetParkingSpotBlockingEntity(Vector3 center, float heading, float width, float length, float height)
     {
       //--2->auta
       //-- 4->peds
@@ -107,7 +107,7 @@ namespace OriginFramework
 
       GetShapeTestResult(ray, ref hit, ref endCoords, ref surfaceNormal, ref entityHit);
 
-      return hit;
+      return entityHit;
     }
 
     private Vector3 GetAngledPosition(Vector3 center, float dist, float angle, float mod)

@@ -200,7 +200,6 @@ namespace OriginFramework
       var ped = new Ped(pid);
 
       var dist = Vector3.Distance(ped.Position, ppos);
-      Debug.WriteLine($"Dist: {dist}");
       if (dist <= 2)
         return true;
       else
