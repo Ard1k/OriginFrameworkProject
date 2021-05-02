@@ -66,9 +66,12 @@ namespace OriginFrameworkServer
       var known = OriginServerIdentifiers.Where(oid => oid.License == lic).FirstOrDefault();
 
       if (known != null)
+      {
+        known.LastServerID = Int32.Parse(p.Handle);
         return known.OID;
+      }
 
-      var newOID = new OIDBag { License = lic, OID = ++index };
+      var newOID = new OIDBag { License = lic, LastServerID = Int32.Parse(p.Handle), OID = ++index };
       OriginServerIdentifiers.Add(newOID);
 
       Debug.WriteLine($"OID: Created new OID:[{newOID.OID}] License:[{newOID.License}]");
@@ -85,6 +88,16 @@ namespace OriginFrameworkServer
       }
 
       return oids.ToArray();
+    }
+
+    public static int GetLastKnownServerID(int oid)
+    {
+      var oidBag = OriginServerIdentifiers.Where(o => o.OID == oid).FirstOrDefault();
+
+      if (oidBag == null)
+        return -1;
+
+      return oidBag.LastServerID;
     }
   }
 }

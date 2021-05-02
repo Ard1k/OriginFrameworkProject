@@ -42,9 +42,18 @@ namespace OriginFramework
         for (int i = 0; i < Group.Members.Length; i++)
         {
           var member = Group.Members[i];
-          
+
+          if (member.IsOnline == false)
+          {
+            member.IsInQuestRange = false;
+            member.IsInRange = false;
+            member.Distance = 999f;
+            continue;
+          }
+
           if (member.NetPedID == myPedNetId)
           {
+            member.IsInQuestRange = true;
             member.IsInRange = true;
             member.Distance = 0f;
             continue;
@@ -54,6 +63,7 @@ namespace OriginFramework
 
           if (memberPed <= 0)
           {
+            member.IsInQuestRange = false;
             member.IsInRange = false;
             member.Distance = 999f;
             continue;
@@ -61,6 +71,7 @@ namespace OriginFramework
 
           var memberCoords = GetEntityCoords(memberPed, true);
 
+          member.IsInQuestRange = false;
           member.IsInRange = true;
           member.Distance = Vector3.Distance(myPos, memberCoords);
           if (member.Distance <= questDistance)
@@ -68,14 +79,14 @@ namespace OriginFramework
         }
       }
 
-      await Delay(500);
+      await Delay(100);
     }
 
     private float timeCounter = 0;
     private async Task PeriodicGroupRefresh()
     {
       timeCounter += (GetFrameTime() * 1000);
-      if (timeCounter > 12000)
+      if (timeCounter > 30000)
       {
         TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
         timeCounter = 0;
@@ -110,6 +121,8 @@ namespace OriginFramework
       while (SettingsManager.Settings == null)
         await Delay(0);
 
+      TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
+
       Tick += GroupDisplay;
       Tick += ProcessGroupDistance;
       Tick += PeriodicGroupRefresh;
@@ -138,9 +151,9 @@ namespace OriginFramework
             continue;
 
           if (i < 2)
-            s1.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (p.IsInQuestRange) ? "~g~" : (p.IsInRange) ? "~o~" : "~r~", p.ServerPlayerID, p.DisplayName, p.Distance);
+            s1.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (p.IsInQuestRange && p.IsOnline) ? "~g~" : (p.IsInRange && p.IsOnline) ? "~o~" : "~c~", p.ServerPlayerID, p.DisplayName, p.Distance);
           else
-            s2.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (p.IsInQuestRange) ? "~g~" : (p.IsInRange) ? "~o~" : "~r~", p.ServerPlayerID, p.DisplayName, p.Distance);
+            s2.AppendFormat("{0}ID:{1} {2} [{3:0}m]~n~", (p.IsInQuestRange && p.IsOnline) ? "~g~" : (p.IsInRange && p.IsOnline) ? "~o~" : "~c~", p.ServerPlayerID, p.DisplayName, p.Distance);
         }
       }
       else if (IsWaitingForGroup)
@@ -174,7 +187,7 @@ namespace OriginFramework
 
       foreach (var m in Group.Members)
       {
-        if (m.Distance > questDistance)
+        if (!m.IsInQuestRange)
         {
           Notify.Alert("Clenove party jsou moc daleko!");
           return false;
@@ -196,7 +209,5 @@ namespace OriginFramework
 
       TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
     }
-
-    
   }
 }

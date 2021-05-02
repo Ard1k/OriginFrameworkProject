@@ -20,14 +20,21 @@ namespace OriginFrameworkServer
       {
         Targets = new LCDTargetVehicleBag[]
         {
-          new LCDTargetVehicleBag { Identifier = "Car1", ModelName = "t20", Position = new PosBag { X = -710.0746f, Y = 641.9553f, Z = 154.3442f, Heading = 349.0895f } }
+          new LCDTargetVehicleBag { Identifier = "Car1", ModelName = "t20", Position = new PosBag { X = -710.0746f, Y = 641.9553f, Z = 154.3442f, Heading = 349.0895f } },
+          new LCDTargetVehicleBag { Identifier = "Car2", ModelName = "t20", Position = new PosBag { X = -713.0746f, Y = 643.9553f, Z = 154.3442f, Heading = 349.0895f } }
         },
-        DeliverySpot = new PosBag { X = -162.0009f, Y = -2707.5093f, Z = 5.0071f, Heading = 267.0062f }
+        Guards = new LCDLocationGuard[]
+        {
+          new LCDLocationGuard { Identifier = "Guard1", Position = new PosBag { X = -713.0746f, Y = 643.9553f, Z = 154.3442f, Heading = 349.0895f }, WeaponModelName = "weapon_pistol", ModelName = "cs_siemonyetarian" }
+        },
+        DeliverySpot = new PosBag { X = -162.0009f, Y = -2707.5093f, Z = 5.0071f, Heading = 267.0062f },
+        RewardPerCar = 1000
       }
     };
 
     private List<LCDJobStateBag> JobStates = new List<LCDJobStateBag>();
     private bool spawningLock = false;
+    private dynamic ESX = null;
 
     public LuxuryCarsDeliveryServer()
     {
@@ -42,6 +49,13 @@ namespace OriginFrameworkServer
       while (SettingsManager.Settings == null)
         await Delay(0);
 
+      while (ESX == null)
+      {
+        TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
+        await Delay(0);
+      }
+
+      Debug.WriteLine("OFW_LCD: ESX object loaded!");
     }
 
     private async void OnResourceStop(string resourceName)
@@ -73,9 +87,6 @@ namespace OriginFrameworkServer
       }
       spawningLock = true;
 
-      Debug.WriteLine("Past spawn lock");
-
-      //todoSpawnCar
       //Zkontolovat, jestli uz v serverstate nemam pro auto netID. Kdyz ne, spawnu. Kdyz jo, tak ho rovnou vratim. Nemusim pak delat zadny harakiri.
 
       int oidSource = OIDServer.GetOriginServerID(source);
@@ -94,12 +105,10 @@ namespace OriginFrameworkServer
       if (jobState != null && jobState.TargetVehicles != null)
       {
         var vehBag = jobState.TargetVehicles.Where(v => v.Identifier == identifier).FirstOrDefault();
-        Debug.WriteLine("Vehicle found");
         if (vehBag != null)
         {
           if (vehBag.NetID > 0)
           {
-            Debug.WriteLine("NetID exists");
             _ = callback(vehBag.NetID);
           }
           else
@@ -113,7 +122,6 @@ namespace OriginFrameworkServer
               completed = true;
               return true;
             };
-            Debug.WriteLine("Spawning vehicle");
             TriggerEvent("ofw_veh:SpawnServerVehicle", vehBag.ModelName, new Vector3(vehBag.Position.X, vehBag.Position.Y, vehBag.Position.Z), vehBag.Position.Heading, CallbackFunction);
 
             while (!completed)
@@ -127,8 +135,106 @@ namespace OriginFrameworkServer
           }
         }
       }
-      _ = callback(-1);
       spawningLock = false;
+    }
+
+    [EventHandler("ofw_lcd:JobFinished")]
+    private async void JobFinished([FromSource] Player source)
+    {
+      int oidSource = OIDServer.GetOriginServerID(source);
+      if (oidSource == -1)
+      {
+        Debug.WriteLine("ofw_lcd:JobFinished: unresolved player oid, cannot deliver");
+        return;
+      }
+
+      var jobState = JobStates.Where(j => j.PlayersOnJob.Contains(oidSource)).FirstOrDefault();
+
+      if (jobState != null && jobState.TargetVehicles != null)
+      {
+        if (jobState.TargetVehicles.Any(v => v.Delivered == false))
+        {
+          Debug.WriteLine("OFW_LCD: There are some undelivered cars!");
+          return;
+        }
+
+        var count = jobState.TargetVehicles.Count();
+        var membersServerIDs = new List<int>();
+
+        foreach (var oid in jobState.PlayersOnJob)
+        {
+          membersServerIDs.Add(OIDServer.GetLastKnownServerID(oid));
+        }
+
+        var players = Players.Where(p => membersServerIDs.Contains(int.Parse(p.Handle))).ToArray();
+
+        int reward = jobState.RewardPerCar * count;
+
+        foreach (var p in players)
+        {
+          var xPlayer = ESX.GetPlayerFromId(p.Handle);
+          if (xPlayer == null)
+          {
+            Debug.WriteLine("OFW_LCD: esx player is null!");
+          }
+          else
+          {
+            xPlayer.addMoney(reward);
+          }
+
+          p.TriggerEvent("ofw_lcd:JobFinishedUpdate", reward);
+        }
+        DeleteGuards(jobState.Guards);
+
+        JobStates.Remove(jobState);
+      }
+    }
+
+    [EventHandler("ofw_lcd:JobCancelled")]
+    private async void JobCancelled([FromSource] Player source)
+    {
+      int oidSource = OIDServer.GetOriginServerID(source);
+      if (oidSource == -1)
+      {
+        Debug.WriteLine("ofw_lcd:JobCancelled: unresolved player oid, cannot deliver");
+        return;
+      }
+
+      var jobState = JobStates.Where(j => j.PlayersOnJob.Contains(oidSource)).FirstOrDefault();
+
+      if (jobState != null)
+      {
+        var membersServerIDs = new List<int>();
+
+        foreach (var oid in jobState.PlayersOnJob)
+        {
+          membersServerIDs.Add(OIDServer.GetLastKnownServerID(oid));
+        }
+
+        var players = Players.Where(p => membersServerIDs.Contains(int.Parse(p.Handle))).ToArray();
+
+        if (jobState.TargetVehicles != null)
+        {
+          foreach (var v in jobState.TargetVehicles)
+          {
+            if (v.NetID > 0 && !v.Delivered)
+            {
+              //Fuj no... ale chova se to jinak kdyz mazu server entitu udelanou serverem a kdyz mazu random entitu
+              try { DeleteEntity(NetworkGetEntityFromNetworkId(v.NetID)); } catch { }
+              try { DeleteEntity(v.NetID); } catch { }
+            }
+          }
+        }
+
+        DeleteGuards(jobState.Guards);
+
+        foreach (var p in players)
+        {
+          p.TriggerEvent("ofw_lcd:JobCancelledUpdate");
+        }
+
+        JobStates.Remove(jobState);
+      }
     }
 
     [EventHandler("ofw_lcd:StartJob")]
@@ -142,7 +248,7 @@ namespace OriginFrameworkServer
       }
 
       LCDMissionDefinitionBag selectedMission = null;
-      var unplayedMissions = Missions.Where(m => m.LastRun == null).ToList();
+      var unplayedMissions = Missions.Where(m => m.LastRun == null)?.ToList();
       if (unplayedMissions != null && unplayedMissions.Count > 0)
       {
         int random = MainServer.rngGen.Next(0, unplayedMissions.Count);
@@ -150,7 +256,7 @@ namespace OriginFrameworkServer
       }
       else
       {
-        selectedMission = unplayedMissions.OrderBy(m => m.LastRun).FirstOrDefault();
+        selectedMission = Missions.OrderBy(m => m.LastRun).FirstOrDefault();
       }
 
       if (selectedMission == null)
@@ -158,7 +264,7 @@ namespace OriginFrameworkServer
         Debug.WriteLine("ofw_lcd:StartJob: no suitable mission, job not started");
       }
 
-      var members = GroupServer.GetAllGroupMembersServerID(Int32.Parse(source.Handle));
+      var members = GroupServer.GetAllGroupMembersServerID(source);
       if (members == null || members.Length <= 0)
         members = new int[] { Int32.Parse(source.Handle) };
 
@@ -171,8 +277,29 @@ namespace OriginFrameworkServer
         CurrentState = LCDState.VehicleHunt,
         DeliverySpot = selectedMission.DeliverySpot,
         PlayersOnJob = oids,
-        TargetVehicles = selectedMission.Targets
+        TargetVehicles = selectedMission.Targets,
+        RewardPerCar = selectedMission.RewardPerCar,
+        Guards = selectedMission.Guards,
       };
+
+      foreach (var i in js.TargetVehicles)
+      {
+        i.Delivered = false;
+        i.HasEntityBlip = false;
+        i.NetID = -1;
+        i.StaticBlip = 0;
+      }
+
+      foreach (var i in js.Guards)
+      {
+        i.NetID = -1;
+      }
+
+      if (js.Guards != null)
+      {
+        foreach (var g in js.Guards)
+          SpawnGuard(g);
+      }
 
       JobStates.Add(js);
       selectedMission.LastRun = DateTime.Now;
@@ -205,10 +332,10 @@ namespace OriginFrameworkServer
           vehBag.Delivered = true;
 
           //Fuj no... ale chova se to jinak kdyz mazu server entitu udelanou serverem a kdyz mazu random entitu
-          try { DeleteEntity(NetworkGetEntityFromNetworkId(netID)); } catch {}
+          try { DeleteEntity(NetworkGetEntityFromNetworkId(netID)); } catch { }
           try { DeleteEntity(netID); } catch { }
-          
-          var members = GroupServer.GetAllGroupMembersServerID(Int32.Parse(source.Handle));
+
+          var members = GroupServer.GetAllGroupMembersServerID(source);
           if (members == null || members.Length <= 0)
             members = new int[] { Int32.Parse(source.Handle) };
 
@@ -224,6 +351,44 @@ namespace OriginFrameworkServer
       }
 
       _ = callback(false);
+    }
+
+    private void DeleteGuards(LCDLocationGuard[] guards)
+    {
+      if (guards == null)
+        return;
+
+      foreach (var i in guards)
+      {
+        if (i.NetID <= 0)
+        {
+          continue;
+        }
+
+        var pid = NetworkGetEntityFromNetworkId(i.NetID);
+        if (pid > 0)
+        {
+          try
+          {
+            DeleteEntity(pid);
+          }
+          catch
+          { 
+          }
+        }
+      }
+    }
+
+    private async Task<bool> SpawnGuard(LCDLocationGuard n)
+    {
+      var p = CreatePed(0, (uint)GetHashKey(n.ModelName), n.Position.X, n.Position.Y, n.Position.Z, n.Position.Heading, true, true);
+
+      while (!DoesEntityExist(p))
+        await Delay(0);
+
+      var ped = new Ped(p);
+      n.NetID = ped.NetworkId;
+      return true;
     }
   }
 }

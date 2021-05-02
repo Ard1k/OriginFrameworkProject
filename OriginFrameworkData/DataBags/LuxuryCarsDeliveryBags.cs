@@ -11,13 +11,17 @@ namespace OriginFrameworkData.DataBags
 		public int[] PlayersOnJob { get; set; }
 		public LCDState CurrentState { get; set; }
 		public LCDTargetVehicleBag[] TargetVehicles { get; set; }
+		public LCDLocationGuard[] Guards { get; set; }
 		public PosBag DeliverySpot { get; set; }
+		public int RewardPerCar { get; set; }
 	}
 
 	public class LCDMissionDefinitionBag
 	{
 		public LCDTargetVehicleBag[] Targets { get; set; }
+		public LCDLocationGuard[] Guards { get; set; }
 		public PosBag DeliverySpot { get; set; }
+		public int RewardPerCar { get; set; }
 		public DateTime? LastRun { get; set; }
 	}
 
@@ -31,6 +35,15 @@ namespace OriginFrameworkData.DataBags
 		public int StaticBlip { get; set; }
 		public bool HasEntityBlip { get; set; }
 		public bool Delivered { get; set; }
+	}
+
+	public class LCDLocationGuard
+	{
+		public int NetID { get; set; }
+		public string Identifier { get; set; }
+		public PosBag Position { get; set; }
+		public string ModelName { get; set; }
+		public string WeaponModelName { get; set; }
 	}
 
 	public enum LCDState : int

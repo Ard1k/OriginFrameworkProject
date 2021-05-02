@@ -71,7 +71,10 @@ namespace OriginFramework
         if (i.SpawnedNetID <= 0)
           continue;
 
-        if (!NetworkDoesEntityExistWithNetworkId(i.SpawnedNetID))
+        //if (Vector3.Distance(Game.PlayerPed.Position, new Vector3(i.Position.X, i.Position.Y, i.Position.Z)) > 200f)
+        //  continue;
+
+        if (!NetworkDoesNetworkIdExist(i.SpawnedNetID) || !NetworkDoesEntityExistWithNetworkId(i.SpawnedNetID))
           continue;
 
         var pid = NetworkGetEntityFromNetworkId(i.SpawnedNetID);
@@ -87,9 +90,17 @@ namespace OriginFramework
         }
         SetPedDropsWeaponsWhenDead(pid, i.CanDropWeapon);
         SetPedCombatAttributes(pid, 5, true);
+        //SetPedCanRagdoll(pid, false);
+        //SetPedCanRagdollFromPlayerImpact(pid, false);
+        SetPedAsEnemy(pid, true);
+        //TaskSetBlockingOfNonTemporaryEvents(pid, true);
+        SetPedFleeAttributes(pid, 0, true);
+        SetPedCombatAttributes(pid, 17, false);
         SetPedCombatAttributes(pid, 46, true);
+
         if (GetSelectedPedWeapon(pid) != GetHashKey(i.WeaponModelName))
         {
+          SetPedCanSwitchWeapon(pid, true);
           GiveWeaponToPed(pid, (uint)GetHashKey(i.WeaponModelName), 999999, false, true);
           SetCurrentPedWeapon(pid, (uint)GetHashKey(i.WeaponModelName), true);
         }
@@ -147,7 +158,10 @@ namespace OriginFramework
         if (i.SpawnedNetID <= 0)
           continue;
 
-        if (!NetworkDoesEntityExistWithNetworkId(i.SpawnedNetID))
+        //if (Vector3.Distance(playerPos, new Vector3(i.Position.X, i.Position.Y, i.Position.Z)) > 200f)
+        //  continue;
+
+        if (!NetworkDoesNetworkIdExist(i.SpawnedNetID) || !NetworkDoesEntityExistWithNetworkId(i.SpawnedNetID))
           continue;
 
         var pid = NetworkGetEntityFromNetworkId(i.SpawnedNetID);
@@ -156,7 +170,7 @@ namespace OriginFramework
           continue;
 
         var ped = new Ped(pid);
-
+        
         var distance = Vector3.Distance(ped.Position, playerPos);
         if (distance < 50 && ped.IsOnScreen)
         {
@@ -164,7 +178,7 @@ namespace OriginFramework
             DrawNpcName(ped.Position, distance, i.VisibleName);
         }
 
-        if (distance < 2 && i.OnInteraction != null)
+        if (distance < 3 && i.OnInteraction != null)
         {
           DisplayHelpTextThisFrame("OFW_NPC_INTERACT", false);
           if (IsControlJustPressed(0, (int)NPCInteractionKey))

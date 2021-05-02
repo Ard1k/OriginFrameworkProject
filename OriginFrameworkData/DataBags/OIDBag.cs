@@ -10,5 +10,6 @@ namespace OriginFrameworkData.DataBags
 	{
 		public int OID { get; set; }
 		public string License { get; set; }
+		public int LastServerID { get; set; }
 	}
 }

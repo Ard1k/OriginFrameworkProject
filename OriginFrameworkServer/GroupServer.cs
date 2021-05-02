@@ -41,18 +41,19 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_grp:CreateGroup")]
     private void CreateGroup([FromSource] Player source)
     {
-      var spH = int.Parse(source.Handle);
+      //var spH = int.Parse(source.Handle);
+      var oid = OIDServer.GetOriginServerID(source);
 
-      Debug.WriteLine($"triggered ofw_grp:CreateGroup [Handle: {spH}]");
+      //Debug.WriteLine($"triggered ofw_grp:CreateGroup [OID: {oid}]");
 
-      if (DictionaryPlayerInGroup.ContainsKey(spH))
+      if (DictionaryPlayerInGroup.ContainsKey(oid))
       {
         source.TriggerEvent("ofw_grp:NotifyError", "You are already in a party!");
         return;
       }
 
       var newGroupIndex = ++lastGroupIndex;
-      DictionaryPlayerInGroup.Add(spH, newGroupIndex);
+      DictionaryPlayerInGroup.Add(oid, newGroupIndex);
 
       source.TriggerEvent("ofw_grp:NotifySuccess", "Party created!");
       SendGroupToSource(source, true);
@@ -62,22 +63,31 @@ namespace OriginFrameworkServer
     private void InviteToGroup([FromSource] Player source, int targetPlayerID)
     {
       var spH = int.Parse(source.Handle);
+      var targetPlayer = Players.Where(p => p.Handle == targetPlayerID.ToString()).FirstOrDefault();
+      if (targetPlayer == null)
+      {
+        Debug.WriteLine("OFW ERROR: 544548778814 - cannot find player object!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Internal server error");
+        return;
+      }
+      var targetOID = OIDServer.GetOriginServerID(targetPlayer);
+      var sourceOID = OIDServer.GetOriginServerID(source);
 
-      Debug.WriteLine($"triggered ofw_grp:InviteToGroup [Handle: {spH}][TargetPlayer: {targetPlayerID}]");
+      //Debug.WriteLine($"triggered ofw_grp:InviteToGroup [Handle: {spH}][TargetPlayer: {targetPlayerID}]");
 
-      if (DictionaryPlayerInGroup.ContainsKey(targetPlayerID))
+      if (DictionaryPlayerInGroup.ContainsKey(targetOID))
       {
         source.TriggerEvent("ofw_grp:NotifyError", "Player is already in a party!");
         return;
       }
 
-      if (!DictionaryPlayerInGroup.ContainsKey(spH))
+      if (!DictionaryPlayerInGroup.ContainsKey(sourceOID))
       {
         source.TriggerEvent("ofw_grp:NotifyError", "You are not in a group!");
         return;
       }
 
-      var groupID = DictionaryPlayerInGroup[spH];
+      var groupID = DictionaryPlayerInGroup[sourceOID];
       if (groupID <= 0)
       {
         Debug.WriteLine("OFW ERROR: 489742214 - group not found after validation!");
@@ -92,14 +102,6 @@ namespace OriginFrameworkServer
         return;
       }
 
-      var targetPlayer = Players.Where(p => p.Handle == targetPlayerID.ToString()).FirstOrDefault();
-      if (targetPlayer == null)
-      {
-        Debug.WriteLine("OFW ERROR: 544548778814 - cannot find player object!");
-        source.TriggerEvent("ofw_grp:NotifyError", "Internal server error");
-        return;
-      }
-
       targetPlayer.TriggerEvent("ofw_grp:ConfirmGroupInvite", (spH + securitySalt));
     }
 
@@ -108,8 +110,9 @@ namespace OriginFrameworkServer
     {
       var senderH = inviteSenderHash - securitySalt;
       var sourceId = int.Parse(source.Handle);
+      var sourceOID = OIDServer.GetOriginServerID(source);
 
-      Debug.WriteLine($"triggered ofw_grp:InviteToGroup [OriginalSender: {senderH}][AcceptingPlayer: {source.Handle}]");
+      //Debug.WriteLine($"triggered ofw_grp:InviteToGroup [OriginalSender: {senderH}][AcceptingPlayer: {source.Handle}]");
       
       var senderPlayer = Players.Where(p => p.Handle == senderH.ToString()).FirstOrDefault();
       if (senderPlayer == null)
@@ -118,19 +121,21 @@ namespace OriginFrameworkServer
         return;
       }
 
+      var senderOID = OIDServer.GetOriginServerID(senderPlayer);
+
       if (!accepted)
       {
         senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Player is not waiting for invite!");
         return;
       }
 
-      if (!DictionaryPlayerInGroup.ContainsKey(senderH))
+      if (!DictionaryPlayerInGroup.ContainsKey(senderOID))
       {
         Debug.WriteLine("ofw_grp:ConfirmGroupInviteResponse - inviting player doesnt have a group!");
         return;
       }
 
-      var groupId = DictionaryPlayerInGroup[senderH];
+      var groupId = DictionaryPlayerInGroup[senderOID];
 
       if (groupId <= 0)
       {
@@ -138,13 +143,13 @@ namespace OriginFrameworkServer
         return;
       }
 
-      if (DictionaryPlayerInGroup.ContainsKey(sourceId))
+      if (DictionaryPlayerInGroup.ContainsKey(sourceOID))
       {
         source.TriggerEvent("ofw_grp:NotifyError", "Invited player has already a group!");
         return;
       }
 
-      DictionaryPlayerInGroup.Add(sourceId, groupId);
+      DictionaryPlayerInGroup.Add(sourceOID, groupId);
       senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Invite accepted!");
       SendGroupToSource(source, true);
     }
@@ -152,25 +157,25 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_grp:LeaveGroup")]
     private void LeaveGroup([FromSource] Player source)
     {
-      var spH = int.Parse(source.Handle);
+      var oid = OIDServer.GetOriginServerID(source);
 
-      if (!DictionaryPlayerInGroup.ContainsKey(spH))
+      if (!DictionaryPlayerInGroup.ContainsKey(oid))
       {
         source.TriggerEvent("ofw_grp:NotifyError", "You are not member of a party!");
         return;
       }
 
-      int groupId = DictionaryPlayerInGroup[spH];
-      DictionaryPlayerInGroup.Remove(spH);
+      int groupId = DictionaryPlayerInGroup[oid];
+      DictionaryPlayerInGroup.Remove(oid);
       SendGroupToSource(source, false);
       source.TriggerEvent("ofw_grp:NotifySuccess", "You left party!");
 
       var anyMember = DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).FirstOrDefault();
       if (anyMember > 0)
       {
-        var anyMemberPlayer = Players[anyMember];
-
-        SendGroupToSource(anyMemberPlayer, true);
+        var anyMemberPlayer = Players[OIDServer.GetLastKnownServerID(anyMember)];
+        if (anyMemberPlayer != null)
+          SendGroupToSource(anyMemberPlayer, true);
       }
     }
 
@@ -178,15 +183,16 @@ namespace OriginFrameworkServer
     {
       if (source == null || !Players.Contains(source)) //Neni online
       {
-        Debug.WriteLine($"SendGroupToSource: Player not online [Handle{source?.Handle ?? "null"}]");
+        //Debug.WriteLine($"SendGroupToSource: Player not online [Handle{source?.Handle ?? "null"}]");
         return;
       }
 
-      int spH = int.Parse(source.Handle);
+      //int spH = int.Parse(source.Handle);
+      int oid = OIDServer.GetOriginServerID(source);
 
       int groupId = -1;
-      if (DictionaryPlayerInGroup.ContainsKey(spH))
-        groupId = DictionaryPlayerInGroup[spH];
+      if (DictionaryPlayerInGroup.ContainsKey(oid))
+        groupId = DictionaryPlayerInGroup[oid];
 
       if (groupId <= 0)
       {
@@ -194,23 +200,39 @@ namespace OriginFrameworkServer
         return;
       }
 
-      var members = DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).ToList();
+      var membersOIDs = DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).ToList();
 
       var memberPlayers = new List<Player>();
-      foreach (var m in members)
-      {
-        if (Players[m] != null)
-          memberPlayers.Add(Players[m]);
-        else
-          DictionaryPlayerInGroup.Remove(m); //Neni online, cistime
+      int offlineCount = 0;
 
+      foreach (var moid in membersOIDs)
+      {
+        var lsID = OIDServer.GetLastKnownServerID(moid);
+
+        if (lsID <= 0)
+          continue;
+
+        var player = Players.Where(p => p.Handle == lsID.ToString()).FirstOrDefault();
+        if (player == null)
+        {
+          offlineCount++;
+        }
+        else
+        {
+          memberPlayers.Add(player);
+        }
       }
 
       var memberBags = new List<GroupMemberBag>();
-
       foreach (var m in memberPlayers)
       {
         memberBags.Add(new GroupMemberBag { ServerPlayerID = int.Parse(m.Handle), DisplayName = m.Name, IsOnline = true, NetPedID = m.Character.NetworkId });
+      }
+
+      while (offlineCount > 0)
+      {
+        memberBags.Add(new GroupMemberBag { ServerPlayerID = -1, DisplayName = "OFFLINE", IsOnline = false, NetPedID = -1 });
+        offlineCount--;
       }
 
       var bag = new GroupBag
@@ -223,27 +245,38 @@ namespace OriginFrameworkServer
       {
         foreach (var m in memberPlayers)
         {
-          Debug.WriteLine($"SendGroupToSource: Sending for each player [Current Handle{m?.Handle ?? "null"}]");
+          //Debug.WriteLine($"SendGroupToSource: Sending for each player [Current Handle{m?.Handle ?? "null"}]");
           m.TriggerEvent("ofw_grp:RefreshGroupInfo", JsonConvert.SerializeObject(bag));
         }
       }
       else
       {
-        Debug.WriteLine($"SendGroupToSource: Sending only for source [Handle{source?.Handle ?? "null"}]");
+        //Debug.WriteLine($"SendGroupToSource: Sending only for source [Handle{source?.Handle ?? "null"}]");
         source.TriggerEvent("ofw_grp:RefreshGroupInfo", JsonConvert.SerializeObject(bag));
       }
     }
 
-    public static int[] GetAllGroupMembersServerID(int pServerId)
+    public static int[] GetAllGroupMembersServerID(Player player)
     {
-      if (!DictionaryPlayerInGroup.ContainsKey(pServerId))
+      var oid = OIDServer.GetOriginServerID(player);
+
+      if (!DictionaryPlayerInGroup.ContainsKey(oid))
       {
         return null;
       }
 
-      int groupId = DictionaryPlayerInGroup[pServerId];
+      int groupId = DictionaryPlayerInGroup[oid];
 
-      return DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).ToArray();
+      var membersOIDs = DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).ToArray();
+
+      var pserverIDs = new List<int>();
+      
+      foreach (var moid in membersOIDs)
+      {
+        pserverIDs.Add(OIDServer.GetLastKnownServerID(moid));
+      }
+
+      return pserverIDs.ToArray();
     }
   }
 }

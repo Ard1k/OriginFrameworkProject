@@ -28,6 +28,8 @@ namespace OriginFramework
       EventHandlers["ofw_lcd:NewJobStateSent"] += new Action<string>(NewJobStateSent);
       EventHandlers["ofw_lcd:TryRestoreJobState"] += new Action(TryRestoreJobState);
       EventHandlers["ofw_lcd:VehicleDeliveredUpdate"] += new Action<string>(VehicleDeliveredUpdate);
+      EventHandlers["ofw_lcd:JobFinishedUpdate"] += new Action<int>(JobFinishedUpdate);
+      EventHandlers["ofw_lcd:JobCancelledUpdate"] += new Action(JobCancelledUpdate);
     }
 
 
@@ -92,7 +94,10 @@ namespace OriginFramework
         {
           var v = JobState.TargetVehicles[i];
 
-          if (NetworkDoesNetworkIdExist(v.NetID) || !NetworkDoesEntityExistWithNetworkId(v.NetID))
+          if (v.Delivered || v.NetID <= 0)
+            continue;
+
+          if (NetworkDoesNetworkIdExist(v.NetID) && NetworkDoesEntityExistWithNetworkId(v.NetID))
           {
             var entid = NetworkGetEntityFromNetworkId(v.NetID);
             if (GetBlipFromEntity(entid) > 0)
@@ -110,6 +115,10 @@ namespace OriginFramework
       {
         var pedid = Game.PlayerPed.Handle;
         var vehid = GetVehiclePedIsIn(pedid, true);
+
+        if (Vector3.Distance(Game.PlayerPed.Position, new Vector3(JobState.DeliverySpot.X, JobState.DeliverySpot.Y, JobState.DeliverySpot.Z)) < 50f)
+          DrawMarker(25, JobState.DeliverySpot.X, JobState.DeliverySpot.Y, JobState.DeliverySpot.Z + 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, 7f, 7f, 7f, 0, 255, 0, 90, false, false, 2, false, null, null, false);
+
         if (vehid > 0)
         {
           var veh = new Vehicle(vehid);
@@ -171,6 +180,60 @@ namespace OriginFramework
       }
     }
 
+    private async void JobFinishedUpdate(int reward)
+    {
+      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+
+      while (!HasScaleformMovieLoaded(scaleform))
+        await Delay(0);
+
+      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
+      PushScaleformMovieMethodParameterString("Job Done");
+      PushScaleformMovieMethodParameterString($"Odmena: {reward}$");
+      EndScaleformMovieMethod();
+
+      float time = 0;
+
+      JobState = null;
+      ClearBlips();
+
+      while (time <= 5000)
+      {
+        time += (GetFrameTime() * 1000);
+        DrawScaleformMovieFullscreen(scaleform, 0, 255, 0, 255, 0);
+        await Delay(0);
+      }
+
+      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+    }
+
+    private async void JobCancelledUpdate()
+    {
+      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+
+      while (!HasScaleformMovieLoaded(scaleform))
+        await Delay(0);
+
+      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
+      PushScaleformMovieMethodParameterString("Job Failed");
+      PushScaleformMovieMethodParameterString($"Posral ses a nedokoncil si ukol!");
+      EndScaleformMovieMethod();
+
+      float time = 0;
+
+      JobState = null;
+      ClearBlips();
+
+      while (time <= 5000)
+      {
+        time += (GetFrameTime() * 1000);
+        DrawScaleformMovieFullscreen(scaleform, 255, 0, 0, 255, 0);
+        await Delay(0);
+      }
+
+      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+    }
+
     private void LuxuryCarDelivery_01_Interaction(int pid, string pname)
     {
       var localPlayers = Main.LocalPlayers.ToList();
@@ -211,6 +274,20 @@ namespace OriginFramework
           TextLeft = $"Jasne, mas je v garazi!",
           TextDescription = npcTalk,
           OnClick = () => {
+            TriggerServerEvent("ofw_lcd:JobFinished");
+            MenuController.CloseAllMenus();
+          }
+        });
+      }
+
+      if (JobState != null)
+      {
+        dynMenuItems.Add(new DynamicMenuItem
+        {
+          TextLeft = $"Seru na to, sem sracka!",
+          TextDescription = npcTalk,
+          OnClick = () => {
+            TriggerServerEvent("ofw_lcd:JobCancelled");
             MenuController.CloseAllMenus();
           }
         });
@@ -240,9 +317,32 @@ namespace OriginFramework
     private async void NewJobStateSent(string sstate)
     {
       Debug.WriteLine(sstate);
-      JobState = JsonConvert.DeserializeObject<LCDJobStateBag>(sstate);
 
+      JobState = JsonConvert.DeserializeObject<LCDJobStateBag>(sstate);
       RefreshBlipsFromJobstate(JobState);
+
+      if (JobState.CurrentState == LCDState.VehicleHunt)
+      {
+        var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+
+        while (!HasScaleformMovieLoaded(scaleform))
+          await Delay(0);
+
+        BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
+        PushScaleformMovieMethodParameterString("job started");
+        PushScaleformMovieMethodParameterString($"Dovez pozadovana auta");
+        EndScaleformMovieMethod();
+
+        float time = 0;
+        while (time <= 5000)
+        {
+          time += (GetFrameTime() * 1000);
+          DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255, 0);
+          await Delay(0);
+        }
+
+        SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+      }
     }
 
     private async void OnResourceStop(string resourceName)
@@ -262,7 +362,7 @@ namespace OriginFramework
       for (int i = 0; i < JobState.TargetVehicles.Length; i++)
       {
         var v = JobState.TargetVehicles[i];
-        if (v.NetID > 0)
+        if (v.NetID > 0 || v.Delivered)
           continue;
 
         var carPos = new Vector3(v.Position.X, v.Position.Y, v.Position.Z);
@@ -290,7 +390,7 @@ namespace OriginFramework
             await Delay(0);
           }
 
-          Debug.WriteLine("Spawncar netID returned");
+          Debug.WriteLine("Spawncar netID returned: " + netID);
           if (netID > 0)
           {
             v.NetID = netID;
@@ -317,13 +417,13 @@ namespace OriginFramework
         foreach (var v in JobState.TargetVehicles)
         {
           //blips.Add(OfwFunctions.CreateRadiusBlip(new Vector3(v.Position.X, v.Position.Y, v.Position.Z), 2f, 1));
-          if (v.NetID <= 0)
+          if (v.NetID <= 0 && !v.Delivered)
           {
             var bc = OfwFunctions.CreateBlip(new Vector3(v.Position.X, v.Position.Y, v.Position.Z), v.Name, 596, 1, 1f);
             blips.Add(bc);
             v.StaticBlip = bc;
           }
-          else
+          else if (!v.Delivered)
           {
             TriggerEvent("ofw_lcd:DrawEntityBlip", v.NetID);
           }
