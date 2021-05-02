@@ -35,8 +35,8 @@ namespace OriginFramework
       EventHandlers["baseevents:onPlayerKilled"] += new Action<dynamic, dynamic>(OnPlayerDied);
     }
 
-
-    private async void OnClientResourceStart(string resourceName)
+		#region event handlers
+		private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
@@ -65,13 +65,42 @@ namespace OriginFramework
       Tick += GuardsTick;
     }
 
-    private async void OnPlayerDied(dynamic u1, dynamic u2)
+    private async void OnResourceStop(string resourceName)
     {
-      Debug.WriteLine("PlayerDied triggered");
-      if (JobState == null || JobState.CurrentState != LCDState.VehicleHunt)
-        return;
+      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      TriggerServerEvent("ofw_lcd:JobCancelled");
+      ClearBlips();
+    }
+
+    private async void NewJobStateSent(string sstate)
+    {
+      Debug.WriteLine(sstate);
+
+      JobState = JsonConvert.DeserializeObject<LCDJobStateBag>(sstate);
+      RefreshBlipsFromJobstate(JobState);
+
+      if (JobState.CurrentState == LCDState.VehicleHunt)
+      {
+        var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+
+        while (!HasScaleformMovieLoaded(scaleform))
+          await Delay(0);
+
+        BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
+        PushScaleformMovieMethodParameterString("job started");
+        PushScaleformMovieMethodParameterString($"Dovez pozadovana auta");
+        EndScaleformMovieMethod();
+
+        float time = 0;
+        while (time <= 5000)
+        {
+          time += (GetFrameTime() * 1000);
+          DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255, 0);
+          await Delay(0);
+        }
+
+        SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+      }
     }
 
     private async void TryRestoreJobState()
@@ -96,6 +125,143 @@ namespace OriginFramework
       {
         JobState = JsonConvert.DeserializeObject<LCDJobStateBag>(ret);
         RefreshBlipsFromJobstate(JobState);
+      }
+    }
+
+    private async void VehicleDeliveredUpdate(string identifier)
+    {
+      if (JobState != null && JobState.TargetVehicles != null)
+      {
+        var vehbag = JobState.TargetVehicles.Where(v => v.Identifier == identifier).FirstOrDefault();
+
+        if (vehbag != null)
+        {
+          vehbag.Delivered = true;
+          Notify.Success($"Vozidlo {vehbag.Name} bylo doruceno!");
+        }
+      }
+    }
+
+    private async void JobFinishedUpdate(int reward)
+    {
+      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+
+      while (!HasScaleformMovieLoaded(scaleform))
+        await Delay(0);
+
+      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
+      PushScaleformMovieMethodParameterString("Job Done");
+      PushScaleformMovieMethodParameterString($"Odmena: {reward}$");
+      EndScaleformMovieMethod();
+
+      float time = 0;
+
+      JobState = null;
+      ClearBlips();
+
+      while (time <= 5000)
+      {
+        time += (GetFrameTime() * 1000);
+        DrawScaleformMovieFullscreen(scaleform, 0, 255, 0, 255, 0);
+        await Delay(0);
+      }
+
+      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+    }
+
+    private async void JobCancelledUpdate()
+    {
+      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+
+      while (!HasScaleformMovieLoaded(scaleform))
+        await Delay(0);
+
+      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
+      PushScaleformMovieMethodParameterString("Job Failed");
+      PushScaleformMovieMethodParameterString($"Nepodarilo se ti dokoncit ukol!");
+      EndScaleformMovieMethod();
+
+      float time = 0;
+
+      JobState = null;
+      ClearBlips();
+
+      while (time <= 5000)
+      {
+        time += (GetFrameTime() * 1000);
+        DrawScaleformMovieFullscreen(scaleform, 255, 0, 0, 255, 0);
+        await Delay(0);
+      }
+
+      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+    }
+
+    private async void OnPlayerDied(dynamic u1, dynamic u2)
+    {
+      Debug.WriteLine("PlayerDied triggered");
+      if (JobState == null || JobState.CurrentState != LCDState.VehicleHunt)
+        return;
+
+      TriggerServerEvent("ofw_lcd:JobCancelled");
+    }
+
+		#endregion
+
+		#region Tick
+
+		private async Task VehicleDistanceChecker()
+    {
+      await Delay(1000);
+      if (JobState == null || JobState.TargetVehicles == null)
+        return;
+      var pos = Game.PlayerPed.Position;
+
+      for (int i = 0; i < JobState.TargetVehicles.Length; i++)
+      {
+        var v = JobState.TargetVehicles[i];
+        if (v.NetID > 0 || v.Delivered)
+          continue;
+
+        var carPos = new Vector3(v.Position.X, v.Position.Y, v.Position.Z);
+        var dist = Vector3.Distance(pos, carPos);
+        if (dist < 200f)
+        {
+          int netID = -1;
+          bool completed = false;
+          Func<int, bool> CallbackFunction = (data) =>
+          {
+            netID = data;
+            completed = true;
+            return true;
+          };
+
+          Debug.WriteLine("Triggering spawn");
+          var blockingEnt = VehicleClient.GetParkingSpotBlockingEntity(carPos, v.Position.Heading);
+          int blockingNetID = -1;
+          if (blockingEnt > 0)
+            blockingNetID = NetworkGetNetworkIdFromEntity(blockingNetID);
+          TriggerServerEvent("ofw_lcd:SpawnJobCar", v.Identifier, blockingNetID, CallbackFunction);
+
+          while (!completed)
+          {
+            await Delay(0);
+          }
+
+          Debug.WriteLine("Spawncar netID returned: " + netID);
+          if (netID > 0)
+          {
+            v.NetID = netID;
+            if (v.StaticBlip > 0 && DoesBlipExist(v.StaticBlip))
+            {
+              var blp = v.StaticBlip;
+              RemoveBlip(ref blp);
+            }
+
+            var entid = NetworkGetEntityFromNetworkId(netID);
+            OfwFunctions.CreateVehicleBlip(entid, v.Name, 596, 1, 1f);
+            v.HasEntityBlip = true;
+          }
+        }
       }
     }
 
@@ -179,75 +345,77 @@ namespace OriginFramework
       }
     }
 
-    private async void VehicleDeliveredUpdate(string identifier)
+    private async Task GuardsTick()
     {
-      if (JobState != null && JobState.TargetVehicles != null)
+      if (JobState == null || JobState.Guards == null)
       {
-        var vehbag = JobState.TargetVehicles.Where(v => v.Identifier == identifier).FirstOrDefault();
+        await Delay(5000);
+        return;
+      }
 
-        if (vehbag != null)
+      foreach (var i in JobState.Guards)
+      {
+        if (i.NetID <= 0)
+          continue;
+
+        if (!NetworkDoesNetworkIdExist(i.NetID) || !NetworkDoesEntityExistWithNetworkId(i.NetID))
+          continue;
+
+        var pid = NetworkGetEntityFromNetworkId(i.NetID);
+
+        if (pid <= 0)
+          continue;
+
+        var ped = new Ped(pid);
+        if (GetPedMaxHealth(pid) < 2000)
         {
-          vehbag.Delivered = true;
-          Notify.Success($"Vozidlo {vehbag.Name} bylo doruceno!");
+          SetPedMaxHealth(pid, 2000);
+          ped.Health = 2000;
+        }
+        SetPedDropsWeaponsWhenDead(pid, false);
+        SetPedCombatAttributes(pid, 5, true);
+        SetPedAsEnemy(pid, true);
+
+        SetPedFleeAttributes(pid, 0, true);
+        SetPedCombatAttributes(pid, 17, false);
+        SetPedCombatAttributes(pid, 46, true);
+
+        if (GetSelectedPedWeapon(pid) != GetHashKey(i.WeaponModelName))
+        {
+          SetPedCanSwitchWeapon(pid, true);
+          GiveWeaponToPed(pid, (uint)GetHashKey(i.WeaponModelName), 999999, false, true);
+          SetCurrentPedWeapon(pid, (uint)GetHashKey(i.WeaponModelName), true);
+        }
+
+        if (gtaGroup <= 0)
+        {
+          AddRelationshipGroup("lcd_enemies", ref gtaGroup);
+          Debug.WriteLine("CreatedGroup " + gtaGroup);
+        }
+
+        if (gtaGroup > 0 && DoesRelationshipGroupExist((int)gtaGroup))
+        {
+          if (GetPedRelationshipGroupHash(pid) != (int)gtaGroup)
+          {
+            SetPedRelationshipGroupHash(pid, gtaGroup);
+          }
+        }
+
+        if (Vector3.Distance(ped.Position, Game.PlayerPed.Position) < 20f && !IsPedInCombat(pid, 0))
+        {
+          Debug.WriteLine("attack ordered");
+          TaskCombatPed(pid, Game.PlayerPed.Handle, 0, 16);
         }
       }
+
+      await Delay(1000);
     }
 
-    private async void JobFinishedUpdate(int reward)
-    {
-      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
+		#endregion
 
-      while (!HasScaleformMovieLoaded(scaleform))
-        await Delay(0);
+		#region private
 
-      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
-      PushScaleformMovieMethodParameterString("Job Done");
-      PushScaleformMovieMethodParameterString($"Odmena: {reward}$");
-      EndScaleformMovieMethod();
-
-      float time = 0;
-
-      JobState = null;
-      ClearBlips();
-
-      while (time <= 5000)
-      {
-        time += (GetFrameTime() * 1000);
-        DrawScaleformMovieFullscreen(scaleform, 0, 255, 0, 255, 0);
-        await Delay(0);
-      }
-
-      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
-    }
-
-    private async void JobCancelledUpdate()
-    {
-      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
-
-      while (!HasScaleformMovieLoaded(scaleform))
-        await Delay(0);
-
-      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
-      PushScaleformMovieMethodParameterString("Job Failed");
-      PushScaleformMovieMethodParameterString($"Nepodarilo se ti dokoncit ukol!");
-      EndScaleformMovieMethod();
-
-      float time = 0;
-
-      JobState = null;
-      ClearBlips();
-
-      while (time <= 5000)
-      {
-        time += (GetFrameTime() * 1000);
-        DrawScaleformMovieFullscreen(scaleform, 255, 0, 0, 255, 0);
-        await Delay(0);
-      }
-
-      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
-    }
-
-    private void LuxuryCarDelivery_01_Interaction(int pid, string pname)
+		private void LuxuryCarDelivery_01_Interaction(int pid, string pname)
     {
       var localPlayers = Main.LocalPlayers.ToList();
 
@@ -327,99 +495,7 @@ namespace OriginFramework
       dynMenu.Menu.OpenMenu();
     }
 
-    private async void NewJobStateSent(string sstate)
-    {
-      Debug.WriteLine(sstate);
-
-      JobState = JsonConvert.DeserializeObject<LCDJobStateBag>(sstate);
-      RefreshBlipsFromJobstate(JobState);
-
-      if (JobState.CurrentState == LCDState.VehicleHunt)
-      {
-        var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
-
-        while (!HasScaleformMovieLoaded(scaleform))
-          await Delay(0);
-
-        BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
-        PushScaleformMovieMethodParameterString("job started");
-        PushScaleformMovieMethodParameterString($"Dovez pozadovana auta");
-        EndScaleformMovieMethod();
-
-        float time = 0;
-        while (time <= 5000)
-        {
-          time += (GetFrameTime() * 1000);
-          DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255, 0);
-          await Delay(0);
-        }
-
-        SetScaleformMovieAsNoLongerNeeded(ref scaleform);
-      }
-    }
-
-    private async void OnResourceStop(string resourceName)
-    {
-      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
-
-      ClearBlips();
-    }
-
-    private async Task VehicleDistanceChecker()
-    {
-      await Delay(1000);
-      if (JobState == null || JobState.TargetVehicles == null)
-        return;
-      var pos = Game.PlayerPed.Position;
-
-      for (int i = 0; i < JobState.TargetVehicles.Length; i++)
-      {
-        var v = JobState.TargetVehicles[i];
-        if (v.NetID > 0 || v.Delivered)
-          continue;
-
-        var carPos = new Vector3(v.Position.X, v.Position.Y, v.Position.Z);
-        var dist = Vector3.Distance(pos, carPos);
-        if (dist < 200f)
-        {
-          int netID = -1;
-          bool completed = false;
-          Func<int, bool> CallbackFunction = (data) =>
-          {
-            netID = data;
-            completed = true;
-            return true;
-          };
-
-          Debug.WriteLine("Triggering spawn");
-          var blockingEnt = VehicleClient.GetParkingSpotBlockingEntity(carPos, v.Position.Heading);
-          int blockingNetID = -1;
-          if (blockingEnt > 0)
-            blockingNetID = NetworkGetNetworkIdFromEntity(blockingNetID);
-          TriggerServerEvent("ofw_lcd:SpawnJobCar", v.Identifier, blockingNetID, CallbackFunction);
-
-          while (!completed)
-          {
-            await Delay(0);
-          }
-
-          Debug.WriteLine("Spawncar netID returned: " + netID);
-          if (netID > 0)
-          {
-            v.NetID = netID;
-            if (v.StaticBlip > 0 && DoesBlipExist(v.StaticBlip))
-            {
-              var blp = v.StaticBlip;
-              RemoveBlip(ref blp);
-            }
-
-            var entid = NetworkGetEntityFromNetworkId(netID);
-            OfwFunctions.CreateVehicleBlip(entid, v.Name, 596, 1, 1f);
-            v.HasEntityBlip = true;
-          }
-        }
-      }
-    }
+    
 
     private void RefreshBlipsFromJobstate(LCDJobStateBag state)
     {
@@ -462,70 +538,6 @@ namespace OriginFramework
       }
     }
 
-    private async Task GuardsTick()
-    {
-      if (JobState == null || JobState.Guards == null)
-      {
-        await Delay(5000);
-        return;
-      }
-
-      foreach (var i in JobState.Guards)
-      {
-        if (i.NetID <= 0)
-          continue;
-
-        if (!NetworkDoesNetworkIdExist(i.NetID) || !NetworkDoesEntityExistWithNetworkId(i.NetID))
-          continue;
-
-        var pid = NetworkGetEntityFromNetworkId(i.NetID);
-
-        if (pid <= 0)
-          continue;
-
-        var ped = new Ped(pid);
-        if (GetPedMaxHealth(pid) < 2000)
-        {
-          SetPedMaxHealth(pid, 2000);
-          ped.Health = 2000;
-        }
-        SetPedDropsWeaponsWhenDead(pid, false);
-        SetPedCombatAttributes(pid, 5, true);
-        SetPedAsEnemy(pid, true);
-
-        SetPedFleeAttributes(pid, 0, true);
-        SetPedCombatAttributes(pid, 17, false);
-        SetPedCombatAttributes(pid, 46, true);
-
-        if (GetSelectedPedWeapon(pid) != GetHashKey(i.WeaponModelName))
-        {
-          SetPedCanSwitchWeapon(pid, true);
-          GiveWeaponToPed(pid, (uint)GetHashKey(i.WeaponModelName), 999999, false, true);
-          SetCurrentPedWeapon(pid, (uint)GetHashKey(i.WeaponModelName), true);
-        }
-       
-        if (gtaGroup <= 0)
-        {
-          AddRelationshipGroup("lcd_enemies", ref gtaGroup);
-          Debug.WriteLine("CreatedGroup " + gtaGroup);
-        }
-
-        if (gtaGroup > 0 && DoesRelationshipGroupExist((int)gtaGroup))
-        {
-          if (GetPedRelationshipGroupHash(pid) != (int)gtaGroup)
-          {
-            SetPedRelationshipGroupHash(pid, gtaGroup);
-          }
-        }
-
-        if (Vector3.Distance(ped.Position, Game.PlayerPed.Position) < 20f && !IsPedInCombat(pid,0))
-        {
-          Debug.WriteLine("attack ordered");
-          TaskCombatPed(pid, Game.PlayerPed.Handle, 0, 16);
-        }
-      }
-
-      await Delay(1000);
-    }
+    #endregion
   }
 }

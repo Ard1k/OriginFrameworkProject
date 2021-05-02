@@ -57,7 +57,9 @@ namespace OriginFrameworkServer
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
     }
 
-    private async void OnResourceStart(string resourceName)
+		#region event handlers
+
+		private async void OnResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
@@ -379,8 +381,10 @@ namespace OriginFrameworkServer
 
       _ = callback(false);
     }
+		#endregion
 
-    private void DeleteGuards(LCDLocationGuard[] guards)
+		#region private
+		private void DeleteGuards(LCDLocationGuard[] guards)
     {
       if (guards == null)
         return;
@@ -417,5 +421,7 @@ namespace OriginFrameworkServer
       n.NetID = ped.NetworkId;
       return true;
     }
+
+    #endregion
   }
 }
