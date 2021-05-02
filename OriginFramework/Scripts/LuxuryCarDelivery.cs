@@ -19,6 +19,7 @@ namespace OriginFramework
     private LCDJobStateBag JobState = null;
     private List<int> blips = new List<int>();
     private string InteractionKeyString = " ~INPUT_CONTEXT~ ";
+    private uint gtaGroup = 0;
     public static Control InteractionKey { get; private set; } = Control.Context;
 
     public LuxuryCarDelivery()
@@ -30,6 +31,8 @@ namespace OriginFramework
       EventHandlers["ofw_lcd:VehicleDeliveredUpdate"] += new Action<string>(VehicleDeliveredUpdate);
       EventHandlers["ofw_lcd:JobFinishedUpdate"] += new Action<int>(JobFinishedUpdate);
       EventHandlers["ofw_lcd:JobCancelledUpdate"] += new Action(JobCancelledUpdate);
+      EventHandlers["baseevents:onPlayerDied"] += new Action<dynamic, dynamic>(OnPlayerDied);
+      EventHandlers["baseevents:onPlayerKilled"] += new Action<dynamic, dynamic>(OnPlayerDied);
     }
 
 
@@ -59,6 +62,16 @@ namespace OriginFramework
       Tick += VehicleDistanceChecker;
       Tick += CheckEntityBlips;
       Tick += VehicleDeliveryHandler;
+      Tick += GuardsTick;
+    }
+
+    private async void OnPlayerDied(dynamic u1, dynamic u2)
+    {
+      Debug.WriteLine("PlayerDied triggered");
+      if (JobState == null || JobState.CurrentState != LCDState.VehicleHunt)
+        return;
+
+      TriggerServerEvent("ofw_lcd:JobCancelled");
     }
 
     private async void TryRestoreJobState()
@@ -216,7 +229,7 @@ namespace OriginFramework
 
       BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
       PushScaleformMovieMethodParameterString("Job Failed");
-      PushScaleformMovieMethodParameterString($"Posral ses a nedokoncil si ukol!");
+      PushScaleformMovieMethodParameterString($"Nepodarilo se ti dokoncit ukol!");
       EndScaleformMovieMethod();
 
       float time = 0;
@@ -240,7 +253,7 @@ namespace OriginFramework
 
       var dynMenuItems = new List<DynamicMenuItem>();
 
-      string npcTalk = $"{pname} rika: Co chces? Praci? Neco bych mel, ale neni to nic pro padavky. Myslis, ze na to mas?";
+      string npcTalk = $"{pname} rika: Co chces? Praci? Mam par zabavenych aut, za ktery je nekdo ochotnej dobre zaplatit. Ale jsou hlidnay a budou te cekat... takze sam bych do toho nesel! Myslis, ze na to mas? ~n~ ~n~ Pozn: Job podporuje synchronizaci v ramci party!";
       if (JobState != null)
       {
         switch (JobState.CurrentState)
@@ -419,7 +432,7 @@ namespace OriginFramework
           //blips.Add(OfwFunctions.CreateRadiusBlip(new Vector3(v.Position.X, v.Position.Y, v.Position.Z), 2f, 1));
           if (v.NetID <= 0 && !v.Delivered)
           {
-            var bc = OfwFunctions.CreateBlip(new Vector3(v.Position.X, v.Position.Y, v.Position.Z), v.Name, 596, 1, 1f);
+            var bc = OfwFunctions.CreateBlip(new Vector3(v.Position.X, v.Position.Y, v.Position.Z), v.Name, 433, 1, 1f);
             blips.Add(bc);
             v.StaticBlip = bc;
           }
@@ -431,7 +444,7 @@ namespace OriginFramework
       }
 
       if (JobState != null && JobState.DeliverySpot != null)
-        blips.Add(OfwFunctions.CreateBlip(new Vector3(JobState.DeliverySpot.X, JobState.DeliverySpot.Y, JobState.DeliverySpot.Z), "Delivery", 103, 3, 1f));
+        blips.Add(OfwFunctions.CreateBlip(new Vector3(JobState.DeliverySpot.X, JobState.DeliverySpot.Y, JobState.DeliverySpot.Z), "Delivery", 474, 3, 1f));
     }
 
     private void ClearBlips()
@@ -447,6 +460,72 @@ namespace OriginFramework
           }
         }
       }
+    }
+
+    private async Task GuardsTick()
+    {
+      if (JobState == null || JobState.Guards == null)
+      {
+        await Delay(5000);
+        return;
+      }
+
+      foreach (var i in JobState.Guards)
+      {
+        if (i.NetID <= 0)
+          continue;
+
+        if (!NetworkDoesNetworkIdExist(i.NetID) || !NetworkDoesEntityExistWithNetworkId(i.NetID))
+          continue;
+
+        var pid = NetworkGetEntityFromNetworkId(i.NetID);
+
+        if (pid <= 0)
+          continue;
+
+        var ped = new Ped(pid);
+        if (GetPedMaxHealth(pid) < 2000)
+        {
+          SetPedMaxHealth(pid, 2000);
+          ped.Health = 2000;
+        }
+        SetPedDropsWeaponsWhenDead(pid, false);
+        SetPedCombatAttributes(pid, 5, true);
+        SetPedAsEnemy(pid, true);
+
+        SetPedFleeAttributes(pid, 0, true);
+        SetPedCombatAttributes(pid, 17, false);
+        SetPedCombatAttributes(pid, 46, true);
+
+        if (GetSelectedPedWeapon(pid) != GetHashKey(i.WeaponModelName))
+        {
+          SetPedCanSwitchWeapon(pid, true);
+          GiveWeaponToPed(pid, (uint)GetHashKey(i.WeaponModelName), 999999, false, true);
+          SetCurrentPedWeapon(pid, (uint)GetHashKey(i.WeaponModelName), true);
+        }
+       
+        if (gtaGroup <= 0)
+        {
+          AddRelationshipGroup("lcd_enemies", ref gtaGroup);
+          Debug.WriteLine("CreatedGroup " + gtaGroup);
+        }
+
+        if (gtaGroup > 0 && DoesRelationshipGroupExist((int)gtaGroup))
+        {
+          if (GetPedRelationshipGroupHash(pid) != (int)gtaGroup)
+          {
+            SetPedRelationshipGroupHash(pid, gtaGroup);
+          }
+        }
+
+        if (Vector3.Distance(ped.Position, Game.PlayerPed.Position) < 20f && !IsPedInCombat(pid,0))
+        {
+          Debug.WriteLine("attack ordered");
+          TaskCombatPed(pid, Game.PlayerPed.Handle, 0, 16);
+        }
+      }
+
+      await Delay(1000);
     }
   }
 }
