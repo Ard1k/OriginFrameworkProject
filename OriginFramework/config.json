@@ -2,7 +2,7 @@
   "MenuKey": 344,
   "LoadHeistIsland": true,
   "MenuAlignRight": false,
-  "TestJobActive": true,
+  "TestJobActive": false,
   "NPCRespawnDistance": 50,
   "NPCs": [
     {
@@ -56,6 +56,54 @@
       }
     },
     {
+      "UniqueName": "Strip1",
+      "VisibleName": "Dendo",
+      "ModelName": "a_f_m_bodybuild_01",
+      "IsPositionFrozen": true,
+      "IsInvincible": true,
+      "CanDropWeapon": false,
+      "HasNoColissions": true,
+      "Group": 1000,
+      "Position": {
+        "X": 109.5922,
+        "Y": -1312.0729,
+        "Z": 28.8083,
+        "Heading": 211.4566
+      }
+    },
+    {
+      "UniqueName": "Strip2",
+      "VisibleName": "HanissG",
+      "ModelName": "a_m_m_acult_01",
+      "IsPositionFrozen": true,
+      "IsInvincible": true,
+      "CanDropWeapon": false,
+      "HasNoColissions": true,
+      "Group": 1000,
+      "Position": {
+        "X": 106.6636,
+        "Y": -1313.8142,
+        "Z": 28.8126,
+        "Heading": 208.8534
+      }
+    },
+    {
+      "UniqueName": "Strip3",
+      "VisibleName": "Basternak",
+      "ModelName": "a_f_m_fatcult_01",
+      "IsPositionFrozen": true,
+      "IsInvincible": true,
+      "CanDropWeapon": false,
+      "HasNoColissions": true,
+      "Group": 1000,
+      "Position": {
+        "X": 112.5103,
+        "Y": -1310.607,
+        "Z": 28.8493,
+        "Heading": 213.9792
+      }
+    },
+    {
       "UniqueName": "LuxuryCarDelivery_01",
       "VisibleName": "Zlodejicek",
       "ModelName": "cs_siemonyetarian",
@@ -72,6 +120,602 @@
         "Z": 5.1217,
         "Heading": -89.06
       }
+    }
+  ],
+  "LCDMissions": [
+    {
+      "Comment": "First mission",
+      "RewardPerCar": 1000,
+      "DeliverySpot": {
+        "X": -162.0009,
+        "Y": -2707.5093,
+        "Z": 5.0071,
+        "Heading": 267.0062
+      },
+      "Targets": [
+        {
+          "Identifier": "Auto1",
+          "ModelName": "t20",
+          "Position": {
+            "X": -710.0746,
+            "Y": 641.9553,
+            "Z": 154.3442,
+            "Heading": 349.0895
+          }
+        },
+        {
+          "Identifier": "Auto2",
+          "ModelName": "zorrusso",
+          "Position": {
+            "X": -714.9092,
+            "Y": 644.1235,
+            "Z": 154.2549,
+            "Heading": 349.0895
+          }
+        },
+        {
+          "Identifier": "Auto3",
+          "ModelName": "zentorno",
+          "Position": {
+            "X": -717.8843,
+            "Y": 655.6467,
+            "Z": 154.2125,
+            "Heading": 292.4331
+          }
+        }
+      ],
+      "Guards": [
+        {
+          "Identifier": "Guard1",
+          "WeaponModelName": "weapon_pistol",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -715.6859,
+            "Y": 660.5085,
+            "Z": 154.6261,
+            "Heading": 86.0628
+          }
+        },
+        {
+          "Identifier": "Guard2",
+          "WeaponModelName": "weapon_pistol",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -713.7208,
+            "Y": 639.7061,
+            "Z": 154.203,
+            "Heading": 351.9815
+          }
+        },
+        {
+          "Identifier": "Guard3",
+          "WeaponModelName": "weapon_pumpshotgun",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -704.9307,
+            "Y": 653.6785,
+            "Z": 154.246,
+            "Heading": 79.8487
+          }
+        },
+        {
+          "Identifier": "Guard4",
+          "WeaponModelName": "weapon_pumpshotgun",
+          "ModelName": "s_m_m_ciasec_01",
+          "Position": {
+            "X": -717.1736,
+            "Y": 653.2667,
+            "Z": 154.1907,
+            "Heading": 86.5724
+          }
+        },
+        {
+          "Identifier": "Guard5",
+          "WeaponModelName": "weapon_assaultrifle",
+          "ModelName": "s_m_m_fiboffice_01",
+          "Position": {
+            "X": -711.8065,
+            "Y": 665.9557,
+            "Z": 154.2011,
+            "Heading": 165.3582
+          }
+        },
+        {
+          "Identifier": "Guard6",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -720.822,
+            "Y": 630.5483,
+            "Z": 154.2267,
+            "Heading": 164.2625
+          }
+        },
+        {
+          "Identifier": "Guard7",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -700.5179,
+            "Y": 626.0772,
+            "Z": 154.227,
+            "Heading": 167.7841
+          }
+        },
+        {
+          "Identifier": "Guard8",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -709.0027,
+            "Y": 638.4026,
+            "Z": 154.1841,
+            "Heading": 4.7099
+          }
+        },
+        {
+          "Identifier": "Guard9",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -717.6414,
+            "Y": 643.1592,
+            "Z": 154.267,
+            "Heading": 254.3675
+          }
+        },
+        {
+          "Identifier": "Guard10",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -698.4186,
+            "Y": 647.2443,
+            "Z": 154.2245,
+            "Heading": 347.2966
+          }
+        },
+        {
+          "Identifier": "Guard11",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -703.017,
+            "Y": 648.215,
+            "Z": 154.2016,
+            "Heading": 348.3533
+          }
+        },
+        {
+          "Identifier": "Guard12",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -705.4385,
+            "Y": 650.8867,
+            "Z": 154.2146,
+            "Heading": 78.7743
+          }
+        },
+        {
+          "Identifier": "Guard13",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -721.0404,
+            "Y": 634.5102,
+            "Z": 154.2327,
+            "Heading": 74.996
+          }
+        },
+        {
+          "Identifier": "Guard14",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -706.2832,
+            "Y": 665.1672,
+            "Z": 154.2679,
+            "Heading": 178.1032
+          }
+        }
+      ]
+    },
+    {
+      "Comment": "Second mission",
+      "RewardPerCar": 1000,
+      "DeliverySpot": {
+        "X": -162.0009,
+        "Y": -2707.5093,
+        "Z": 5.0071,
+        "Heading": 267.0062
+      },
+      "Targets": [
+        {
+          "Identifier": "Auto1",
+          "ModelName": "t20",
+          "Position": {
+            "X": -1524.4484,
+            "Y": 83.6881,
+            "Z": 55.5955,
+            "Heading": 8.4367
+          }
+        },
+        {
+          "Identifier": "Auto2",
+          "ModelName": "zorrusso",
+          "Position": {
+            "X": -1528.5006,
+            "Y": 82.8695,
+            "Z": 55.7255,
+            "Heading": 5.8674
+          }
+        },
+        {
+          "Identifier": "Auto3",
+          "ModelName": "zentorno",
+          "Position": {
+            "X": -1532.3193,
+            "Y": 93.6128,
+            "Z": 55.7692,
+            "Heading": 229.1554
+          }
+        }
+      ],
+      "Guards": [
+        {
+          "Identifier": "Guard1",
+          "WeaponModelName": "weapon_pistol",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -1534.3652,
+            "Y": 101.9562,
+            "Z": 55.8727,
+            "Heading": 330.5389
+          }
+        },
+        {
+          "Identifier": "Guard2",
+          "WeaponModelName": "weapon_pistol",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -1532.5133,
+            "Y": 104.2107,
+            "Z": 55.8239,
+            "Heading": 140.8919
+          }
+        },
+        {
+          "Identifier": "Guard3",
+          "WeaponModelName": "weapon_pumpshotgun",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -1520.0839,
+            "Y": 80.308,
+            "Z": 55.7811,
+            "Heading": 5.4918
+          }
+        },
+        {
+          "Identifier": "Guard4",
+          "WeaponModelName": "weapon_pumpshotgun",
+          "ModelName": "s_m_m_ciasec_01",
+          "Position": {
+            "X": -1531.7516,
+            "Y": 78.7788,
+            "Z": 55.7827,
+            "Heading": 1.5653
+          }
+        },
+        {
+          "Identifier": "Guard5",
+          "WeaponModelName": "weapon_assaultrifle",
+          "ModelName": "s_m_m_fiboffice_01",
+          "Position": {
+            "X": -1537.1776,
+            "Y": 83.404,
+            "Z": 55.8691,
+            "Heading": 304.2226
+          }
+        },
+        {
+          "Identifier": "Guard6",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -1491.5056,
+            "Y": 94.228,
+            "Z": 54.0316,
+            "Heading": 47.0734
+          }
+        },
+        {
+          "Identifier": "Guard7",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -1490.0321,
+            "Y": 81.4015,
+            "Z": 53.9739,
+            "Heading": 355.0713
+          }
+        },
+        {
+          "Identifier": "Guard8",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -1516.2279,
+            "Y": 69.213,
+            "Z": 55.9917,
+            "Heading": 212.5633
+          }
+        },
+        {
+          "Identifier": "Guard9",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -1520.4344,
+            "Y": 77.8787,
+            "Z": 60.3743,
+            "Heading": 312.1054
+          }
+        },
+        {
+          "Identifier": "Guard10",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -1539.4136,
+            "Y": 112.7682,
+            "Z": 55.8008,
+            "Heading": 103.1247
+          }
+        },
+        {
+          "Identifier": "Guard11",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -1465.6614,
+            "Y": 82.3324,
+            "Z": 53.7877,
+            "Heading": 156.8437
+          }
+        },
+        {
+          "Identifier": "Guard12",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -1490.3895,
+            "Y": 113.1401,
+            "Z": 54.7558,
+            "Heading": 316.6964
+          }
+        },
+        {
+          "Identifier": "Guard13",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -1509.5547,
+            "Y": 92.2713,
+            "Z": 54.8799,
+            "Heading": 186.1225
+          }
+        },
+        {
+          "Identifier": "Guard14",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -1499.723,
+            "Y": 103.7218,
+            "Z": 54.7054,
+            "Heading": 228.1359
+          }
+        }
+      ]
+    },
+    {
+      "Comment": "Third mission",
+      "RewardPerCar": 1000,
+      "DeliverySpot": {
+        "X": -162.0009,
+        "Y": -2707.5093,
+        "Z": 5.0071,
+        "Heading": 267.0062
+      },
+      "Targets": [
+        {
+          "Identifier": "Auto1",
+          "ModelName": "t20",
+          "Position": {
+            "X": -2305.115,
+            "Y": 254.8405,
+            "Z": 168.6911,
+            "Heading": 24.9493
+          }
+        },
+        {
+          "Identifier": "Auto2",
+          "ModelName": "zorrusso",
+          "Position": {
+            "X": -2297.0493,
+            "Y": 259.5967,
+            "Z": 168.6031,
+            "Heading": 42.9908
+          }
+        },
+        {
+          "Identifier": "Auto3",
+          "ModelName": "zentorno",
+          "Position": {
+            "X": -2288.478,
+            "Y": 262.992,
+            "Z": 168.6086,
+            "Heading": 42.6649
+          }
+        }
+      ],
+      "Guards": [
+        {
+          "Identifier": "Guard1",
+          "WeaponModelName": "weapon_pistol",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -2291.152,
+            "Y": 251.9641,
+            "Z": 168.6683,
+            "Heading": 25.0552
+          }
+        },
+        {
+          "Identifier": "Guard2",
+          "WeaponModelName": "weapon_pistol",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -2300.4102,
+            "Y": 247.1526,
+            "Z": 168.6305,
+            "Heading": 23.6699
+          }
+        },
+        {
+          "Identifier": "Guard3",
+          "WeaponModelName": "weapon_pumpshotgun",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -2309.0815,
+            "Y": 251.7403,
+            "Z": 168.6272,
+            "Heading": 225.0565
+          }
+        },
+        {
+          "Identifier": "Guard4",
+          "WeaponModelName": "weapon_pumpshotgun",
+          "ModelName": "s_m_m_ciasec_01",
+          "Position": {
+            "X": -2291.428,
+            "Y": 276.6374,
+            "Z": 168.6584,
+            "Heading": 113.6096
+          }
+        },
+        {
+          "Identifier": "Guard5",
+          "WeaponModelName": "weapon_assaultrifle",
+          "ModelName": "s_m_m_fiboffice_01",
+          "Position": {
+            "X": -2286.5334,
+            "Y": 266.3832,
+            "Z": 168.6883,
+            "Heading": 113.3002
+          }
+        },
+        {
+          "Identifier": "Guard6",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -2315.3638,
+            "Y": 260.2808,
+            "Z": 168.6778,
+            "Heading": 292.0256
+          }
+        },
+        {
+          "Identifier": "Guard7",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -2314.1543,
+            "Y": 251.3531,
+            "Z": 168.6575,
+            "Heading": 119.988
+          }
+        },
+        {
+          "Identifier": "Guard8",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -2271.644,
+            "Y": 236.4225,
+            "Z": 168.6636,
+            "Heading": 350.5471
+          }
+        },
+        {
+          "Identifier": "Guard9",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -2272.8823,
+            "Y": 219.6621,
+            "Z": 168.6665,
+            "Heading": 85.5329
+          }
+        },
+        {
+          "Identifier": "Guard10",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -2315.1226,
+            "Y": 263.2914,
+            "Z": 173.6071,
+            "Heading": 294.6078
+          }
+        },
+        {
+          "Identifier": "Guard11",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_02",
+          "Position": {
+            "X": -2318.1397,
+            "Y": 262.7659,
+            "Z": 173.6179,
+            "Heading": 24.5748
+          }
+        },
+        {
+          "Identifier": "Guard12",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_highsec_01",
+          "Position": {
+            "X": -2306.7573,
+            "Y": 290.6021,
+            "Z": 173.6617,
+            "Heading": 155.3094
+          }
+        },
+        {
+          "Identifier": "Guard13",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -2302.4228,
+            "Y": 292.377,
+            "Z": 173.6539,
+            "Heading": 198.8035
+          }
+        },
+        {
+          "Identifier": "Guard14",
+          "WeaponModelName": "weapon_carbinerifle",
+          "ModelName": "s_m_m_bouncer_01",
+          "Position": {
+            "X": -2345.1096,
+            "Y": 256.9518,
+            "Z": 168.6412,
+            "Heading": 274.01
+          }
+        }
+      ]
     }
   ]
 }

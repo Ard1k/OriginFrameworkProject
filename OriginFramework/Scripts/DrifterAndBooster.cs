@@ -1,4 +1,5 @@
 ﻿using CitizenFX.Core;
+using OriginFrameworkData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace OriginFramework
 {
 	public class DrifterAndBooster : BaseScript
 	{
-    private static bool isDrifterEnabled = false;
+    public static bool IsDrifterEnabled { get; set; } = GetResourceKvpInt(KvpManager.getKvpString(KvpEnum.DrifterEnabled)) > 0;
     private static bool isBoosterEnabled = false;
 
     private float speed_limit = 1000f;
@@ -37,7 +38,7 @@ namespace OriginFramework
 		{
       await (Delay(250));
 
-      if (isDrifterEnabled || isBoosterEnabled)
+      if (IsDrifterEnabled || isBoosterEnabled)
       {
         if (IsPedInAnyVehicle(Game.PlayerPed.Handle, false))
         {
@@ -47,14 +48,14 @@ namespace OriginFramework
             var vehicleSpeed = GetEntitySpeed(vehicle);
             if ((IsControlPressed(0, (int)actionKey) || IsDisabledControlPressed(0, (int)actionKey)) && (vehicleSpeed * kmh_multiplier) <= speed_limit)
             {
-              if (isDrifterEnabled)
+              if (IsDrifterEnabled)
                 SetVehicleReduceGrip(vehicle, true);
-              else if (isBoosterEnabled)
-                SetVehicleForwardSpeed(vehicle, vehicleSpeed * 1.2f);
+              if (isBoosterEnabled)
+                SetVehicleForwardSpeed(vehicle, vehicleSpeed * 1.3f);
             }
             else
             {
-              if (isDrifterEnabled)
+              if (IsDrifterEnabled)
                 SetVehicleReduceGrip(vehicle, false);
             }
           }
@@ -64,23 +65,23 @@ namespace OriginFramework
 
     public static void EnableDrifter()
     {
-      isDrifterEnabled = true;
-      Notify.Info("Drift enabled!");
+      IsDrifterEnabled = true;
+      Notify.Info("Drift aktivovan!");
     }
     public static void DisableDrifter()
     {
-      isDrifterEnabled = false;
-      Notify.Info("Drift disabled!");
+      IsDrifterEnabled = false;
+      Notify.Info("Drift deaktivovan!");
     }
     public static void EnableBooster()
     {
       isBoosterEnabled = true;
-      Notify.Info("Booster enabled!");
+      Notify.Info("Booster aktivovan!");
     }
     public static void DisableBooster()
     {
       isBoosterEnabled = false;
-      Notify.Info("Booster disabled!");
+      Notify.Info("Booster deaktivovan!");
     }
   }
 }

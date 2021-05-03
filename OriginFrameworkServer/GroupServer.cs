@@ -48,14 +48,14 @@ namespace OriginFrameworkServer
 
       if (DictionaryPlayerInGroup.ContainsKey(oid))
       {
-        source.TriggerEvent("ofw_grp:NotifyError", "You are already in a party!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Uz jsi ve skupine!");
         return;
       }
 
       var newGroupIndex = ++lastGroupIndex;
       DictionaryPlayerInGroup.Add(oid, newGroupIndex);
 
-      source.TriggerEvent("ofw_grp:NotifySuccess", "Party created!");
+      source.TriggerEvent("ofw_grp:NotifySuccess", "Skupina vytvorena!");
       SendGroupToSource(source, true);
     }
 
@@ -67,7 +67,7 @@ namespace OriginFrameworkServer
       if (targetPlayer == null)
       {
         Debug.WriteLine("OFW ERROR: 544548778814 - cannot find player object!");
-        source.TriggerEvent("ofw_grp:NotifyError", "Internal server error");
+        source.TriggerEvent("ofw_grp:NotifyError", "Interni chyba");
         return;
       }
       var targetOID = OIDServer.GetOriginServerID(targetPlayer);
@@ -77,13 +77,13 @@ namespace OriginFrameworkServer
 
       if (DictionaryPlayerInGroup.ContainsKey(targetOID))
       {
-        source.TriggerEvent("ofw_grp:NotifyError", "Player is already in a party!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Hrac uz je v nejake skupine!");
         return;
       }
 
       if (!DictionaryPlayerInGroup.ContainsKey(sourceOID))
       {
-        source.TriggerEvent("ofw_grp:NotifyError", "You are not in a group!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Nejsi ve skupine!");
         return;
       }
 
@@ -91,14 +91,14 @@ namespace OriginFrameworkServer
       if (groupID <= 0)
       {
         Debug.WriteLine("OFW ERROR: 489742214 - group not found after validation!");
-        source.TriggerEvent("ofw_grp:NotifyError", "You are not in a group!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Nejsi ve skupine!");
         return;
       }
 
       var memberCount = DictionaryPlayerInGroup.Where(g => g.Value == groupID)?.Count();
       if (memberCount != null && memberCount.Value >= 4)
       {
-        source.TriggerEvent("ofw_grp:NotifyError", "Group is full");
+        source.TriggerEvent("ofw_grp:NotifyError", "Skupina je plna");
         return;
       }
 
@@ -125,7 +125,7 @@ namespace OriginFrameworkServer
 
       if (!accepted)
       {
-        senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Player is not waiting for invite!");
+        senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Hrac neceka na pozvanku!");
         return;
       }
 
@@ -145,12 +145,12 @@ namespace OriginFrameworkServer
 
       if (DictionaryPlayerInGroup.ContainsKey(sourceOID))
       {
-        source.TriggerEvent("ofw_grp:NotifyError", "Invited player has already a group!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Hrac uz je v nejake skupine!");
         return;
       }
 
       DictionaryPlayerInGroup.Add(sourceOID, groupId);
-      senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Invite accepted!");
+      senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Pozvanka prijata!");
       SendGroupToSource(source, true);
     }
 
@@ -161,14 +161,14 @@ namespace OriginFrameworkServer
 
       if (!DictionaryPlayerInGroup.ContainsKey(oid))
       {
-        source.TriggerEvent("ofw_grp:NotifyError", "You are not member of a party!");
+        source.TriggerEvent("ofw_grp:NotifyError", "Nejsi clenem zadne skupiny!");
         return;
       }
 
       int groupId = DictionaryPlayerInGroup[oid];
       DictionaryPlayerInGroup.Remove(oid);
       SendGroupToSource(source, false);
-      source.TriggerEvent("ofw_grp:NotifySuccess", "You left party!");
+      source.TriggerEvent("ofw_grp:NotifySuccess", "Opustil jsi skupinu!");
 
       var anyMember = DictionaryPlayerInGroup.Where(gk => gk.Value == groupId).Select(gk => gk.Key).FirstOrDefault();
       if (anyMember > 0)

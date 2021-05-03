@@ -401,9 +401,8 @@ namespace OriginFramework
           }
         }
 
-        if (Vector3.Distance(ped.Position, Game.PlayerPed.Position) < 20f && !IsPedInCombat(pid, 0))
+        if (Vector3.Distance(ped.Position, Game.PlayerPed.Position) < 8f && !IsPedInCombat(pid, 0))
         {
-          Debug.WriteLine("attack ordered");
           TaskCombatPed(pid, Game.PlayerPed.Handle, 0, 16);
         }
       }

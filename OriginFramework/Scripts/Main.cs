@@ -35,6 +35,7 @@ namespace OriginFramework
     public static Group GroupMenu { get; set; }
     public static About AboutMenu { get; set; }
     public static Tools ToolsMenu { get; set; }
+    public static Toys ToysMenu { get; set; }
     #endregion
 
     public bool firstTick = true;
@@ -78,70 +79,70 @@ namespace OriginFramework
       Debug.WriteLine($"OID retrieved: {oid}");
 
       #region register commands
-      RegisterCommand("testik", new Action<int, List<object>, string>((source, args, raw) =>
-      {
-        BaseScript.TriggerEvent("chat:addMessage", new
-        {
-          color = new[] { 255, 0, 0 },
-          args = new[] { "[CarSpawner]", $"I wish I could spawn this {(args.Count > 0 ? $"{args[0]} or" : "")} adder but my owner was too lazy. :(" + CitizenFX.Core.Native.API.GetCurrentResourceName() }
-        });
+      //RegisterCommand("testik", new Action<int, List<object>, string>((source, args, raw) =>
+      //{
+      //  BaseScript.TriggerEvent("chat:addMessage", new
+      //  {
+      //    color = new[] { 255, 0, 0 },
+      //    args = new[] { "[CarSpawner]", $"I wish I could spawn this {(args.Count > 0 ? $"{args[0]} or" : "")} adder but my owner was too lazy. :(" + CitizenFX.Core.Native.API.GetCurrentResourceName() }
+      //  });
 
-      }), false);
+      //}), false);
 
-      RegisterCommand("mcar", new Action<int, List<object>, string>((source, args, raw) =>
-      {
-        var ped = Game.PlayerPed;
-        Debug.WriteLine("S: " + source + "P: " + ped?.Heading);
-        RequestModel((uint)GetHashKey(args[0].ToString()));
-        CreateVehicle((uint)GetHashKey(args[0].ToString()), ped.Position.X, ped.Position.Y, ped.Position.Z, ped.Heading, true, true);
+      //RegisterCommand("mcar", new Action<int, List<object>, string>((source, args, raw) =>
+      //{
+      //  var ped = Game.PlayerPed;
+      //  Debug.WriteLine("S: " + source + "P: " + ped?.Heading);
+      //  RequestModel((uint)GetHashKey(args[0].ToString()));
+      //  CreateVehicle((uint)GetHashKey(args[0].ToString()), ped.Position.X, ped.Position.Y, ped.Position.Z, ped.Heading, true, true);
 
-        BaseScript.TriggerEvent("chat:addMessage", new
-        {
-          color = new[] { 255, 0, 0 },
-          args = new[] { "[CarSpawner]", $"wtf" }
-        });
-      }), false);
+      //  BaseScript.TriggerEvent("chat:addMessage", new
+      //  {
+      //    color = new[] { 255, 0, 0 },
+      //    args = new[] { "[CarSpawner]", $"wtf" }
+      //  });
+      //}), false);
 
-      RegisterCommand("testdynmenu", new Action<int, List<object>, string>((source, args, raw) =>
-      {
-        var mDefSub = new DynamicMenuDefinition
-        {
-          Name = "TestSub",
-          Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "TestSub1" }, new DynamicMenuItem { TextLeft = "TestSub2" }, new DynamicMenuItem { TextLeft = "TestSub3" } }
-        };
+      //RegisterCommand("testdynmenu", new Action<int, List<object>, string>((source, args, raw) =>
+      //{
+      //  var mDefSub = new DynamicMenuDefinition
+      //  {
+      //    Name = "TestSub",
+      //    Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "TestSub1" }, new DynamicMenuItem { TextLeft = "TestSub2" }, new DynamicMenuItem { TextLeft = "TestSub3" } }
+      //  };
 
-        var mDef = new DynamicMenuDefinition
-        {
-          Name = "Testmain",
-          Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "Test1" }, new DynamicMenuItem { TextLeft = "Test2" }, new DynamicMenuItem { TextLeft = "TestSub", Submenu = mDefSub }, new DynamicMenuItem { TextLeft = "Test3" } }
-        };
+      //  var mDef = new DynamicMenuDefinition
+      //  {
+      //    Name = "Testmain",
+      //    Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "Test1" }, new DynamicMenuItem { TextLeft = "Test2" }, new DynamicMenuItem { TextLeft = "TestSub", Submenu = mDefSub }, new DynamicMenuItem { TextLeft = "Test3" } }
+      //  };
 
-        var menu = new DynamicMenu(mDef);
-        menu.Menu.OpenMenu();
+      //  var menu = new DynamicMenu(mDef);
+      //  menu.Menu.OpenMenu();
 
-      }), false);
+      //}), false);
 
-      RegisterCommand("testdb", new Action<int, List<object>, string>(async (source, args, raw) =>
-      {
-        string ret = String.Empty;
-        bool completed = false;
+      //  RegisterCommand("testdb", new Action<int, List<object>, string>(async (source, args, raw) =>
+      //  {
+      //    string ret = String.Empty;
+      //    bool completed = false;
 
-        Func<string, bool> CallbackFunction = (data) =>
-        {
-          ret = data;
-          completed = true;
-          return true;
-        };
+      //    Func<string, bool> CallbackFunction = (data) =>
+      //    {
+      //      ret = data;
+      //      completed = true;
+      //      return true;
+      //    };
 
-        TriggerServerEvent("ofw:TestDB", CallbackFunction);
+      //    TriggerServerEvent("ofw:TestDB", CallbackFunction);
 
-        while (!completed)
-        {
-          await Delay(0);
-        }
+      //    while (!completed)
+      //    {
+      //      await Delay(0);
+      //    }
 
-        Debug.WriteLine(ret);
-      }), false);
+      //    Debug.WriteLine(ret);
+      //  }), false);
 
       #endregion
 
@@ -205,7 +206,7 @@ namespace OriginFramework
     {
       GroupMenu = new Group();
       Menu menu1 = GroupMenu.GetMenu();
-      MenuItem button1 = new MenuItem("Group", "Organize group")
+      MenuItem button1 = new MenuItem("Skupina", "Zorganizuj si svoji skupinu. Nektere mise od NPC s ni umi pracovat. Pokud ano, zjistis to, kdyz si s nima pokecas. Pro spusteni mise jako skupina musi byt vsichni clenove skupiny do vzdalenosti 20m (zeleni v party)")
       {
         Label = "→→→"
       };
@@ -219,21 +220,29 @@ namespace OriginFramework
         }
       };
 
-      ToolsMenu = new Tools();
-      Menu menu2 = ToolsMenu.GetMenu();
-      MenuItem button2 = new MenuItem("Tools", "Custom tools")
+      ToysMenu = new Toys();
+      Menu menu2 = ToysMenu.GetMenu();
+      MenuItem button2 = new MenuItem("Blbustky", "Blbiny a vychytavky")
       {
         Label = "→→→"
       };
       AddMenu(OriginMainMenu, menu2, button2);
 
-      AboutMenu = new About();
-      Menu menu3 = AboutMenu.GetMenu();
-      MenuItem button3 = new MenuItem("About OFW", "Information about OFW.")
+      ToolsMenu = new Tools();
+      Menu menu3 = ToolsMenu.GetMenu();
+      MenuItem button3 = new MenuItem("Dev Nastroje", "Nastroje pro vyvoj. Nic moc zajimavyho")
       {
         Label = "→→→"
       };
       AddMenu(OriginMainMenu, menu3, button3);
+
+      AboutMenu = new About();
+      Menu menu4 = AboutMenu.GetMenu();
+      MenuItem button4 = new MenuItem("About OFW", "Informace o origin frameworku")
+      {
+        Label = "→→→"
+      };
+      AddMenu(OriginMainMenu, menu4, button4);
 
     }
     #endregion

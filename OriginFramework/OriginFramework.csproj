@@ -45,8 +45,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Menus\Toys.cs" />
     <Compile Include="OfwFunctions.cs" />
     <Compile Include="Scripts\Checkpointer.cs" />
+    <Compile Include="Scripts\FlashHeadlightsOnHorn.cs" />
     <Compile Include="Scripts\VehicleClient.cs" />
     <Compile Include="Scripts\LuxuryCarDelivery.cs" />
     <Compile Include="Scripts\GroupManager.cs" />

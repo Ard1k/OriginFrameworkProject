@@ -14,9 +14,8 @@ namespace OriginFramework.Menus
 {
   public class Tools
   {
-    Menu toolsMenu = new Menu("OriginRP", "Tools");
+    Menu toolsMenu = new Menu("OriginRP", "Dev Tools");
     Menu checkpointTool = new Menu("OriginRP", "Checkpoint tool");
-    MenuCheckboxItem driftItem = new MenuCheckboxItem("Shift drift", "Press SHIFT to drift your car.", false);
     MenuCheckboxItem boostItem = new MenuCheckboxItem("Shift boost", "Press SHIFT to boost your car.", false);
 
     bool isInitialized = false;
@@ -64,46 +63,12 @@ namespace OriginFramework.Menus
 
       toolsMenu.OnCheckboxChange += (sender, item, index, _checked) =>
       {
-        if (item == driftItem)
-        {
-          if (_checked)
-          {
-            DrifterAndBooster.EnableDrifter();
-            var bIt = toolsMenu.GetMenuItems().Where(it => it == boostItem).FirstOrDefault();
-            if (bIt != null && bIt is MenuCheckboxItem)
-            {
-              if (((MenuCheckboxItem)bIt).Checked == true)
-              {
-                ((MenuCheckboxItem)bIt).Checked = false;
-                DrifterAndBooster.DisableBooster();
-              }
-            }
-          }
-          else
-          {
-            DrifterAndBooster.DisableDrifter();
-          }
-        }
-
         if (item == boostItem)
         {
           if (_checked)
-          {
             DrifterAndBooster.EnableBooster();
-            var dIt = toolsMenu.GetMenuItems().Where(it => it == driftItem).FirstOrDefault();
-            if (dIt != null && dIt is MenuCheckboxItem)
-            {
-              if (((MenuCheckboxItem)dIt).Checked == true)
-              {
-                ((MenuCheckboxItem)dIt).Checked = false;
-                DrifterAndBooster.DisableDrifter();
-              }
-            }
-          }
           else
-          {
             DrifterAndBooster.DisableBooster();
-          }
         }
 
         if (item == drawEntityInfoItem)
@@ -127,7 +92,6 @@ namespace OriginFramework.Menus
       if (!isInitialized)
         return;
 
-      toolsMenu.AddMenuItem(driftItem);
       toolsMenu.AddMenuItem(boostItem);
       toolsMenu.RefreshIndex();
     }

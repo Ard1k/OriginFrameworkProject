@@ -158,7 +158,7 @@ namespace OriginFramework
       }
       else if (IsWaitingForGroup)
       {
-        s2.Append("~g~Waiting for invite");
+        s2.Append("~g~Cekas na pozvani");
       }
       //DrawRect(x + (width / 2) - width, y + (height / 2), width, height, 255, 0, 0, 100);
 

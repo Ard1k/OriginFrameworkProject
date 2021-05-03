@@ -42,33 +42,20 @@ namespace OriginFrameworkServer
       while (SettingsManager.Settings == null)
         await Delay(0);
 
-      RegisterCommand("printidents", new Action<int, List<object>, string>((source, args, raw) =>
+      RegisterCommand("idcopy", new Action<int, List<object>, string>((source, args, raw) =>
       {
+        if (args == null || args.Count != 1)
+        {
+          return;
+          //Invalid arguments
+        }
+
         var plr = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
 
         var id = OIDServer.GetOriginServerID(plr);
 
         Debug.WriteLine("returned ID: " + id + " SID: " + source);
       }), false);
-
-      //Tick += TickTask;
-    }
-
-
-    [EventHandler("ofw:GetPlayerCompanyData")]
-    private void GetPlayerCompanyBag([FromSource] Player source, int playerId, NetworkCallbackDelegate callback)
-    {
-      //TODO pokud playerId > 0, tak najit jeho data, jinak z Player
-
-      var bag = new PlayerCompanyBag
-      {
-        CompanyName = "TestCompany",
-        CompanyCode = "TC",
-        IsCompanyManager = true,
-        IsCompanyOwner = true
-      };
-
-      _ = callback(JsonConvert.SerializeObject(bag));
     }
 
     [EventHandler("ofw:TestDB")]

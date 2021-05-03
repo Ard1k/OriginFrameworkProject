@@ -19,11 +19,11 @@ namespace OriginFramework.Menus
       menu = new Menu("Origin Framework", "About");
 
       // Create menu items.
-      MenuItem version = new MenuItem("Version", $" ~b~~h~{Main.Version}~h~~s~.")
+      MenuItem version = new MenuItem("Verze", $" ~b~~h~{Main.Version}~h~~s~.")
       {
         Label = $"~h~{Main.Version}~h~"
       };
-      MenuItem credits = new MenuItem("About", "Provides custom server features");
+      MenuItem credits = new MenuItem("About", "Custom featurky pro server");
 
       MenuItem serverInfo = new MenuItem("Server Info", "Origin");
       serverInfo.Label = "Origin RP";
@@ -36,7 +36,7 @@ namespace OriginFramework.Menus
       {
         if (item == version)
         {
-          string result = await GetUserInput(windowTitle: "Enter command:");
+          string result = await GetUserInput(windowTitle: "Kdo je tvuj nejoblibenejsi prezident a proc prave Zeman?");
           if (result != null && result == "iwantsomefun")
           {
             Main.UnlockFun();

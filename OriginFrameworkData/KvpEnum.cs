@@ -10,6 +10,8 @@ namespace OriginFrameworkData
 	{
 		MiscDrawEntityInfo = 1,
 		ShowClosesVehicleTrunkInfo = 2,
+		DrifterEnabled = 3,
+		FlashOnHorn = 4,
 
 		ServerPersistenVehicleDB = 1000
 	}
@@ -23,6 +25,8 @@ namespace OriginFrameworkData
 				case KvpEnum.MiscDrawEntityInfo: return "drawentityinfo";
 				case KvpEnum.ShowClosesVehicleTrunkInfo: return "closesvehtrnkinfo";
 				case KvpEnum.ServerPersistenVehicleDB: return "server_persvehdb";
+				case KvpEnum.DrifterEnabled: return "drifterenabled";
+				case KvpEnum.FlashOnHorn: return "flashonhorn";
 				default: return "undefined";
 			}
 		}

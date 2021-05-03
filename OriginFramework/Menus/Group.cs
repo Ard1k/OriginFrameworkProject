@@ -25,12 +25,12 @@ namespace OriginFramework.Menus
 
     private void CreateMenu()
     {
-      groupMenu = new Menu("OriginRP", "Group");
-      createItem = new MenuItem("Create group", "Create new group");
-      stopWaitItem = new MenuItem("Stop waiting for invite", "Stop waiting for invite");
-      startWaitItem = new MenuItem("Wait for invite", "Set your status as waiting for invite");
-      inviteItem = new MenuItem("Invite", "Invite another member to group");
-      leaveItem = new MenuItem("Leave", "Leave group");
+      groupMenu = new Menu("OriginRP", "Skupina");
+      createItem = new MenuItem("Zalozit skupinu", "Vytvori novou skupinu do ktere bude mozne pozvat az dalsi 3 hrace");
+      stopWaitItem = new MenuItem("Prestat cekat na pozvanku", "Nepujde te pridat do skupiny");
+      startWaitItem = new MenuItem("Cekat na pozvanku", "Clenove jine skupiny te budou moci pridat");
+      inviteItem = new MenuItem("Pozvat", "Pozvat hrace do skupiny");
+      leaveItem = new MenuItem("Opustit", "Opustis skupinu");
 
       groupMenu.AddMenuItem(createItem);
       groupMenu.AddMenuItem(stopWaitItem);
@@ -43,7 +43,7 @@ namespace OriginFramework.Menus
       {
         if (item == createItem)
         {
-          Debug.WriteLine($"GroupMenu: ProcessingOnClick, triggering server event ofw_grp:CreateGroup");
+          //Debug.WriteLine($"GroupMenu: ProcessingOnClick, triggering server event ofw_grp:CreateGroup");
           TriggerServerEvent("ofw_grp:CreateGroup");
         }
         else if (item == inviteItem)
@@ -62,7 +62,7 @@ namespace OriginFramework.Menus
 
           if (dynMenuItems.Count <= 0)
           {
-            Notify.Info("No players nearby");
+            Notify.Info("Zadni hraci pobliz");
           }
           else
           {
