@@ -13,4 +13,11 @@ namespace OriginFrameworkData.DataBags
 		public float Z { get; set; }
 		public float Heading { get; set; }
 	}
+
+	public class PosCameraBag : PosBag
+	{
+		public float RotationX { get; set; }
+		public float RotationY { get; set; }
+		public float RotationZ { get; set; }
+	}
 }

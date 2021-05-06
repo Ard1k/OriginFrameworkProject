@@ -9,7 +9,7 @@ version '0.0.4'
 ui_page 'index.html'
 
 files {
-    'MenuAPI.dll',
+	'MenuAPI.dll',
 	'Newtonsoft.Json.dll',
 	'OriginFrameworkData.dll',
 	'index.html',
@@ -22,7 +22,6 @@ files {
 }
 
 server_scripts {
-	'@mysql-async/lib/MySQL.lua',
 	'OriginFrameworkServer.net.dll'
 }
 

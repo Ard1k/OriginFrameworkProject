@@ -1,6 +1,7 @@
 ﻿using CitizenFX.Core;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,5 +55,18 @@ namespace OriginFramework
 			return blip;
 		}
 
+		public static async Task<dynamic> DeserializeToExpando(string serialized)
+		{
+			dynamic ret = null;
+			bool completed = false;
+			Func<dynamic, bool> CallbackFunction = (data) => { ret = data; completed = true; return true;	};
+			BaseScript.TriggerServerEvent("ofw_deserializer:DeserializeExpandoClient", serialized, CallbackFunction);
+			while (!completed)
+			{
+				await Main.Delay(0);
+			}
+
+			return ret;
+		}
 	}
 }

@@ -15,6 +15,7 @@ namespace OriginFrameworkData.DataBags
 		public NPCDefinitionBag[] NPCs { get; set; } = new NPCDefinitionBag[0];
 		public float NPCRespawnDistance { get; set; } = 20f;
 		public LCDMissionDefinitionBag[] LCDMissions { get; set; }
+		public GarageBag[] Garages { get; set; }
 
 		public SettingsBag() { }
 	}
