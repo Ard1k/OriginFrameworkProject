@@ -97,8 +97,9 @@ namespace OriginFrameworkServer
 
       var param2 = new Dictionary<string, object>();
       param2.Add("@plate", plate);
+      param2.Add("@garage", garageId);
       param2.Add("@vehicle", JsonConvert.SerializeObject(vehicleProps));
-      await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 1, `vehicle` = @vehicle WHERE `plate` = @plate", param2);
+      await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 1, `vehicle` = @vehicle, `garage` = @garage WHERE `plate` = @plate", param2);
     }
 
     #endregion

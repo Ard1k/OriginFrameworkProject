@@ -20,8 +20,6 @@ namespace OriginFramework.Scripts
 		public EsxGarage()
 		{
 			EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
-			EventHandlers["esx:playerLoaded"] += new Action<dynamic>(EsxPlayerLoaded);
-			EventHandlers["esx:setJob"] += new Action<dynamic>(EsxSetJob);
 		}
 
 		private async void OnClientResourceStart(string resourceName)
@@ -59,16 +57,6 @@ namespace OriginFramework.Scripts
 			Tick += OnTick;
 		}
 
-		private async void EsxPlayerLoaded(dynamic playerData)
-		{
-			ESX.PlayerData = playerData;
-		}
-
-		private async void EsxSetJob(dynamic newJob)
-		{
-			ESX.PlayerData["job"] = newJob;
-		}
-
 		public async Task OnTick()
 		{
 			bool sleep = true;
@@ -87,7 +75,10 @@ namespace OriginFramework.Scripts
 					{
 						DisplayHelpTextThisFrame("OFW_ESXGARAGE_OPENMENU", false);
 						if (IsControlJustPressed(0, 38))
+						{
+							Game.DisableControlThisFrame(0, Control.Pickup);
 							GarageMenu.ShowGarageMenu(garage);
+						}
 					}
 
 					if (GarageMenu.IsHidden)
@@ -101,7 +92,7 @@ namespace OriginFramework.Scripts
 					if (dstVeh < vehMarkerSize && GarageMenu.IsHidden && DoIDriveAVehicle())
 					{
 						if (IsControlJustPressed(0, 38))
-						GarageMenu.SaveInGarage(garage);
+							GarageMenu.SaveInGarage(garage);
 						DisplayHelpTextThisFrame("OFW_ESXGARAGE_SAVEVEH", false);
 					}
 

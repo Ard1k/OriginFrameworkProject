@@ -15,14 +15,17 @@ namespace OriginFramework
 {
 	public class GarageMenu : BaseScript
 	{
-		static string MenuTitle { get; set; }
-		static List<GarageMenuButton> Buttons { get; set; } = new List<GarageMenuButton>();
-		static int SelectedIndex { get; set; } = 0;
+		private static string MenuTitle { get; set; }
+		private static List<GarageMenuButton> Buttons { get; set; } = new List<GarageMenuButton>();
+		private static int SelectedIndex { get; set; } = 0;
 		public static bool IsHidden { get; protected set; } = true;
 		private static GarageBag CurrentGarage { get; set; } = null;
-		public static dynamic ESX { get; set; } = null;
-		public static int ActiveCamera { get; set; } = -1;
-		public static int LocalVehicle { get; set; } = -1;
+		private static dynamic ESX { get; set; } = null;
+		private static int ActiveCamera { get; set; } = -1;
+		private static int LocalVehicle { get; set; } = -1;
+		private static int MaxIndexVisible = 14;
+		private static int SelectedIndexVisible = 0;
+		private static bool controlsLocked = false;
 
 		public GarageMenu()
 		{
@@ -50,17 +53,18 @@ namespace OriginFramework
 
 		public static void AddButton(string name, Action onSelected)
 		{
-			AddButton(name, onSelected, null, null, null, null);
+			AddButton(name, onSelected, false, null, null, null, null, -1);
 		}
-		public static void AddButton(string name, Action onSelected, string nameRight, string extraLeft, string extraRight, Action onHover)
+		public static void AddButton(string name, Action onSelected, int index)
 		{
-			var yoffset = 0.25f;
-			var xoffset = 0.3f;
-			var xmin = 0.0f;
-			var xmax = 0.15f;
-			var ymin = 0.03f;
-			var ymax = 0.03f;
-
+			AddButton(name, onSelected, false, null, null, null, null, index);
+		}
+		public static void AddButton(string name, Action onSelected, bool colorAsUnavailable, string nameRight, string extraLeft, string extraRight, Action onHover)
+		{
+			AddButton(name, onSelected, colorAsUnavailable, nameRight, extraLeft, extraRight, onHover, -1);
+		}
+		public static void AddButton(string name, Action onSelected, bool colorAsUnavailable, string nameRight, string extraLeft, string extraRight, Action onHover, int index)
+		{			
 			var btn = new GarageMenuButton();
 
 			btn.NameRight = nameRight;
@@ -70,21 +74,32 @@ namespace OriginFramework
 			btn.FuncOnSelected = onSelected;
 			btn.FuncOnHover = onHover;
 			btn.Active = false;
-			btn.Xmin = xmin;
-			btn.Ymin = ymin * (Buttons.Count + 0.01f) + yoffset;
-			btn.Xmax = xmax;
-			btn.Ymax = ymax;
+			btn.ColorAsUnavailable = colorAsUnavailable;
 
-			Buttons.Add(btn);
+			if (index >= 0)
+				Buttons.Insert(index, btn);
+			else
+				Buttons.Add(btn);
+			
 		}
 		public void UpdateSelection()
 		{
+			if (controlsLocked)
+				return;
+
 			if (IsControlJustPressed(1, 173)) //key down
 			{
 				if (SelectedIndex < Buttons.Count - 1)
+				{
 					SelectedIndex++;
+					if (SelectedIndexVisible < MaxIndexVisible)
+						SelectedIndexVisible++;
+				}
 				else
+				{
 					SelectedIndex = 0;
+					SelectedIndexVisible = 0;
+				}
 
 				Buttons[SelectedIndex].FuncOnHover?.Invoke();
 				PlaySound(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", false, 0, true);
@@ -92,9 +107,16 @@ namespace OriginFramework
 			else if (IsControlJustPressed(1, 27)) // key up
 			{
 				if (SelectedIndex > 0)
+				{
 					SelectedIndex--;
+					if (SelectedIndexVisible > 0)
+						SelectedIndexVisible--;
+				}
 				else
+				{
 					SelectedIndex = Buttons.Count - 1;
+					SelectedIndexVisible = (Buttons.Count - 1) <= MaxIndexVisible ? Buttons.Count - 1 : MaxIndexVisible;
+				}
 
 				Buttons[SelectedIndex].FuncOnHover?.Invoke();
 				PlaySound(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", false, 0, true);
@@ -125,71 +147,120 @@ namespace OriginFramework
 
 		public void RenderButtons()
 		{
-			float yoffset = 0.5f;
-			float xoffset = 0f;
+			float yoffset = 0.25f;
+			float ymaxoffset = 0.03f;
 
-			foreach (var btn in Buttons)
+			int indexMin = SelectedIndex - SelectedIndexVisible;
+			int indexMax = SelectedIndex + (MaxIndexVisible - SelectedIndexVisible);
+
+			if (MenuTitle != null)
 			{
+				SetTextScale(0.34f, 0.34f);
+				SetTextColour(0, 0, 0, 255);
+				SetTextEntry("STRING");
+				AddTextComponentString("~h~" + MenuTitle.ToUpper());
+				DrawText(0.63f, (yoffset + (0.03f * (-2 + 0.01f)) - 0.012f));
+
+				DrawRect(0.7f, yoffset + (0.03f * (-2 + 0.01f)), 0.15f, ymaxoffset - 0.002f, 255, 255, 255, 200);
+			}
+
+			if (indexMin > 0)
+			{
+				SetTextScale(0.34f, 0.34f);
+				SetTextColour(255, 255, 255, 255);
+				SetTextEntry("STRING");
+				AddTextComponentString("↑↑↑");
+				DrawText(0.63f, (yoffset + (0.03f * (-1 + 0.01f)) - 0.012f));
+
+				DrawRect(0.7f, yoffset + (0.03f * (-1 + 0.01f)), 0.15f, ymaxoffset - 0.002f, 13, 11, 10, 233); //main
+			}
+
+			if (indexMax < Buttons.Count - 1)
+			{
+				SetTextScale(0.34f, 0.34f);
+				SetTextColour(255, 255, 255, 255);
+				SetTextEntry("STRING");
+				AddTextComponentString("↓↓↓");
+				DrawText(0.63f, (yoffset + (0.03f * (15 + 0.01f)) - 0.012f));
+
+				DrawRect(0.7f, yoffset + (0.03f * (15 + 0.01f)), 0.15f, ymaxoffset - 0.002f, 13, 11, 10, 233); //main
+			}
+
+			for (int i = 0; i < Buttons.Count; i++)
+			{
+				if (i < indexMin)
+					continue;
+				if (i > indexMax)
+					continue;
+
 				int screen_w = 0;
 				int screen_h = 0;
 				GetScreenResolution(ref screen_w, ref screen_h);
 				float moveText = 0f;
 
-				var boxColor = new int[] { 13, 11, 10, 233 };
-				//if (btn.Extra == "In")
-				//	boxColor = new int[] { 44, 88, 44, 230 };
-				//else if (btn.Extra == "Out")
-				//	moveText = -0.025f;
+				var boxColor = new int[4];
 
-				if (btn.Active)
-					boxColor = new int[] { 45, 45, 45, 230 };
+				if (!Buttons[i].Active)
+				{
+					if (Buttons[i].ColorAsUnavailable)
+						boxColor = new int[] { 60, 20, 20, 233 };
+					else
+						boxColor = new int[] { 13, 11, 10, 233 };
+				}
+				else
+				{
+					if (Buttons[i].ColorAsUnavailable)
+						boxColor = new int[] { 120, 45, 45, 230 };
+					else
+						boxColor = new int[] { 45, 45, 45, 230 };
+				}
 
 				SetTextFont(4);
 
-				if (btn.Name != null)
+				if (Buttons[i].Name != null)
 				{
 					SetTextScale(0.34f, 0.34f);
 					SetTextColour(255, 255, 255, 255);
 					SetTextEntry("STRING");
-					AddTextComponentString(btn.Name);
-					DrawText(0.63f, (btn.Ymin - 0.012f));
+					AddTextComponentString(Buttons[i].Name);
+					DrawText(0.63f, (yoffset + (0.03f * (i - indexMin + 0.01f)) - 0.012f));
 				}
 
-				if (btn.NameRight != null)
+				if (Buttons[i].NameRight != null)
 				{
 					SetTextFont(4);
 					SetTextScale(0.26f, 0.26f);
 					SetTextColour(255, 255, 255, 255);
 					SetTextEntry("STRING");
-					AddTextComponentString(btn.NameRight);
-					DrawText(0.730f + moveText, (btn.Ymin - 0.009f));
+					AddTextComponentString(Buttons[i].NameRight);
+					DrawText(0.730f + moveText, (yoffset + (0.03f * (i - indexMin + 0.01f)) - 0.009f));
 				}
 
-				if (btn.ExtraLeft != null)
+				if (Buttons[i].ExtraLeft != null)
 				{
 					SetTextFont(4);
 					SetTextScale(0.31f, 0.31f);
 					SetTextColour(11, 11, 11, 255);
 					SetTextEntry("STRING");
-					AddTextComponentString(btn.ExtraLeft);
-					DrawText(0.78f, (btn.Ymin - 0.012f));
+					AddTextComponentString(Buttons[i].ExtraLeft);
+					DrawText(0.78f, (yoffset + (0.03f * (i - indexMin + 0.01f)) - 0.012f));
 				}
 
-				if (btn.ExtraRight != null)
+				if (Buttons[i].ExtraRight != null)
 				{
 					SetTextFont(4);
 					SetTextScale(0.31f, 0.31f);
 					SetTextColour(11, 11, 11, 255);
 					SetTextEntry("STRING");
-					AddTextComponentString(btn.ExtraRight);
-					DrawText(0.845f, (btn.Ymin - 0.012f));
+					AddTextComponentString(Buttons[i].ExtraRight);
+					DrawText(0.845f, (yoffset + (0.03f * (i - indexMin + 0.01f)) - 0.012f));
 				}
 
 
-				DrawRect(0.7f, btn.Ymin, 0.15f, btn.Ymax - 0.002f, boxColor[0], boxColor[1], boxColor[2], boxColor[3]); //main
+				DrawRect(0.7f, yoffset + (0.03f * (i - indexMin + 0.01f)), 0.15f, ymaxoffset - 0.002f, boxColor[0], boxColor[1], boxColor[2], boxColor[3]); //main
 
-				if (btn.ExtraLeft != null || btn.ExtraRight != null)
-					DrawRect(0.832f, btn.Ymin, 0.11f, btn.Ymax - 0.002f, 255, 255, 255, 199); // extra
+				if (Buttons[i].ExtraLeft != null || Buttons[i].ExtraRight != null)
+					DrawRect(0.832f, yoffset + (0.03f * (i - indexMin + 0.01f)), 0.11f, ymaxoffset - 0.002f, 255, 255, 255, 199); // extra
 			}
 		}
 
@@ -197,11 +268,13 @@ namespace OriginFramework
 		{
 			Buttons.Clear();
 			SelectedIndex = 0;
+			SelectedIndexVisible = 0;
 		}
 
 		public static void CloseMenu()
 		{
 			IsHidden = true;
+			controlsLocked = false;
 			ClearMenu();
 			DeleteLocalVehicle();
 			EnsureGarageCamera(null);
@@ -219,7 +292,7 @@ namespace OriginFramework
 		public static void ShowGarageMenu(GarageBag garage)
 		{
 			CurrentGarage = garage;
-			MenuTitle = "Garage";
+			MenuTitle = "garaz";
 			ClearMenu();
 
 			AddButton("Seznam vozidel", new Action(() => { ListVehicles(); }));
@@ -246,10 +319,9 @@ namespace OriginFramework
 		#region menu onclick functions
 		private static async void ListVehicles()
 		{
-			MenuTitle = "Moje auta";
+			MenuTitle = "Vlastnena auta";
 			ClearMenu();
 			EnsureGarageCamera(CurrentGarage);
-			AddButton("Zpet", new Action(() => { DeleteLocalVehicle(); ShowGarageMenu(); }));
 
 			string ret = null;
 			bool completed = false;
@@ -269,9 +341,14 @@ namespace OriginFramework
 
 			if (ret != null)
 			{
+				string playerJob = ESX.GetPlayerData()?.job?.name;
+				Debug.WriteLine("PlayerJob: " + playerJob ?? "job unresolved");
 				var fetched = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(ret);
 				foreach (var row in fetched)
 				{
+					if ((long)row["stored"] <= 0)
+						continue;
+
 					dynamic vehicle = await OfwFunctions.DeserializeToExpando((string)row["vehicle"]);
 					float engine = 1000f;
 					float fuel = 100f;
@@ -281,10 +358,23 @@ namespace OriginFramework
 					if (((IDictionary<String, object>)vehicle).ContainsKey("fuelLevel"))
 						fuel = (float)vehicle.fuelLevel;
 
+					
+
 					var displayName = GetDisplayNameFromVehicleModel((uint)vehicle.model);
 					var plate = (string)row["plate"];
-					AddButton($"{plate} | {displayName}", new Action(() => { VehicleMenu(vehicle); }), $"Garage: {(string)row["garage"]}", $"Motor: {engine}/1000", $"Palivo: {fuel}%", new Action(() => { SpawnLocalVehicle(vehicle); }));
+					bool correctGarage = (string)row["garage"] == CurrentGarage?.Id;
+					bool correctJob = true;
+					if (playerJob != null && (string)row["job"] != null)
+					{
+						if (playerJob != (string)row["job"])
+							correctJob = false;
+					}
+
+					AddButton($"{plate} | {displayName}", new Action(() => { VehicleMenu(vehicle, $"{plate} | {displayName}", correctGarage, correctJob); }), !correctJob || !correctGarage, $"Garage: {(string)row["garage"]}", $"Motor: {engine}/1000", $"Palivo: {fuel}%", new Action(() => { SpawnLocalVehicle(vehicle); }));
 				}
+
+				Buttons = Buttons.OrderBy(b => b.ColorAsUnavailable).ToList();
+				AddButton("Zpet", new Action(() => { DeleteLocalVehicle(); ShowGarageMenu(); }), 0);
 			}
 			else
 			{
@@ -296,11 +386,18 @@ namespace OriginFramework
 			IsHidden = false;
 		}
 
-		private static async void VehicleMenu(dynamic vehicle)
+		private static async void VehicleMenu(dynamic vehicle, string menutitle, bool correctGarage, bool correctJob)
 		{
-			MenuTitle = "Moje auta";
+			MenuTitle = menutitle;
 			ClearMenu();
-			AddButton("Vyparkuj auto", null);
+			
+			if (!correctJob)
+				AddButton("Nemas spravny job!", null);
+			else if (!correctGarage)
+				AddButton("Auto je v jine garazi!", null);
+			else
+				AddButton("Vyparkuj auto", new Action(() => { SpawnVehicle(vehicle); }));
+
 			AddButton("Zpet", new Action(() => { ListVehicles(); }));
 		}
 		#endregion
@@ -352,6 +449,67 @@ namespace OriginFramework
 
 				SetModelAsNoLongerNeeded((uint)vehicleData.model);
 			}));
+		}
+
+		private static async void SpawnVehicle(dynamic vehicleData)
+		{
+			if (vehicleData == null || CurrentGarage == null)
+				return;
+
+			var spawnpoint = new Vector3(CurrentGarage.VehiclePosition.X, CurrentGarage.VehiclePosition.Y, CurrentGarage.VehiclePosition.Z);
+
+			if (!IsModelValid((uint)vehicleData?.model))
+				return;
+
+			DeleteLocalVehicle();
+
+			if (!ESX.Game.IsSpawnPointClear(spawnpoint, 3.0f))
+			{
+				Notify.Alert("Spawnpoint je blokovan");
+				return;
+			}
+
+			controlsLocked = true;
+
+			int ret = -1;
+			bool completed = false;
+			Func<int, bool> CallbackFunction = (data) =>
+			{
+				ret = data;
+				completed = true;
+				return true;
+			};
+
+			BaseScript.TriggerServerEvent("ofw_veh:SpawnServerVehicleFromGarage", vehicleData.plate, new Vector3(CurrentGarage.VehiclePosition.X, CurrentGarage.VehiclePosition.Y, CurrentGarage.VehiclePosition.Z), CurrentGarage.VehiclePosition.Heading, CallbackFunction);
+
+			while (!completed)
+			{
+				await Delay(0);
+
+				DrawScreenText($"Cekani na spawn ...", 255, 255, 255, 150);
+			}
+
+			controlsLocked = false;
+			if (ret == -1)
+				return;
+
+			CloseMenu();
+
+			int frameCounter = 0;
+			while (!NetworkDoesNetworkIdExist(ret) || !NetworkDoesEntityExistWithNetworkId(ret))
+			{
+				await Delay(100);
+				frameCounter++;
+				if (frameCounter > 100)
+				{
+					Notify.Error("Nepodarilo se identifikovat vozidlo vytvorene serverem!");
+					return;
+				}
+			}
+
+			int vehID = NetworkGetEntityFromNetworkId(ret);
+			SetVehicleProperties(vehID, vehicleData);
+			TaskWarpPedIntoVehicle(Game.PlayerPed.Handle, vehID, -1);
 		}
 
 		private async static void SetVehicleProperties(int vehicle, dynamic vehicleProps)
@@ -522,11 +680,8 @@ namespace OriginFramework
 		public Action FuncOnHover { get; set; }
 		public Action FuncOnSelected { get; set; }
 		public bool Active { get; set; }
-		public float Xmin { get; set; }
-		public float Xmax { get; set; }
-		public float Ymin { get; set; }
-		public float Ymax { get; set; }
 		public string ExtraLeft { get; set; }
 		public string ExtraRight { get; set; }
+		public bool ColorAsUnavailable { get; set; }
 	}
 }

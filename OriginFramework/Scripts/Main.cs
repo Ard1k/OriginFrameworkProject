@@ -45,6 +45,7 @@ namespace OriginFramework
       LocalPlayers = Players;
 
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
+      EventHandlers["ofw:ValidationErrorNotification"] += new Action<string>(ValidationErrorNotification);
     }
 
     private async void OnClientResourceStart(string resourceName)
@@ -147,6 +148,11 @@ namespace OriginFramework
       #endregion
 
       Tick += OnTick;
+    }
+
+    private async void ValidationErrorNotification(string message)
+    {
+      Notify.Error(message);
     }
 
     private async Task OnTick()

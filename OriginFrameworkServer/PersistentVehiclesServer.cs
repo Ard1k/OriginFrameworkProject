@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;
 using CitizenFX.Core.Native;
+using System.Dynamic;
 
 namespace OriginFrameworkServer
 {
@@ -96,6 +97,68 @@ namespace OriginFrameworkServer
 
       var veh = new Vehicle(vehID);
       data.Vehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, LastKnownPos = new VehiclePosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model });
+
+      _ = callback(veh.NetworkId);
+    }
+
+    [EventHandler("ofw_veh:SpawnServerVehicleFromGarage")]
+    private async void SpawnServerVehicleFromGarage([FromSource] Player source, string plate, Vector3 pos, float heading, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+        return;
+
+      var param = new Dictionary<string, object>();
+      param.Add("@plate", plate);
+      var result = await VSql.FetchAllAsync("SELECT `stored`, `vehicle` FROM `owned_vehicles` WHERE `plate` = @plate", param);
+
+      if (result == null || result.Count <= 0)
+      {
+        Debug.WriteLine("OFW_SpawnServerVehicleFromGarage: Car with plate not found: " + plate);
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto newni v seznamu vlastnenych!");
+        _ = callback(-1);
+        return;
+      }
+      if ((sbyte)result[0]["stored"] <= 0)
+      {
+        Debug.WriteLine("OFW_SpawnServerVehicleFromGarage: Car is not stored: " + plate);
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto neni v garazi!");
+        _ = callback(-1);
+        return;
+      }
+
+      dynamic vehData = JsonConvert.DeserializeObject<ExpandoObject>((string)result[0]["vehicle"]);
+      var modelHash = (int)vehData.model;
+
+      var vehID = SpawnPersistentVehicle(modelHash, pos, heading);
+
+      int frameCounter = 0;
+      while (!DoesEntityExist(vehID))
+      {
+        await Delay(100);
+        frameCounter++;
+        if (frameCounter >= 20)
+        {
+
+          Debug.WriteLine("OFW_VEH: Vehicle from garage server spawn timeout!");
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Timeout pro spawn auta, zkus to prosim znovu!");
+          _ = callback(-1);
+          return;
+        }
+      }
+
+      var veh = new Vehicle(vehID);
+      data.Vehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, Plate = plate, LastKnownPos = new VehiclePosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model });
+
+      //kdyby ho do restartu serveru nevratil a uz bylo opraveny, tak at se nevrati poskozeni
+      vehData.engineHealth = null;
+      vehData.windows = null;
+      vehData.tyres = null;
+      vehData.doors = null;
+
+      var param2 = new Dictionary<string, object>();
+      param2.Add("@plate", plate);
+      param2.Add("@vehicle", JsonConvert.SerializeObject(vehData));
+      await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 0, `vehicle` = @vehicle WHERE `plate` = @plate", param2);
 
       _ = callback(veh.NetworkId);
     }
@@ -241,7 +304,7 @@ namespace OriginFrameworkServer
       //}
       // returns "Vehicle"
       
-      return CreateVehicle((uint)hash, pos.X, pos.Y, pos.Z, heading, true, false);
+      return CreateVehicle((uint)hash, pos.X, pos.Y, pos.Z, heading, true, true);
     }
   }
 }

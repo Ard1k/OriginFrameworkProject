@@ -18,6 +18,7 @@ namespace OriginFrameworkData.DataBags
 		public int NetID { get; set; }
 		public int ModelHash { get; set; }
 		public VehiclePosBag LastKnownPos { get; set; }
+		public string Plate { get; set; }
 	}
 
 	public class VehiclePosBag
