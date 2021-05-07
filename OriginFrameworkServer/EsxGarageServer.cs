@@ -16,6 +16,7 @@ namespace OriginFrameworkServer
   public class EsxGarageServer : BaseScript
   {
     private dynamic ESX = null;
+    private int recoverVehiclePrice = 1000;
 
     public EsxGarageServer()
     {
@@ -31,6 +32,8 @@ namespace OriginFrameworkServer
 
       while (SettingsManager.Settings == null)
         await Delay(0);
+
+      recoverVehiclePrice = SettingsManager.Settings.GarageRecoverPrice;
 
       while (ESX == null)
       {
@@ -73,6 +76,41 @@ namespace OriginFrameworkServer
       var result = await VSql.FetchScalarAsync("SELECT 1 FROM `owned_vehicles` WHERE `plate` = @plate", param);
 
       _ = callback((result != null && result != DBNull.Value) ? true : false);
+    }
+
+    [EventHandler("ofw_esxgarage:RecoverVehicle")]
+    private async void RecoverVehicle([FromSource] Player source, string plate, string garageId)
+    {
+      if (source == null)
+        return;
+
+      bool useBank = false;
+      var xPlayer = ESX.GetPlayerFromId(Int32.Parse(source.Handle));
+      if (xPlayer.getAccount("money").money < recoverVehiclePrice)
+      {
+        if (xPlayer.getAccount("bank").money < recoverVehiclePrice)
+        {
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Nemas dost penez!");
+          return;
+        }
+        else
+          useBank = true;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@plate", plate);
+      param.Add("@garage", garageId);
+      await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 1, `garage` = @garage WHERE `plate` = @plate", param);
+
+      //Potrebujem do main threadu, proto delay
+      await Delay(0);
+
+      if (useBank)
+        xPlayer.removeAccountMoney("bank", recoverVehiclePrice);
+      else
+        xPlayer.removeAccountMoney("money", recoverVehiclePrice);
+
+      source.TriggerEvent("ofw:SuccessNotification", $"Vozidlo obnoveno do garaze: {garageId}");
     }
 
     [EventHandler("ofw_esxgarage:SaveVehicle")]

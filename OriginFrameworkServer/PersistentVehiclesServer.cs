@@ -114,7 +114,7 @@ namespace OriginFrameworkServer
       if (result == null || result.Count <= 0)
       {
         Debug.WriteLine("OFW_SpawnServerVehicleFromGarage: Car with plate not found: " + plate);
-        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto newni v seznamu vlastnenych!");
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto neni v seznamu vlastnenych!");
         _ = callback(-1);
         return;
       }
@@ -126,8 +126,26 @@ namespace OriginFrameworkServer
         return;
       }
 
-      dynamic vehData = JsonConvert.DeserializeObject<ExpandoObject>((string)result[0]["vehicle"]);
+      dynamic vehData = null;
+      bool completed = false;
+
+      Func<dynamic, bool> CallbackFunction = (data) =>
+      {
+        vehData = data;
+        completed = true;
+        return true;
+      };
+
+      TriggerEvent("ofw_deserializer:DeserializeExpandoServer", (string)result[0]["vehicle"], CallbackFunction);
+
+      while (!completed)
+      {
+        await Delay(0);
+      }
+
       var modelHash = (int)vehData.model;
+
+      await Delay(0);
 
       var vehID = SpawnPersistentVehicle(modelHash, pos, heading);
 
@@ -161,6 +179,30 @@ namespace OriginFrameworkServer
       await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 0, `vehicle` = @vehicle WHERE `plate` = @plate", param2);
 
       _ = callback(veh.NetworkId);
+    }
+
+    [EventHandler("ofw_veh:IsVehicleWithPlateOutOfGarage")]
+    private async void IsVehicleWithPlateOutOfGarage([FromSource] Player source, string plate, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+        return;
+
+      if (data == null || data.Vehicles == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      for (int i = 0; i < data.Vehicles.Count; i++)
+      {
+        if (data.Vehicles[i].Plate == plate)
+        {
+          _ = callback(true);
+          return;
+        }
+      }
+
+      _ = callback(false);
     }
 
     private async void OnResourceStop(string resourceName)
@@ -252,7 +294,7 @@ namespace OriginFrameworkServer
         {
           var iveh = data.Vehicles[0];
 
-          if (NetworkGetEntityFromNetworkId(iveh.NetID) <= 0)
+          if (NetworkGetEntityFromNetworkId(iveh.NetID) <= 0 || GetEntityModel(NetworkGetEntityFromNetworkId(iveh.NetID)) != iveh.ModelHash)
           {
             Debug.WriteLine($"PersistentVehicles: Removing no longer existing vehicle from sync [NetID: {iveh.NetID}, Model: {iveh.ModelHash}]");
             data.Vehicles.Remove(iveh);

@@ -26,6 +26,7 @@ namespace OriginFramework
 		private static int MaxIndexVisible = 14;
 		private static int SelectedIndexVisible = 0;
 		private static bool controlsLocked = false;
+		private static int recoverVehiclePrice = 1000;
 
 		public GarageMenu()
 		{
@@ -39,6 +40,7 @@ namespace OriginFramework
 			while (SettingsManager.Settings == null)
 				await Delay(0);
 
+			recoverVehiclePrice = SettingsManager.Settings.GarageRecoverPrice;
 
 			while (ESX == null)
 			{
@@ -296,7 +298,7 @@ namespace OriginFramework
 			ClearMenu();
 
 			AddButton("Seznam vozidel", new Action(() => { ListVehicles(); }));
-			AddButton("Znicene/zabavene", new Action(() => { CloseMenu(); }));
+			AddButton("Znicene/zabavene", new Action(() => { ListOutOfGarageVehicles(); }));
 			AddButton("Zavrit", new Action(() => { CloseMenu(); }));
 
 			IsHidden = false;
@@ -358,8 +360,6 @@ namespace OriginFramework
 					if (((IDictionary<String, object>)vehicle).ContainsKey("fuelLevel"))
 						fuel = (float)vehicle.fuelLevel;
 
-					
-
 					var displayName = GetDisplayNameFromVehicleModel((uint)vehicle.model);
 					var plate = (string)row["plate"];
 					bool correctGarage = (string)row["garage"] == CurrentGarage?.Id;
@@ -386,6 +386,70 @@ namespace OriginFramework
 			IsHidden = false;
 		}
 
+		private static async void ListOutOfGarageVehicles()
+		{
+			MenuTitle = "Auta mimo garaz";
+			ClearMenu();
+			EnsureGarageCamera(CurrentGarage);
+
+			string ret = null;
+			bool completed = false;
+			Func<string, bool> CallbackFunction = (data) =>
+			{
+				ret = data;
+				completed = true;
+				return true;
+			};
+
+			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CallbackFunction);
+
+			while (!completed)
+			{
+				await Delay(0);
+			}
+
+			if (ret != null)
+			{
+				string playerJob = ESX.GetPlayerData()?.job?.name;
+				var fetched = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(ret);
+				foreach (var row in fetched)
+				{
+					if ((long)row["stored"] >= 1)
+						continue;
+
+					var plate = (string)row["plate"];
+					dynamic vehicle = await OfwFunctions.DeserializeToExpando((string)row["vehicle"]);
+					bool doesExistNow = await OfwFunctions.IsVehicleWithPlateOutOfGarageSpawned(plate, ESX);
+
+					var displayName = GetDisplayNameFromVehicleModel((uint)vehicle.model);
+					bool correctJob = true;
+					if (playerJob != null && (string)row["job"] != null)
+					{
+						if (playerJob != (string)row["job"])
+							correctJob = false;
+					}
+					string extraString = null;
+					if (doesExistNow)
+						extraString = "Vozidlo je nekde vyparkovane!";
+					else if (!correctJob)
+						extraString = "Nemas spravny job!";
+
+					AddButton($"{plate} | {displayName}", new Action(() => { VehicleOutOfGarageMenu(vehicle, $"{plate} | {displayName}", doesExistNow, correctJob); }), !correctJob || doesExistNow, null, extraString, null, new Action(() => { SpawnLocalVehicle(vehicle); }));
+				}
+
+				Buttons = Buttons.OrderBy(b => b.ColorAsUnavailable).ToList();
+				AddButton("Zpet", new Action(() => { DeleteLocalVehicle(); ShowGarageMenu(); }), 0);
+			}
+			else
+			{
+				Notify.Alert("Nemas zadne auta mimo garaz!");
+				ShowGarageMenu();
+				return;
+			}
+
+			IsHidden = false;
+		}
+
 		private static async void VehicleMenu(dynamic vehicle, string menutitle, bool correctGarage, bool correctJob)
 		{
 			MenuTitle = menutitle;
@@ -397,6 +461,21 @@ namespace OriginFramework
 				AddButton("Auto je v jine garazi!", null);
 			else
 				AddButton("Vyparkuj auto", new Action(() => { SpawnVehicle(vehicle); }));
+
+			AddButton("Zpet", new Action(() => { ListVehicles(); }));
+		}
+
+		private static async void VehicleOutOfGarageMenu(dynamic vehicle, string menutitle, bool doesExistNow, bool correctJob)
+		{
+			MenuTitle = menutitle;
+			ClearMenu();
+
+			if (!correctJob)
+				AddButton("Nemas spravny job!", null);
+			else if (doesExistNow)
+				AddButton("Vozidlo je nekde vyparkovane!", null);
+			else
+				AddButton($"Obnovit auto do teto garaze {recoverVehiclePrice}$", new Action(() => { RecoverVehicle(vehicle); }));
 
 			AddButton("Zpet", new Action(() => { ListVehicles(); }));
 		}
@@ -512,9 +591,25 @@ namespace OriginFramework
 			TaskWarpPedIntoVehicle(Game.PlayerPed.Handle, vehID, -1);
 		}
 
+		private static async void RecoverVehicle(dynamic vehicleData)
+		{
+			if (vehicleData == null || CurrentGarage == null)
+				return;
+
+			BaseScript.TriggerServerEvent("ofw_esxgarage:RecoverVehicle", vehicleData.plate, CurrentGarage.Id);
+
+			CloseMenu();
+		}
+
 		private async static void SetVehicleProperties(int vehicle, dynamic vehicleProps)
 		{
 			ESX.Game.SetVehicleProperties(vehicle, vehicleProps);
+
+			if (((IDictionary<String, object>)vehicleProps).ContainsKey("neonColor"))
+				SetVehicleNeonLightsColour(vehicle, Convert.ToInt32(((IDictionary<String, object>)vehicleProps.neonColor)["1"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.neonColor)["2"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.neonColor)["3"]));
+
+			if (((IDictionary<String, object>)vehicleProps).ContainsKey("tyreSmokeColor"))
+				SetVehicleTyreSmokeColor(vehicle, Convert.ToInt32(((IDictionary<String, object>)vehicleProps.tyreSmokeColor)["1"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.tyreSmokeColor)["2"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.tyreSmokeColor)["3"]));
 
 			if (((IDictionary<String, object>)vehicleProps).ContainsKey("engineHealth"))
 				SetVehicleEngineHealth(vehicle, (float)vehicleProps?.engineHealth);
@@ -522,8 +617,6 @@ namespace OriginFramework
 			{
 				SetVehicleFuelLevel(vehicle, (float)vehicleProps?.fuelLevel);
 			}
-
-			
 
 			if (((IDictionary<String, object>)vehicleProps).ContainsKey("windows"))
 			{
@@ -610,6 +703,8 @@ namespace OriginFramework
 
 			var vehicleProps = GetVehicleProperties(veh);
 
+			Console.WriteLine(JsonConvert.SerializeObject(vehicleProps));
+
 			bool ret = false;
 			bool completed = false;
 			Func<bool, bool> CallbackFunction = (data) =>
@@ -667,6 +762,8 @@ namespace OriginFramework
 			vehicleProps.tyres = tyres;
 			vehicleProps.doors = doors;
 
+
+			Debug.WriteLine("Get Neon: " + (vehicleProps.neonColor).ToString() + " Type: " + (vehicleProps.neonColor).GetType().ToString());
 			return vehicleProps;
 		}
 		#endregion

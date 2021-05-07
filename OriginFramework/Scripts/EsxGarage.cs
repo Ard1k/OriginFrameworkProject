@@ -16,10 +16,13 @@ namespace OriginFramework.Scripts
 		private GarageBag[] Garages = null;
 		private float menuMarkerSize = 2f;
 		private float vehMarkerSize = 6f;
+		private string playerJob = null;
 
 		public EsxGarage()
 		{
 			EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
+			EventHandlers["esx:playerLoaded"] += new Action<dynamic>(EsxPlayerLoaded);
+			EventHandlers["esx:setJob"] += new Action<dynamic>(EsxSetJob);
 		}
 
 		private async void OnClientResourceStart(string resourceName)
@@ -55,6 +58,16 @@ namespace OriginFramework.Scripts
 			}
 
 			Tick += OnTick;
+		}
+
+		private async void EsxPlayerLoaded(dynamic playerData)
+		{
+			playerJob = ESX.GetPlayerData()?.job?.name;
+		}
+
+		private async void EsxSetJob(dynamic newJob)
+		{
+			playerJob = ESX.GetPlayerData()?.job?.name;
 		}
 
 		public async Task OnTick()

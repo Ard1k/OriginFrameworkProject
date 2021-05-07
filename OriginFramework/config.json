@@ -718,6 +718,7 @@
       ]
     }
   ],
+  "GarageRecoverPrice": 2000,
   "Garages": [
     {
       "Id": "A",

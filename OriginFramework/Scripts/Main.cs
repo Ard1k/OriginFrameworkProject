@@ -46,6 +46,7 @@ namespace OriginFramework
 
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
       EventHandlers["ofw:ValidationErrorNotification"] += new Action<string>(ValidationErrorNotification);
+      EventHandlers["ofw:SuccessNotification"] += new Action<string>(SuccessNotification);
     }
 
     private async void OnClientResourceStart(string resourceName)
@@ -153,6 +154,11 @@ namespace OriginFramework
     private async void ValidationErrorNotification(string message)
     {
       Notify.Error(message);
+    }
+
+    private async void SuccessNotification(string message)
+    {
+      Notify.Success(message);
     }
 
     private async Task OnTick()

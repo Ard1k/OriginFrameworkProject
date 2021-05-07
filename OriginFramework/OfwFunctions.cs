@@ -68,5 +68,24 @@ namespace OriginFramework
 
 			return ret;
 		}
+
+		public static async Task<bool> IsVehicleWithPlateOutOfGarageSpawned(string plate, dynamic esx)
+		{
+			bool ret = false;
+			bool completed = false;
+			Func<bool, bool> CallbackFunction = (data) => { ret = data; completed = true; return true; };
+			BaseScript.TriggerServerEvent("ofw_veh:IsVehicleWithPlateOutOfGarage", plate, CallbackFunction);
+			while (!completed)
+			{
+				await Main.Delay(0);
+			}
+
+			if (ret)
+				return ret;
+
+			//Projet jeste blizky auta
+
+			return ret;
+		}
 	}
 }
