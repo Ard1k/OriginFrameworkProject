@@ -17,6 +17,15 @@ namespace OriginFrameworkServer
   {
     private static PersistentVehicleDatabaseBag data = null;
     private bool isFirstTick = true;
+    private JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+    {
+      Error = (obj, args) =>
+      {
+        var context = args.ErrorContext;
+
+        context.Handled = true;
+      }
+    };
 
     public PersistentVehiclesServer()
     {
@@ -126,22 +135,17 @@ namespace OriginFrameworkServer
         return;
       }
 
-      dynamic vehData = null;
-      bool completed = false;
+      var sProps = (string)result[0]["vehicle"];
 
-      Func<dynamic, bool> CallbackFunction = (data) =>
+      if (sProps == null)
       {
-        vehData = data;
-        completed = true;
-        return true;
-      };
-
-      TriggerEvent("ofw_deserializer:DeserializeExpandoServer", (string)result[0]["vehicle"], CallbackFunction);
-
-      while (!completed)
-      {
-        await Delay(0);
+        Debug.WriteLine("OFW_SpawnServerVehicleFromGarage: Invalid car properties: " + plate);
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto neni spravne ulozeno v DB!");
+        _ = callback(-1);
+        return;
       }
+
+      VehiclePropertiesBag vehData = JsonConvert.DeserializeObject<VehiclePropertiesBag>(sProps, jsonSettings);
 
       var modelHash = (int)vehData.model;
 
@@ -182,6 +186,7 @@ namespace OriginFrameworkServer
 
       //kdyby ho do restartu serveru nevratil a uz bylo opraveny, tak at se nevrati poskozeni
       vehData.engineHealth = null;
+      vehData.bodyHealth = null;
       vehData.windows = null;
       vehData.tyres = null;
       vehData.doors = null;

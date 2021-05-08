@@ -28,6 +28,16 @@ namespace OriginFramework
 		private static bool controlsLocked = false;
 		private static int recoverVehiclePrice = 1000;
 
+		private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+		{
+			Error = (obj, args) =>
+			{
+				var context = args.ErrorContext;
+
+				context.Handled = true;
+			}
+		};
+
 		public GarageMenu()
 		{
 			EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
@@ -325,7 +335,7 @@ namespace OriginFramework
 		#region onTick events
 		public async Task OnTick()
 		{
-			if (!IsHidden && !controlsLocked && IsControlJustPressed(1, 177))
+			if (!IsHidden && IsControlJustPressed(1, 177))
 			{
 				CloseMenu();
 			}
@@ -368,13 +378,13 @@ namespace OriginFramework
 					if ((long)row["stored"] <= 0)
 						continue;
 
-					dynamic vehicle = await OfwFunctions.DeserializeToExpando((string)row["vehicle"]);
+					var vehicle = JsonConvert.DeserializeObject<VehiclePropertiesBag>((string)row["vehicle"], jsonSettings);
 					float engine = 1000f;
 					float fuel = 100f;
 
-					if (((IDictionary<String, object>)vehicle).ContainsKey("engineHealth"))
+					if (vehicle.engineHealth != null)
 						engine = (float)vehicle.engineHealth;
-					if (((IDictionary<String, object>)vehicle).ContainsKey("fuelLevel"))
+					if (vehicle.fuelLevel != null)
 						fuel = (float)vehicle.fuelLevel;
 
 					var displayName = GetDisplayNameFromVehicleModel((uint)vehicle.model);
@@ -437,7 +447,7 @@ namespace OriginFramework
 						continue;
 
 					var plate = (string)row["plate"];
-					dynamic vehicle = await OfwFunctions.DeserializeToExpando((string)row["vehicle"]);
+					var vehicle = JsonConvert.DeserializeObject<VehiclePropertiesBag>((string)row["vehicle"], jsonSettings);
 					bool doesExistNow = await OfwFunctions.IsVehicleWithPlateOutOfGarageSpawned(plate, ESX);
 
 					var displayName = GetDisplayNameFromVehicleModel((uint)vehicle.model);
@@ -470,7 +480,7 @@ namespace OriginFramework
 			IsHidden = false;
 		}
 
-		private static async void VehicleMenu(dynamic vehicle, string menutitle, bool correctGarage, bool correctJob)
+		private static async void VehicleMenu(VehiclePropertiesBag vehicle, string menutitle, bool correctGarage, bool correctJob)
 		{
 			MenuTitle = menutitle;
 			ClearMenu();
@@ -485,7 +495,7 @@ namespace OriginFramework
 			AddButton("Zpet", new Action(() => { ListVehicles(); }));
 		}
 
-		private static async void VehicleOutOfGarageMenu(dynamic vehicle, string menutitle, bool doesExistNow, bool correctJob)
+		private static async void VehicleOutOfGarageMenu(VehiclePropertiesBag vehicle, string menutitle, bool doesExistNow, bool correctJob)
 		{
 			MenuTitle = menutitle;
 			ClearMenu();
@@ -521,7 +531,7 @@ namespace OriginFramework
 			}
 		}
 
-		private static async void SpawnLocalVehicle(dynamic vehicleData)
+		private static async void SpawnLocalVehicle(VehiclePropertiesBag vehicleData)
 		{
 			if (vehicleData == null || CurrentGarage == null)
 				return;
@@ -533,13 +543,17 @@ namespace OriginFramework
 			DeleteLocalVehicle();
 
 			if (!IsModelValid((uint)vehicleData?.model))
+			{
+				controlsLocked = false;
 				return;
+			}
 
 			WaitForModel((int)vehicleData.model);
 
 			if (!ESX.Game.IsSpawnPointClear(spawnpoint, 3.0f))
 			{
 				Notify.Alert("Spawnpoint je blokovan");
+				controlsLocked = false;
 				return;
 			}
 
@@ -554,7 +568,7 @@ namespace OriginFramework
 			}));
 		}
 
-		private static async void SpawnVehicle(dynamic vehicleData)
+		private static async void SpawnVehicle(VehiclePropertiesBag vehicleData)
 		{
 			if (vehicleData == null || CurrentGarage == null)
 				return;
@@ -611,11 +625,12 @@ namespace OriginFramework
 			}
 
 			int vehID = NetworkGetEntityFromNetworkId(ret);
-			SetVehicleProperties(vehID, vehicleData);
 			TaskWarpPedIntoVehicle(Game.PlayerPed.Handle, vehID, -1);
+			await Delay(100);
+			SetVehicleProperties(vehID, vehicleData);
 		}
 
-		private static async void RecoverVehicle(dynamic vehicleData)
+		private static async void RecoverVehicle(VehiclePropertiesBag vehicleData)
 		{
 			if (vehicleData == null || CurrentGarage == null)
 				return;
@@ -625,46 +640,33 @@ namespace OriginFramework
 			CloseMenu();
 		}
 
-		private async static void SetVehicleProperties(int vehicle, dynamic vehicleProps)
+		private async static void SetVehicleProperties(int vehicle, VehiclePropertiesBag vehicleProps)
 		{
-			ESX.Game.SetVehicleProperties(vehicle, vehicleProps);
+			OfwFunctions.SetVehicleProperties(vehicle, vehicleProps);
 
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("neonColor"))
-				SetVehicleNeonLightsColour(vehicle, Convert.ToInt32(((IDictionary<String, object>)vehicleProps.neonColor)["1"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.neonColor)["2"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.neonColor)["3"]));
-
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("tyreSmokeColor"))
-				SetVehicleTyreSmokeColor(vehicle, Convert.ToInt32(((IDictionary<String, object>)vehicleProps.tyreSmokeColor)["1"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.tyreSmokeColor)["2"]), Convert.ToInt32(((IDictionary<String, object>)vehicleProps.tyreSmokeColor)["3"]));
-
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("engineHealth"))
-				SetVehicleEngineHealth(vehicle, (float)vehicleProps?.engineHealth);
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("fuelLevel"))
-			{
-				SetVehicleFuelLevel(vehicle, (float)vehicleProps?.fuelLevel);
-			}
-
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("windows"))
+			if (vehicleProps.windows != null)
 			{
 				for (int i = 0; i <= 13; i++)
 				{
-					if (vehicleProps.windows.Count > i && (bool)vehicleProps.windows[i] == false)
+					if (vehicleProps.windows.Length > i && (bool)vehicleProps.windows[i] == false)
 						SmashVehicleWindow(vehicle, i);
 				}
 			}
 
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("tyres"))
+			if (vehicleProps.tyres != null)
 			{
 				for (int i = 0; i <= 7; i++)
 				{
-					if (vehicleProps.tyres.Count > i && (bool)vehicleProps.tyres[i] == false)
+					if (vehicleProps.tyres.Length > i && (bool)vehicleProps.tyres[i] == false)
 						SetVehicleTyreBurst(vehicle, i, true, 1000);
 				}
 			}
 			
-			if (((IDictionary<String, object>)vehicleProps).ContainsKey("doors"))
+			if (vehicleProps.doors != null)
 			{
 				for (int i = 0; i <= 5; i++)
 				{
-					if (vehicleProps.doors.Count > i && (bool)vehicleProps.doors[i] == false)
+					if (vehicleProps.doors.Length > i && (bool)vehicleProps.doors[i] == false)
 						SetVehicleDoorBroken(vehicle, i, true);
 				}
 			}
@@ -760,15 +762,15 @@ namespace OriginFramework
 			Notify.Success("Vozidlo zaparkovano!");
 			DeleteEntity(ref veh);
 
-			TriggerServerEvent("ofw_esxgarage:SaveVehicle", CurrentGarage.Id, vehicleProps);
+			TriggerServerEvent("ofw_esxgarage:SaveVehicle", CurrentGarage.Id, JsonConvert.SerializeObject(vehicleProps));
 		}
 
-		private static dynamic GetVehicleProperties(int veh)
+		private static VehiclePropertiesBag GetVehicleProperties(int veh)
 		{
 			if (!DoesEntityExist(veh))
 				return null;
 
-			var vehicleProps = ESX.Game.GetVehicleProperties(veh);
+			var vehicleProps = OfwFunctions.GetVehicleProperties(veh);
 
 			var windows = new bool[14];
 			for (int i = 0; i <= 13; i++)

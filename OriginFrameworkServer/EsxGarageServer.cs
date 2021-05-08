@@ -17,6 +17,15 @@ namespace OriginFrameworkServer
   {
     private dynamic ESX = null;
     private int recoverVehiclePrice = 1000;
+    private JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+    {
+      Error = (obj, args) =>
+      {
+        var context = args.ErrorContext;
+
+        context.Handled = true;
+      }
+    };
 
     public EsxGarageServer()
     {
@@ -129,8 +138,13 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_esxgarage:SaveVehicle")]
-    private async void SaveVehicle([FromSource] Player source, string garageId, dynamic vehicleProps)
+    private async void SaveVehicle([FromSource] Player source, string garageId, string vehiclePropsSerialized)
     {
+      if (vehiclePropsSerialized == null)
+        return;
+
+      var vehicleProps = JsonConvert.DeserializeObject<VehiclePropertiesBag>(vehiclePropsSerialized);
+
       var player = ESX.GetPlayerFromId(Int32.Parse(source.Handle));
       string plate = (string)vehicleProps.plate;
 
@@ -140,8 +154,8 @@ namespace OriginFrameworkServer
       var result1 = await VSql.FetchScalarAsync("SELECT `vehicle` FROM `owned_vehicles` WHERE `plate` = @plate", param1);
       if (result1 != null && result1 is string)
       {
-        dynamic storedVeh = JsonConvert.DeserializeObject<ExpandoObject>((string)result1);
-        if (storedVeh?.model?.ToString() != vehicleProps?.model?.ToString())
+        var storedVeh = JsonConvert.DeserializeObject<VehiclePropertiesBag>((string)result1, jsonSettings);
+        if (storedVeh?.model.ToString() != vehicleProps?.model.ToString())
         {
           Debug.WriteLine("Model changed, not saving vehicle! Following player is probably cheater: " + player.identifier);
           return;
@@ -151,7 +165,7 @@ namespace OriginFrameworkServer
       var param2 = new Dictionary<string, object>();
       param2.Add("@plate", plate);
       param2.Add("@garage", garageId);
-      param2.Add("@vehicle", JsonConvert.SerializeObject(vehicleProps));
+      param2.Add("@vehicle", vehiclePropsSerialized);
       await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 1, `vehicle` = @vehicle, `garage` = @garage WHERE `plate` = @plate", param2);
     }
 
