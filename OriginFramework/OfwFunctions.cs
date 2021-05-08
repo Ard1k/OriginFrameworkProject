@@ -7,11 +7,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static CitizenFX.Core.Native.API;
+using static CitizenFX.Core.UI.Screen;
 
 namespace OriginFramework
 {
 	public static class OfwFunctions
 	{
+		public static bool DebugMode { get; set; } = false;
+
+		#region base script functions wrappers
+		public static void TriggerServerEvent(string eventName, params object[] args)
+		{
+			BaseScript.TriggerServerEvent(eventName, args);
+		}
+
+		public static void TriggerEvent(string eventName, params object[] args)
+		{
+			BaseScript.TriggerEvent(eventName, args);
+		}
+
+		public static async Task Delay(int time)
+		{
+			await BaseScript.Delay(time);
+		}
+		#endregion
+
+		#region Optional debug
+		public static void WriteOnlyInDebugMode(string data)
+		{
+			if (DebugMode) Debug.WriteLine(@data);
+		}
+		#endregion
+
+		#region blips
 		public static int CreateBlip(Vector3 coords, string name, int sprite, int color, float scale)
 		{
 			var blip = AddBlipForCoord(coords.X, coords.Y, coords.Z);
@@ -56,20 +84,25 @@ namespace OriginFramework
 			return blip;
 		}
 
-		//public static async Task<dynamic> DeserializeToExpando(string serialized)
-		//{
-		//	dynamic ret = null;
-		//	bool completed = false;
-		//	Func<dynamic, bool> CallbackFunction = (data) => { ret = data; completed = true; return true;	};
-		//	BaseScript.TriggerServerEvent("ofw_deserializer:DeserializeExpandoClient", serialized, CallbackFunction);
-		//	while (!completed)
-		//	{
-		//		await Main.Delay(0);
-		//	}
+		#endregion
 
-		//	return ret;
-		//}
+		#region ofw_deserializer
+		public static async Task<dynamic> DeserializeToExpando(string serialized)
+		{
+			dynamic ret = null;
+			bool completed = false;
+			Func<dynamic, bool> CallbackFunction = (data) => { ret = data; completed = true; return true; };
+			BaseScript.TriggerServerEvent("ofw_deserializer:DeserializeExpandoClient", serialized, CallbackFunction);
+			while (!completed)
+			{
+				await Main.Delay(0);
+			}
 
+			return ret;
+		}
+		#endregion
+
+		#region vehicle related
 		public static async Task<bool> IsVehicleWithPlateOutOfGarageSpawned(string plate, dynamic esx)
 		{
 			bool ret = false;
@@ -306,5 +339,81 @@ namespace OriginFramework
 				SetVehicleLivery(vehicleId, props.modLivery.Value);
 			}
 		}
+
+		#endregion
+
+		#region string utils
+		public static string[] StringToArray(string inputString)
+		{
+			return CitizenFX.Core.UI.Screen.StringToArray(inputString);
+		}
+		#endregion
+
+		#region Draw text
+		public static void DrawTextOnScreen(string text, float xPosition, float yPosition) =>
+				DrawTextOnScreen(text, xPosition, yPosition, size: 0.48f);
+
+		public static void DrawTextOnScreen(string text, float xPosition, float yPosition, float size) =>
+				DrawTextOnScreen(text, xPosition, yPosition, size, CitizenFX.Core.UI.Alignment.Left);
+
+		public static void DrawTextOnScreen(string text, float xPosition, float yPosition, float size, CitizenFX.Core.UI.Alignment justification) =>
+				DrawTextOnScreen(text, xPosition, yPosition, size, justification, 6);
+
+		public static void DrawTextOnScreen(string text, float xPosition, float yPosition, float size, CitizenFX.Core.UI.Alignment justification, int font) =>
+				DrawTextOnScreen(text, xPosition, yPosition, size, justification, font, false);
+
+		public static void DrawTextOnScreen(string text, float xPosition, float yPosition, float size, CitizenFX.Core.UI.Alignment justification, int font, bool disableTextOutline)
+		{
+			if (IsHudPreferenceSwitchedOn() && Hud.IsVisible && !IsPlayerSwitchInProgress() && IsScreenFadedIn() && !IsPauseMenuActive() && !IsFrontendFading() && !IsPauseMenuRestarting() && !IsHudHidden())
+			{
+				SetTextFont(font);
+				SetTextScale(1.0f, size);
+				if (justification == CitizenFX.Core.UI.Alignment.Right)
+				{
+					SetTextWrap(0f, xPosition);
+				}
+				SetTextJustification((int)justification);
+				if (!disableTextOutline) { SetTextOutline(); }
+				BeginTextCommandDisplayText("STRING");
+				AddTextComponentSubstringPlayerName(text);
+				EndTextCommandDisplayText(xPosition, yPosition);
+			}
+		}
+		#endregion
+
+		#region vMenu - GetUserInput
+		public static async Task<string> GetUserInput() => await GetUserInput(null, null, 30);
+		public static async Task<string> GetUserInput(int maxInputLength) => await GetUserInput(null, null, maxInputLength);
+		public static async Task<string> GetUserInput(string windowTitle) => await GetUserInput(windowTitle, null, 30);
+		public static async Task<string> GetUserInput(string windowTitle, int maxInputLength) => await GetUserInput(windowTitle, null, maxInputLength);
+		public static async Task<string> GetUserInput(string windowTitle, string defaultText) => await GetUserInput(windowTitle, defaultText, 30);
+		public static async Task<string> GetUserInput(string windowTitle, string defaultText, int maxInputLength)
+		{
+			// Create the window title string.
+			var spacer = "\t";
+			AddTextEntry($"{GetCurrentResourceName().ToUpper()}_WINDOW_TITLE", $"{windowTitle ?? "Enter"}:{spacer}(MAX {maxInputLength} Characters)");
+
+			// Display the input box.
+			DisplayOnscreenKeyboard(1, $"{GetCurrentResourceName().ToUpper()}_WINDOW_TITLE", "", defaultText ?? "", "", "", "", maxInputLength);
+			await Delay(0);
+			// Wait for a result.
+			while (true)
+			{
+				int keyboardStatus = UpdateOnscreenKeyboard();
+
+				switch (keyboardStatus)
+				{
+					case 3: // not displaying input field anymore somehow
+					case 2: // cancelled
+						return null;
+					case 1: // finished editing
+						return GetOnscreenKeyboardResult();
+					default:
+						await Delay(0);
+						break;
+				}
+			}
+		}
+		#endregion
 	}
 }

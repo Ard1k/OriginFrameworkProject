@@ -37,24 +37,24 @@ namespace OriginFrameworkServer
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      RegisterCommand("supercar", new Action<int, List<object>, string>((source, args, raw) =>
-      {
-        if (args == null || args.Count <= 0)
-          return;
+      //RegisterCommand("supercar", new Action<int, List<object>, string>((source, args, raw) =>
+      //{
+      //  if (args == null || args.Count <= 0)
+      //    return;
 
-        var ped = Ped.FromPlayerHandle(source.ToString());
-        var pos = ped.Position;
+      //  var ped = Ped.FromPlayerHandle(source.ToString());
+      //  var pos = ped.Position;
 
-        var vehID = SpawnPersistentVehicle(GetHashKey(args[0].ToString()), new Vector3(pos.X, pos.Y, pos.Z), ped.Heading);
+      //  var vehID = SpawnPersistentVehicle(GetHashKey(args[0].ToString()), new Vector3(pos.X, pos.Y, pos.Z), ped.Heading);
 
-        Task.Run(async () => {
-          while (!DoesEntityExist(vehID))
-            await Delay(0);
+      //  Task.Run(async () => {
+      //    while (!DoesEntityExist(vehID))
+      //      await Delay(0);
 
-          var veh = new Vehicle(vehID);
-          data.Vehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, LastKnownPos = new VehiclePosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model });
-        });
-      }), false);
+      //    var veh = new Vehicle(vehID);
+      //    data.Vehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, LastKnownPos = new VehiclePosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model });
+      //  });
+      //}), false);
 
       while (SettingsManager.Settings == null)
         await Delay(0);

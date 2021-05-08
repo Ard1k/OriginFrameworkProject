@@ -250,7 +250,7 @@ namespace OriginFramework
 
       AboutMenu = new About();
       Menu menu4 = AboutMenu.GetMenu();
-      MenuItem button4 = new MenuItem("About OFW", "Informace o origin frameworku")
+      MenuItem button4 = new MenuItem("About OFW", "Informace o Origin frameworku")
       {
         Label = "→→→"
       };

@@ -21,20 +21,6 @@ namespace OriginFrameworkServer
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
     }
 
-    //public static Vehicle lastSuperVeh = null;
-
-    //private static async Task TickTask()
-    //{
-    //  Debug.WriteLine("superveh owner: " + lastSuperVeh?.Owner ?? "null");
-    //  Debug.WriteLine("superveh ownerHandle: " + lastSuperVeh?.Owner?.Handle ?? "null");
-    //  Debug.WriteLine("superveh netID: " + lastSuperVeh?.NetworkId ?? "null");
-    //  Debug.WriteLine("superveh pos: " + lastSuperVeh?.Position ?? "null");
-    //  Debug.WriteLine("superveh handle: " + lastSuperVeh?.Handle ?? "null");
-    //  Debug.WriteLine("superveh state: " + lastSuperVeh?.State ?? "null");
-
-    //  await Delay(5000);
-    //}
-
     private async void OnResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
@@ -56,14 +42,6 @@ namespace OriginFrameworkServer
 
         Debug.WriteLine("returned ID: " + id + " SID: " + source);
       }), false);
-    }
-
-    [EventHandler("ofw:TestDB")]
-    private async void TestDB([FromSource] Player source, NetworkCallbackDelegate callback)
-    {
-      var result = await VSql.FetchAllAsync("select * from users", null);
-
-      _ = callback(JsonConvert.SerializeObject(result));
     }
   }
 }

@@ -4,7 +4,7 @@ game 'gta5'
 
 description 'OriginFrameworkDeserializer'
 
-version '0.0.4'
+version '1.0.0'
 
 files {
 	'Newtonsoft.Json.dll'

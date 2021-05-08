@@ -7,7 +7,7 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using static CitizenFX.Core.Native.API;
-using static OriginFramework.vMenuFunctions;
+using static OriginFramework.OfwFunctions;
 using OriginFrameworkData;
 using OriginFrameworkData.DataBags;
 

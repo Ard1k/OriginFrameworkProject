@@ -4,39 +4,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static OriginFramework.vMenuFunctions;
 
 namespace OriginFramework.Menus
 {
   public class About
   {
-    // Variables
     private Menu menu;
 
     private void CreateMenu()
     {
-      // Create the menu.
       menu = new Menu("Origin Framework", "About");
 
-      // Create menu items.
-      MenuItem version = new MenuItem("Verze", $" ~b~~h~{Main.Version}~h~~s~.")
+      MenuItem version = new MenuItem("Verze", $" ~b~~h~{Main.Version}~h~~s~")
       {
         Label = $"~h~{Main.Version}~h~"
       };
-      MenuItem credits = new MenuItem("About", "Custom featurky pro server");
+      MenuItem about = new MenuItem("About", "Custom scripty pro server");
+      MenuItem credits = new MenuItem("Credits", "MenuAPI~n~https://github.com/TomGrobbe/MenuAPI~n~~n~VSql~n~https://github.com/warxander/vSql");
 
-      MenuItem serverInfo = new MenuItem("Server Info", "Origin");
-      serverInfo.Label = "Origin RP";
+      MenuItem serverInfo = new MenuItem("Server Info", "OriginPLAY CZ/SK Komunita");
+      serverInfo.Label = "OriginRP";
 
       menu.AddMenuItem(serverInfo);
       menu.AddMenuItem(version);
+      menu.AddMenuItem(about);
       menu.AddMenuItem(credits);
 
       menu.OnItemSelect += async (sender, item, index) =>
       {
         if (item == version)
         {
-          string result = await GetUserInput(windowTitle: "Kdo je tvuj nejoblibenejsi prezident a proc prave Zeman?");
+          string result = await OfwFunctions.GetUserInput(windowTitle: "Nebud citlivy, ok?");
           if (result != null && result == "iwantsomefun")
           {
             Main.UnlockFun();
@@ -45,10 +43,6 @@ namespace OriginFramework.Menus
       };
     }
 
-    /// <summary>
-    /// Create the menu if it doesn't exist, and then returns it.
-    /// </summary>
-    /// <returns>The Menu</returns>
     public Menu GetMenu()
     {
       if (menu == null)
