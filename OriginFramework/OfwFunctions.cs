@@ -83,9 +83,20 @@ namespace OriginFramework
 			if (ret)
 				return ret;
 
-			//Projet jeste blizky auta
+			var vehs = World.GetAllVehicles();
+			bool isAnyFound = false;
 
-			return ret;
+			if (vehs != null)
+			{
+				foreach (var veh in vehs)
+				{
+					var props = esx.Game.GetVehicleProperties(veh.Handle);
+					if (props != null && ((IDictionary<String, object>)props).ContainsKey("plate") && ((string)props.plate) == plate)
+						isAnyFound = true;
+				}
+			}
+
+			return isAnyFound;
 		}
 	}
 }

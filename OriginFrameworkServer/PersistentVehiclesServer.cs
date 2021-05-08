@@ -147,7 +147,20 @@ namespace OriginFrameworkServer
 
       await Delay(0);
 
-      var vehID = SpawnPersistentVehicle(modelHash, pos, heading);
+      int vehID = -1;
+      try
+      {
+        vehID = SpawnPersistentVehicle(modelHash, pos, heading);
+      }
+      catch 
+      {
+        Debug.WriteLine("OFW_VEH: Vehicle from garage server spawn error!");
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Error pri spawnu auta, zkus to prosim znovu!");
+        _ = callback(-1);
+        return;
+      }
+
+      await Delay(200);
 
       int frameCounter = 0;
       while (!DoesEntityExist(vehID))
@@ -346,7 +359,7 @@ namespace OriginFrameworkServer
       //}
       // returns "Vehicle"
       
-      return CreateVehicle((uint)hash, pos.X, pos.Y, pos.Z, heading, true, true);
+      return CreateVehicle((uint)hash, pos.X, pos.Y, pos.Z, heading, true, false);
     }
   }
 }

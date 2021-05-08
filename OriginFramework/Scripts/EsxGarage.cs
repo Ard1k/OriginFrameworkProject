@@ -43,19 +43,19 @@ namespace OriginFramework.Scripts
 				await Delay(0);
 			}
 
-			foreach (var garage in Garages)
+			while (playerJob == null)
 			{
-				var garageBlip = AddBlipForCoord(garage.MenuPosition.X, garage.MenuPosition.Y, garage.MenuPosition.Z);
-
-				SetBlipSprite(garageBlip, 290);
-				SetBlipDisplay(garageBlip, 4);
-				SetBlipScale(garageBlip, 0.7f);
-				SetBlipColour(garageBlip, -1);
-				SetBlipAsShortRange(garageBlip, true);
-				BeginTextCommandSetBlipName("STRING");
-				AddTextComponentString("Parking " + garage.Id);
-				EndTextCommandSetBlipName(garageBlip);
+				try
+				{
+					playerJob = ESX.GetPlayerData().job.name;
+				}
+				catch
+				{ }
+				if (playerJob == null)
+					await Delay(100);
 			}
+
+			RefreshBlips();
 
 			Tick += OnTick;
 		}
@@ -63,11 +63,13 @@ namespace OriginFramework.Scripts
 		private async void EsxPlayerLoaded(dynamic playerData)
 		{
 			playerJob = ESX.GetPlayerData()?.job?.name;
+			RefreshBlips();
 		}
 
 		private async void EsxSetJob(dynamic newJob)
 		{
 			playerJob = ESX.GetPlayerData()?.job?.name;
+			RefreshBlips();
 		}
 
 		public async Task OnTick()
@@ -75,11 +77,10 @@ namespace OriginFramework.Scripts
 			bool sleep = true;
 
 			var pedCoords = Game.PlayerPed.Position;
-			bool draw = false;
-			float markerSize = 1f;
 
 			foreach (var garage in Garages)
 			{
+
 				var dstMenu = Vector3.Distance(pedCoords, new Vector3(garage.MenuPosition.X, garage.MenuPosition.Y, garage.MenuPosition.Z));
 				if (dstMenu < 50f)
 				{
@@ -95,8 +96,11 @@ namespace OriginFramework.Scripts
 					}
 
 					if (GarageMenu.IsHidden)
-						DrawMarker(27, garage.MenuPosition.X, garage.MenuPosition.Y, garage.MenuPosition.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, menuMarkerSize, menuMarkerSize, menuMarkerSize, 0, 255, 0, 255, false, false, 2, false, null, null, false);
+						DrawMarker(27, garage.MenuPosition.X, garage.MenuPosition.Y, garage.MenuPosition.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, menuMarkerSize, menuMarkerSize, menuMarkerSize, 0, 255, 0, 120, false, false, 2, false, null, null, false);
 				}
+
+				if (garage.Job != null && garage.Job != playerJob)
+					continue;
 
 				var dstVeh = Vector3.Distance(pedCoords, new Vector3(garage.VehiclePosition.X, garage.VehiclePosition.Y, garage.VehiclePosition.Z));
 				if (dstVeh < 50f)
@@ -110,7 +114,7 @@ namespace OriginFramework.Scripts
 					}
 
 					if (GarageMenu.IsHidden)
-						DrawMarker(27, garage.VehiclePosition.X, garage.VehiclePosition.Y, garage.VehiclePosition.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, vehMarkerSize, vehMarkerSize, vehMarkerSize, 255, 0, 0, 255, false, false, 2, false, null, null, false);
+						DrawMarker(27, garage.VehiclePosition.X, garage.VehiclePosition.Y, garage.VehiclePosition.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, vehMarkerSize, vehMarkerSize, vehMarkerSize, 255, 0, 0, 120, false, false, 2, false, null, null, false);
 				}
 			}
 
@@ -129,6 +133,40 @@ namespace OriginFramework.Scripts
 					return false;
 			}
 			return false;
+		}
+
+		public void RefreshBlips()
+		{
+			foreach (var garage in Garages)
+			{
+				if (garage.Blip < 0)
+					continue;
+				if (garage.Blip == 0)
+					garage.Blip = 290;
+
+				if (garage.BlipId > 0)
+				{
+					var blp = garage.BlipId;
+					RemoveBlip(ref blp);
+					garage.BlipId = -1;
+				}
+
+				if (garage.Job != null && garage.Job != playerJob)
+					continue;
+
+				var garageBlip = AddBlipForCoord(garage.MenuPosition.X, garage.MenuPosition.Y, garage.MenuPosition.Z);
+
+				SetBlipSprite(garageBlip, garage.Blip);
+				SetBlipDisplay(garageBlip, 4);
+				SetBlipScale(garageBlip, 0.7f);
+				SetBlipColour(garageBlip, garage.BlipColor);
+				SetBlipAsShortRange(garageBlip, true);
+				BeginTextCommandSetBlipName("STRING");
+				AddTextComponentString("Parking " + garage.Id);
+				EndTextCommandSetBlipName(garageBlip);
+
+				garage.BlipId = garageBlip;
+			}
 		}
 	}
 }

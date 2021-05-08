@@ -282,6 +282,20 @@ namespace OriginFramework
 			EnsureGarageCamera(null);
 			RenderScriptCams(false, true, 750, true, false);
 			PlaySound(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", false, 0, true);
+
+			var vehs = World.GetAllVehicles();
+
+			if (vehs != null)
+			{
+				foreach (var veh in vehs)
+				{
+					if (!NetworkGetEntityIsNetworked(veh.Handle))
+					{
+						int vehId = veh.Handle;
+						DeleteEntity(ref vehId);
+					}
+				}
+			}
 		}
 
 		#endregion
@@ -298,7 +312,9 @@ namespace OriginFramework
 			ClearMenu();
 
 			AddButton("Seznam vozidel", new Action(() => { ListVehicles(); }));
-			AddButton("Znicene/zabavene", new Action(() => { ListOutOfGarageVehicles(); }));
+			if (!CurrentGarage.Id.StartsWith("Imp"))
+				if (garage.Job == null || garage.Job == ESX.GetPlayerData()?.job?.name)
+					AddButton("Znicene/zabavene", new Action(() => { ListOutOfGarageVehicles(); }));
 			AddButton("Zavrit", new Action(() => { CloseMenu(); }));
 
 			IsHidden = false;
@@ -309,7 +325,7 @@ namespace OriginFramework
 		#region onTick events
 		public async Task OnTick()
 		{
-			if (!IsHidden && IsControlJustPressed(1, 177))
+			if (!IsHidden && !controlsLocked && IsControlJustPressed(1, 177))
 			{
 				CloseMenu();
 			}
@@ -324,6 +340,7 @@ namespace OriginFramework
 			MenuTitle = "Vlastnena auta";
 			ClearMenu();
 			EnsureGarageCamera(CurrentGarage);
+			string playerJob = ESX.GetPlayerData()?.job?.name;
 
 			string ret = null;
 			bool completed = false;
@@ -334,7 +351,7 @@ namespace OriginFramework
 				return true;
 			};
 
-			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CallbackFunction);
+			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, playerJob, CallbackFunction);
 
 			while (!completed)
 			{
@@ -343,8 +360,8 @@ namespace OriginFramework
 
 			if (ret != null)
 			{
-				string playerJob = ESX.GetPlayerData()?.job?.name;
-				Debug.WriteLine("PlayerJob: " + playerJob ?? "job unresolved");
+				controlsLocked = true;
+
 				var fetched = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(ret);
 				foreach (var row in fetched)
 				{
@@ -375,6 +392,7 @@ namespace OriginFramework
 
 				Buttons = Buttons.OrderBy(b => b.ColorAsUnavailable).ToList();
 				AddButton("Zpet", new Action(() => { DeleteLocalVehicle(); ShowGarageMenu(); }), 0);
+				controlsLocked = false;
 			}
 			else
 			{
@@ -391,6 +409,7 @@ namespace OriginFramework
 			MenuTitle = "Auta mimo garaz";
 			ClearMenu();
 			EnsureGarageCamera(CurrentGarage);
+			string playerJob = ESX.GetPlayerData()?.job?.name;
 
 			string ret = null;
 			bool completed = false;
@@ -401,7 +420,7 @@ namespace OriginFramework
 				return true;
 			};
 
-			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CallbackFunction);
+			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, playerJob, CallbackFunction);
 
 			while (!completed)
 			{
@@ -410,8 +429,8 @@ namespace OriginFramework
 
 			if (ret != null)
 			{
-				string playerJob = ESX.GetPlayerData()?.job?.name;
 				var fetched = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(ret);
+				controlsLocked = true;
 				foreach (var row in fetched)
 				{
 					if ((long)row["stored"] >= 1)
@@ -439,6 +458,7 @@ namespace OriginFramework
 
 				Buttons = Buttons.OrderBy(b => b.ColorAsUnavailable).ToList();
 				AddButton("Zpet", new Action(() => { DeleteLocalVehicle(); ShowGarageMenu(); }), 0);
+				controlsLocked = false;
 			}
 			else
 			{
@@ -506,6 +526,8 @@ namespace OriginFramework
 			if (vehicleData == null || CurrentGarage == null)
 				return;
 
+			controlsLocked = true;
+
 			var spawnpoint = new Vector3(CurrentGarage.VehiclePosition.X, CurrentGarage.VehiclePosition.Y, CurrentGarage.VehiclePosition.Z);
 
 			DeleteLocalVehicle();
@@ -527,6 +549,8 @@ namespace OriginFramework
 				SetVehicleProperties((int)spawnedVeh, vehicleData);
 
 				SetModelAsNoLongerNeeded((uint)vehicleData.model);
+
+				controlsLocked = false;
 			}));
 		}
 
@@ -714,7 +738,7 @@ namespace OriginFramework
 				return true;
 			};
 
-			BaseScript.TriggerServerEvent("ofw_esxgarage:IsVehicleOwned", (string)vehicleProps.plate, CallbackFunction);
+			BaseScript.TriggerServerEvent("ofw_esxgarage:CanParkVehicle", (string)vehicleProps.plate, CurrentGarage.Type, CallbackFunction);
 
 			while (!completed)
 			{
@@ -723,7 +747,7 @@ namespace OriginFramework
 
 			if (!ret)
 			{
-				Notify.Error("Nelze zaparkovat NPC vozidlo!");
+				Notify.Error("Vozidlo nelze zaparkovat. Neni vlastnene nebo spatny typ garaze!");
 				return;
 			}
 
@@ -762,8 +786,6 @@ namespace OriginFramework
 			vehicleProps.tyres = tyres;
 			vehicleProps.doors = doors;
 
-
-			Debug.WriteLine("Get Neon: " + (vehicleProps.neonColor).ToString() + " Type: " + (vehicleProps.neonColor).GetType().ToString());
 			return vehicleProps;
 		}
 		#endregion

@@ -722,6 +722,7 @@
   "Garages": [
     {
       "Id": "A",
+      "BlipColor": 3,
       "MenuPosition": {
         "X": 213.7396,
         "Y": -809.1759,
@@ -744,24 +745,330 @@
     },
     {
       "Id": "B",
+      "BlipColor": 3,
       "MenuPosition": {
-        "X": 215.8124,
-        "Y": -804.7796,
-        "Z": 29.8256
+        "X": 273.67422485352,
+        "Y": -344.15573120117,
+        "Z": 44.919834136963
       },
       "VehiclePosition": {
-        "X": 216.2319,
-        "Y": -786.3704,
-        "Z": 29.8941,
-        "Heading": 161.3845
+        "X": 272.50082397461,
+        "Y": -337.40579223633,
+        "Z": 44.919834136963,
+        "Heading": 160.0
       },
       "Camera": {
-        "X": 216.94,
-        "Y": -795.61,
-        "Z": 32.51,
-        "RotationX": -30.401574149728,
+        "X": 283.282257,
+        "Y": -333.2401,
+        "Z": 50.004,
+        "RotationX": -21.637,
         "RotationY": 0.0,
-        "RotationZ": 0.75157422423
+        "RotationZ": 125.7322835
+      }
+    },
+    {
+      "Id": "C",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -1803.89672,
+        "Y": -341.45928,
+        "Z": 43.986347
+      },
+      "VehiclePosition": {
+        "X": -1810.7857,
+        "Y": -337.135925,
+        "Z": 43.552074,
+        "Heading": 320.0
+      },
+      "Camera": {
+        "X": -1813.5513,
+        "Y": -340.4008,
+        "Z": 46.962894,
+        "RotationX": -39.496062,
+        "RotationY": 0.0,
+        "RotationZ": -42.11023
+      }
+    },
+    {
+      "Id": "D",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 1098.0,
+        "Y": 2659.54,
+        "Z": 38.14
+      },
+      "VehiclePosition": {
+        "X": 1098.51,
+        "Y": 2674.82,
+        "Z": 38.25,
+        "Heading": 178.59
+      }
+    },
+    {
+      "Id": "E",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 1893.77,
+        "Y": 3712.21,
+        "Z": 32.78
+      },
+      "VehiclePosition": {
+        "X": 1886.67,
+        "Y": 3716.10,
+        "Z": 32.82,
+        "Heading": 118.94
+      }
+    },
+    {
+      "Id": "F",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 77.53,
+        "Y": 6361.71,
+        "Z": 31.49
+      },
+      "VehiclePosition": {
+        "X": -76.74,
+        "Y": 6346.73,
+        "Z": 31.07,
+        "Heading": 45.58
+      }
+    },
+    {
+      "Id": "G",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 846.2601,
+        "Y": -1050.77,
+        "Z": 27.9599
+      },
+      "VehiclePosition": {
+        "X": 850.4742,
+        "Y": -1054.4,
+        "Z": 28.0727,
+        "Heading": 266.9
+      }
+    },
+    {
+      "Id": "H",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 1107.18,
+        "Y": 60.58,
+        "Z": 80.89
+      },
+      "VehiclePosition": {
+        "X": 1109.02,
+        "Y": 47.09,
+        "Z": 80.76,
+        "Heading": 265.10
+      }
+    },
+    {
+      "Id": "I",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 1036.09,
+        "Y": -763.36,
+        "Z": 57.99
+      },
+      "VehiclePosition": {
+        "X": 1022.06,
+        "Y": -763.88,
+        "Z": 57.95,
+        "Heading": 319.3
+      },
+      "Camera": {
+        "X": 1023.97,
+        "Y": -756.88062744141,
+        "Z": 59.571212768555,
+        "RotationX": -35.401574149728,
+        "RotationY": 0.0,
+        "RotationZ": 180.40157422423
+      }
+    },
+    {
+      "Id": "J",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -72.69,
+        "Y": 908.39,
+        "Z": 235.63
+      },
+      "VehiclePosition": {
+        "X": -71.00,
+        "Y": 900.06,
+        "Z": 235.59,
+        "Heading": 110.55
+      }
+    },
+    {
+      "Id": "K",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 56.05059,
+        "Y": -876.4091,
+        "Z": 30.65991
+      },
+      "VehiclePosition": {
+        "X": 53.47192,
+        "Y": -883.3654,
+        "Z": 30.29851,
+        "Heading": 182.95
+      }
+    },
+    {
+      "Id": "L",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -72.69,
+        "Y": 908.39,
+        "Z": 235.63
+      },
+      "VehiclePosition": {
+        "X": -71.00,
+        "Y": 900.06,
+        "Z": 235.59,
+        "Heading": 110.55
+      }
+    },
+    {
+      "Id": "M",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -3155.68,
+        "Y": 1125.22,
+        "Z": 20.86
+      },
+      "VehiclePosition": {
+        "X": -3163.21,
+        "Y": 1130.80,
+        "Z": 20.99,
+        "Heading": 332.06
+      }
+    },
+    {
+      "Id": "N",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -52.79,
+        "Y": -220.93,
+        "Z": 45.44
+      },
+      "VehiclePosition": {
+        "X": -46.25,
+        "Y": -221.58,
+        "Z": 45.44,
+        "Heading": 162.14
+      }
+    },
+    {
+      "Id": "O",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 2549.39,
+        "Y": 4669.95,
+        "Z": 34.08
+      },
+      "VehiclePosition": {
+        "X": 2554.65,
+        "Y": 4674.83,
+        "Z": 33.93,
+        "Heading": 15.5
+      }
+    },
+    {
+      "Id": "P",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 951.42,
+        "Y": -122.64,
+        "Z": 74.35
+      },
+      "VehiclePosition": {
+        "X": 966.3,
+        "Y": -130.11,
+        "Z": 74.37,
+        "Heading": 164.31
+      }
+    },
+    {
+      "Id": "Q",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -1414.61,
+        "Y": -653.81,
+        "Z": 28.67
+      },
+      "VehiclePosition": {
+        "X": -1422.6,
+        "Y": -645.43,
+        "Z": 28.67,
+        "Heading": 214.54
+      }
+    },
+    {
+      "Id": "S",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": 541.1,
+        "Y": -1791.09,
+        "Z": 29.14
+      },
+      "VehiclePosition": {
+        "X": 545.74,
+        "Y": -1794.52,
+        "Z": 29.2,
+        "Heading": 335.87
+      }
+    },
+    {
+      "Id": "T",
+      "BlipColor": 3,
+      "MenuPosition": {
+        "X": -737.11,
+        "Y": 5822.99,
+        "Z": 17.31
+      },
+      "VehiclePosition": {
+        "X": -734.86,
+        "Y": 5813.66,
+        "Z": 17.0,
+        "Heading": 251.88
+      }
+    },
+    {
+      "Id": "Impound",
+      "Type": "car",
+      "Blip": 291,
+      "BlipColor": 17,
+      "MenuPosition": {
+        "X": 248.3996,
+        "Y": -780.8016,
+        "Z": 29.6855
+      },
+      "VehiclePosition": {
+        "X": 256.0554,
+        "Y": -773.2901,
+        "Z": 29.7672,
+        "Heading": 73.0442
+      }
+    },
+    {
+      "Id": "Taxi",
+      "Type": "car",
+      "Job": "taxi",
+      "BlipColor": 5,
+      "MenuPosition": {
+        "X": 232.2986,
+        "Y": -789.0192,
+        "Z": 29.6789
+      },
+      "VehiclePosition": {
+        "X": 235.9385,
+        "Y": -780.8009,
+        "Z": 29.7067,
+        "Heading": 114.7714
       }
     }
   ]

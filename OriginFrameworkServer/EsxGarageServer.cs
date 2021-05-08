@@ -49,22 +49,36 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_esxgarage:GetVehicles")]
-    private async void GetVehicles([FromSource] Player source, NetworkCallbackDelegate callback)
+    private async void GetVehicles([FromSource] Player source, string type, string garage, string playerJob, NetworkCallbackDelegate callback)
     {
       if (source == null)
         return;
 
       var player = ESX.GetPlayerFromId(Int32.Parse(source.Handle));
 
-      var param = new Dictionary<string, object>();
-      param.Add("@id", player.identifier);
-      var result = await VSql.FetchAllAsync("SELECT `plate`, `vehicle`, `type`, `job`, `stored`, `garage` FROM `owned_vehicles` WHERE `owner` = @id", param);
+      if (garage == null || !garage.StartsWith("Imp"))
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@id", player.identifier);
+        param.Add("@type", type ?? "car");
+        param.Add("@society", (playerJob != null) ? $"society:{playerJob}" : null);
+        var result = await VSql.FetchAllAsync("SELECT `plate`, `vehicle`, `type`, `job`, `stored`, `garage` FROM `owned_vehicles` WHERE (`owner` = @id OR `owner` = @society) AND `type` = @type", param);
 
-      _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
+        _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
+      }
+      else
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@garage", garage);
+        param.Add("@type", type ?? "car");
+        var result = await VSql.FetchAllAsync("SELECT `plate`, `vehicle`, `type`, `job`, `stored`, `garage` FROM `owned_vehicles` WHERE `garage` = @garage AND `type` = @type", param);
+
+        _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
+      }
     }
 
-    [EventHandler("ofw_esxgarage:IsVehicleOwned")]
-    private async void IsVehicleOwned([FromSource] Player source, string plate, NetworkCallbackDelegate callback)
+    [EventHandler("ofw_esxgarage:CanParkVehicle")]
+    private async void CanParkVehicle([FromSource] Player source, string plate, string garageType, NetworkCallbackDelegate callback)
     {
       if (source == null)
         return;
@@ -73,7 +87,8 @@ namespace OriginFrameworkServer
 
       var param = new Dictionary<string, object>();
       param.Add("@plate", plate);
-      var result = await VSql.FetchScalarAsync("SELECT 1 FROM `owned_vehicles` WHERE `plate` = @plate", param);
+      param.Add("@type", garageType ?? "car");
+      var result = await VSql.FetchScalarAsync("SELECT 1 FROM `owned_vehicles` WHERE `plate` = @plate AND `type` = @type", param);
 
       _ = callback((result != null && result != DBNull.Value) ? true : false);
     }
