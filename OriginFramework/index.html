@@ -35,6 +35,11 @@
                     console.log('Copied:' + str)
                     copyTextToClipboard(str);
                 }
+                else if (eventName === 'copyDataMessage') {
+                    var str = event.data.message;
+                    console.log('Copied:' + str)
+                    copyTextToClipboard(str);
+                }
             }
 
             function copyTextToClipboard(text) {

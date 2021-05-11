@@ -28,19 +28,36 @@ namespace OriginFrameworkServer
       while (SettingsManager.Settings == null)
         await Delay(0);
 
-      RegisterCommand("idcopy", new Action<int, List<object>, string>((source, args, raw) =>
+      RegisterCommand("identcopy", new Action<int, List<object>, string>((source, args, raw) =>
       {
+        var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+        if (sourcePlayer == null)
+          return;
+
         if (args == null || args.Count != 1)
         {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Natplatne server ID hrace");
           return;
-          //Invalid arguments
         }
 
-        var plr = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+        var player = Players.Where(p => p.Handle == args[0].ToString()).FirstOrDefault();
+        if (player == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nepodarilo se najit hrace");
+          return;
+        }
 
-        var id = OIDServer.GetOriginServerID(plr);
+        var sb = new StringBuilder();
+        sb.AppendLine($"serverID: [{player.Handle}] OID: [{OIDServer.GetOriginServerID(player)}] Name: [{player.Name}]");
+        sb.AppendLine();
+        sb.AppendLine("Known idetifiers:");
 
-        Debug.WriteLine("returned ID: " + id + " SID: " + source);
+        foreach (var ident in player.Identifiers)
+        {
+          sb.AppendLine(ident);
+        }
+
+        sourcePlayer.TriggerEvent("ofw_misc:CopyStringToClipboard", sb.ToString());
       }), false);
     }
   }
