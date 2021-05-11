@@ -1,6 +1,7 @@
 ﻿using CitizenFX.Core;
 using CitizenFX.Core.UI;
 using MenuAPI;
+using Newtonsoft.Json;
 using OriginFramework.Menus;
 using OriginFrameworkData;
 using System;
@@ -321,6 +322,7 @@ namespace OriginFramework
     public Misc()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
+      EventHandlers["ofw_misc:CopyStringToClipboard"] += new Action<string>(CopyStringToClipboard);
     }
 
     private async void OnClientResourceStart(string resourceName)
@@ -345,6 +347,17 @@ namespace OriginFramework
       }
     }
 
-    
+    private async void CopyStringToClipboard(string toCopy)
+    {
+      var message = new
+      {
+        type = "copyDataMessage",
+        message = toCopy
+      };
+      SendNuiMessage(JsonConvert.SerializeObject(message));
+
+      Notify.Info("Copied to clipboard!");
+    }
+
   }
 }
