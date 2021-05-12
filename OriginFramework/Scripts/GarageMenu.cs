@@ -352,21 +352,7 @@ namespace OriginFramework
 			EnsureGarageCamera(CurrentGarage);
 			string playerJob = ESX.GetPlayerData()?.job?.name;
 
-			string ret = null;
-			bool completed = false;
-			Func<string, bool> CallbackFunction = (data) =>
-			{
-				ret = data;
-				completed = true;
-				return true;
-			};
-
-			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, playerJob, CallbackFunction);
-
-			while (!completed)
-			{
-				await Delay(0);
-			}
+			string ret = await OfwFunctions.ServerAsyncCallbackToSync<string>("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, playerJob);
 
 			if (ret != null)
 			{

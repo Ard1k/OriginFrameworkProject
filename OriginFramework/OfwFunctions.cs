@@ -415,5 +415,33 @@ namespace OriginFramework
 			}
 		}
 		#endregion
+
+		#region callback
+		public static async Task<T> ServerAsyncCallbackToSync<T>(string eventName, params object[] args)
+		{
+			var expandedArgs = new object[args.Length + 1];
+			args.CopyTo(expandedArgs, 0);
+
+			T ret = default;
+			bool completed = false;
+			Func<T, bool> CallbackFunction = (data) =>
+			{
+				ret = data;
+				completed = true;
+				return true;
+			};
+
+			expandedArgs[args.Length] = CallbackFunction;
+
+			BaseScript.TriggerServerEvent(eventName, expandedArgs);
+
+			while (!completed)
+			{
+				await Delay(0);
+			}
+
+			return ret;
+		}
+		#endregion
 	}
 }

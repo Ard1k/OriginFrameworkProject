@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 //https://github.com/warxander/vSql
 
@@ -67,7 +68,10 @@ namespace OriginFrameworkServer
           using (var command = db.Connection.CreateCommand())
           {
             BuildCommand(command, query, parameters);
-            numberOfUpdatedRows = await command.ExecuteNonQueryAsync();
+            using (var pm = new PerformanceMeter("Execute", command))
+            {
+              numberOfUpdatedRows = await command.ExecuteNonQueryAsync();
+            }
           }
         }
       }
@@ -139,7 +143,10 @@ namespace OriginFrameworkServer
           using (var command = db.Connection.CreateCommand())
           {
             BuildCommand(command, query, parameters);
-            result = await command.ExecuteScalarAsync();
+            using (var pm = new PerformanceMeter("FetchScalar", command))
+            {
+              result = await command.ExecuteScalarAsync();
+            }
           }
         }
       }
@@ -163,14 +170,17 @@ namespace OriginFrameworkServer
           {
             BuildCommand(command, query, parameters);
 
-            using (var reader = await command.ExecuteReaderAsync())
+            using (var pm = new PerformanceMeter("FetchAll", command))
             {
-              while (await reader.ReadAsync())
+              using (var reader = await command.ExecuteReaderAsync())
               {
-                result.Add(Enumerable.Range(0, reader.FieldCount).ToDictionary(
-                    i => reader.GetName(i),
-                    i => reader.IsDBNull(i) ? null : reader.GetValue(i)
-                ));
+                while (await reader.ReadAsync())
+                {
+                  result.Add(Enumerable.Range(0, reader.FieldCount).ToDictionary(
+                      i => reader.GetName(i),
+                      i => reader.IsDBNull(i) ? null : reader.GetValue(i)
+                  ));
+                }
               }
             }
           }
@@ -219,6 +229,33 @@ namespace OriginFrameworkServer
       }
       
       wasInit = true;
+    }
+
+    private class PerformanceMeter : IDisposable
+    {
+      string _method = null;
+      Stopwatch _sw = new Stopwatch();
+      MySqlCommand _command = null;
+
+      public PerformanceMeter(string method, MySqlCommand command)
+      {
+        this._method = method;
+        this._command = command;
+
+        _sw.Start();
+      }
+
+      public void Dispose()
+      {
+        _sw.Stop();
+
+        if (_sw.ElapsedMilliseconds < 200)
+          return;
+
+        CitizenFX.Core.Debug.WriteLine($"[VSql - {_method}, time: {_sw.ElapsedMilliseconds}ms]");
+        CitizenFX.Core.Debug.WriteLine($"     Query: \"{_command.CommandText}\"");
+        CitizenFX.Core.Debug.WriteLine($"     Params:{string.Join(", ", _command.Parameters?.ToArray().Select(a => $"[Name:\"{a.ParameterName}\" Value:\"{a.Value?.ToString()}\"]"))}");
+      }
     }
   }
 }
