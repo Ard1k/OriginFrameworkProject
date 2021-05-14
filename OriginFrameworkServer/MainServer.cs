@@ -60,5 +60,18 @@ namespace OriginFrameworkServer
         sourcePlayer.TriggerEvent("ofw_misc:CopyStringToClipboard", sb.ToString());
       }), false);
     }
+
+    [EventHandler("ofw_misc:GetJobGrades")]
+    private async void GetJobGrades([FromSource] Player source, string jobname, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+        return;
+
+      var param = new Dictionary<string, object>();
+      param.Add("@jobname", jobname);
+      var result = await VSql.FetchAllAsync("SELECT * from `job_grades` where `job_name` = @jobname order by grade asc ", param);
+
+      _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
+    }
   }
 }

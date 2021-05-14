@@ -1,5 +1,6 @@
 ﻿using CitizenFX.Core;
 using MenuAPI;
+using Newtonsoft.Json;
 using OriginFramework.Menus;
 using OriginFrameworkData.DataBags;
 using System;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static CitizenFX.Core.Native.API;
+using static OriginFramework.OfwFunctions;
 
 
 namespace OriginFramework
@@ -33,6 +35,7 @@ namespace OriginFramework
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
+      EventHandlers["ofw_veh:UpdateSavedVehicleProperties"] += new Action<int, string>(UpdateSavedVehicleProperties);
     }
 
 
@@ -78,6 +81,32 @@ namespace OriginFramework
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
 
+    }
+
+    public static async void UpdateSavedVehicleProperties(int vehNetId, string plate)
+    {
+      var localVeh = NetworkGetEntityFromNetworkId(vehNetId);
+      var veh = -1;
+      float timeout = 5000;
+
+      while (timeout > 0 && veh <= 0)
+      {
+        veh = GetVehiclePedIsUsing(Game.PlayerPed.Handle);
+        await Delay(0);
+        timeout -= (GetFrameTime() * 1000);
+      }
+
+      if (veh <= 0 || veh != localVeh)
+      {
+        Notify.Error("Nepodarilo se ulozit vlastnosti vozidla, pred pouzivanim se prosim stav v garazi");
+        return;
+      }
+
+      var vehicleProps = GetVehicleProperties(veh);
+
+      Console.WriteLine(JsonConvert.SerializeObject(vehicleProps));
+
+      TriggerServerEvent("ofw_esxgarage:UpdateVehicleProperties", plate, JsonConvert.SerializeObject(vehicleProps));
     }
 
     public static int GetParkingSpotBlockingEntity(Vector3 center, float heading)

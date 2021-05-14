@@ -350,9 +350,9 @@ namespace OriginFramework
 			MenuTitle = "Vlastnena auta";
 			ClearMenu();
 			EnsureGarageCamera(CurrentGarage);
-			string playerJob = ESX.GetPlayerData()?.job?.name;
+			var playerJob = ESX.GetPlayerData()?.job;
 
-			string ret = await OfwFunctions.ServerAsyncCallbackToSync<string>("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, playerJob);
+			string ret = await OfwFunctions.ServerAsyncCallbackToSync<string>("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, (string)playerJob?.name);
 
 			if (ret != null)
 			{
@@ -377,13 +377,22 @@ namespace OriginFramework
 					var plate = (string)row["plate"];
 					bool correctGarage = (string)row["garage"] == CurrentGarage?.Id;
 					bool correctJob = true;
-					if (playerJob != null && (string)row["job"] != null)
+					string ownerSocietyName = null;
+					string owner = (string)row["owner"];
+					var minJobGrade = Convert.ToInt32(row["minjobgrade"]);
+					if (owner.StartsWith("society:"))
+						ownerSocietyName = owner.Replace("society:", String.Empty);
+
+					if (playerJob != null && (string)row["job"] != null && !CurrentGarage.Id.StartsWith("Imp"))
 					{
-						if (playerJob != (string)row["job"])
+						if (playerJob?.name != (string)row["job"])
 							correctJob = false;
 					}
 
-					AddButton($"{plate} | {displayName}", new Action(() => { VehicleMenu(vehicle, $"{plate} | {displayName}", correctGarage, correctJob); }), !correctJob || !correctGarage, $"Garage: {(string)row["garage"]}", $"Motor: {engine}/1000", $"Palivo: {fuel}%", new Action(() => { SpawnLocalVehicle(vehicle); }));
+					if (ownerSocietyName != null && playerJob?.grade < minJobGrade)
+						correctJob = false;
+
+					AddButton($"{plate} | {ownerSocietyName ?? "osobni"} | {displayName}", new Action(() => { VehicleMenu(vehicle, $"{plate} | {ownerSocietyName ?? "osobni"} | {displayName}", correctGarage, correctJob, ownerSocietyName, minJobGrade); }), !correctJob || !correctGarage, $"Garage: {(string)row["garage"]}", $"Motor: {engine}/1000", $"Palivo: {fuel}%", new Action(() => { SpawnLocalVehicle(vehicle); }));
 				}
 
 				Buttons = Buttons.OrderBy(b => b.ColorAsUnavailable).ToList();
@@ -405,7 +414,7 @@ namespace OriginFramework
 			MenuTitle = "Auta mimo garaz";
 			ClearMenu();
 			EnsureGarageCamera(CurrentGarage);
-			string playerJob = ESX.GetPlayerData()?.job?.name;
+			var playerJob = ESX.GetPlayerData()?.job;
 
 			string ret = null;
 			bool completed = false;
@@ -416,7 +425,7 @@ namespace OriginFramework
 				return true;
 			};
 
-			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, playerJob, CallbackFunction);
+			BaseScript.TriggerServerEvent("ofw_esxgarage:GetVehicles", CurrentGarage.Type, CurrentGarage.Id, (string)playerJob?.name, CallbackFunction);
 
 			while (!completed)
 			{
@@ -438,18 +447,28 @@ namespace OriginFramework
 
 					var displayName = GetDisplayNameFromVehicleModel((uint)vehicle.model);
 					bool correctJob = true;
-					if (playerJob != null && (string)row["job"] != null)
+					string ownerSocietyName = null;
+					string owner = (string)row["owner"];
+					int minJobGrade = Convert.ToInt32(row["minjobgrade"]);
+					if (owner.StartsWith("society:"))
+						ownerSocietyName = owner.Replace("society:", String.Empty);
+
+					if (playerJob != null && (string)row["job"] != null && !CurrentGarage.Id.StartsWith("Imp"))
 					{
-						if (playerJob != (string)row["job"])
+						if (playerJob?.name != (string)row["job"])
 							correctJob = false;
 					}
+
+					if (ownerSocietyName != null && playerJob?.grade < minJobGrade)
+						correctJob = false;
+
 					string extraString = null;
 					if (doesExistNow)
 						extraString = "Vozidlo je nekde vyparkovane!";
 					else if (!correctJob)
 						extraString = "Nemas spravny job!";
 
-					AddButton($"{plate} | {displayName}", new Action(() => { VehicleOutOfGarageMenu(vehicle, $"{plate} | {displayName}", doesExistNow, correctJob); }), !correctJob || doesExistNow, null, extraString, null, new Action(() => { SpawnLocalVehicle(vehicle); }));
+					AddButton($"{plate} | {ownerSocietyName ?? "osobni"} | {displayName}", new Action(() => { VehicleOutOfGarageMenu(vehicle, $"{plate} | {ownerSocietyName ?? "osobni"} | {displayName} ", doesExistNow, correctJob); }), !correctJob || doesExistNow, null, extraString, null, new Action(() => { SpawnLocalVehicle(vehicle); }));
 				}
 
 				Buttons = Buttons.OrderBy(b => b.ColorAsUnavailable).ToList();
@@ -466,17 +485,46 @@ namespace OriginFramework
 			IsHidden = false;
 		}
 
-		private static async void VehicleMenu(VehiclePropertiesBag vehicle, string menutitle, bool correctGarage, bool correctJob)
+		private static async void ManageVehicleRights(string menutitle, VehiclePropertiesBag vehicle, int currentMinGrade, string society)
+		{
+			MenuTitle = menutitle;
+			ClearMenu();
+
+			AddButton("Zpet", new Action(() => { ListVehicles(); }));
+			AddButton("Soucasna minimalni pozice: " + currentMinGrade, null);
+			AddButton($"Nastavit: bez omezeni", new Action(() => { SetVehicleJobGrade(vehicle, -1); ListVehicles(); }));
+			string ret = await OfwFunctions.ServerAsyncCallbackToSync<string>("ofw_misc:GetJobGrades", society);
+
+			if (ret != null)
+			{
+				var fetched = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(ret);
+				foreach (var row in fetched)
+				{
+					var grade = Convert.ToInt32(row["grade"]);
+					var label = (string)row["label"];
+
+					AddButton($"Nastavit: {label} ({grade}+)", new Action(() => { SetVehicleJobGrade(vehicle, grade); ListVehicles(); }));
+				}
+			}
+
+			IsHidden = false;
+		}
+
+		private static async void VehicleMenu(VehiclePropertiesBag vehicle, string menutitle, bool correctGarage, bool correctJob, string society, int currentMinGrade)
 		{
 			MenuTitle = menutitle;
 			ClearMenu();
 			
 			if (!correctJob)
-				AddButton("Nemas spravny job!", null);
+				AddButton("Nemas spravny job/pozici!", null);
 			else if (!correctGarage)
 				AddButton("Auto je v jine garazi!", null);
 			else
 				AddButton("Vyparkuj auto", new Action(() => { SpawnVehicle(vehicle); }));
+
+			var playerJob = ESX.GetPlayerData()?.job;
+			if (playerJob != null && playerJob.name != null && playerJob.name == society && (playerJob.grade_name == "boss" || playerJob.grade_name == "viceboss"))
+				AddButton("Nastaveni firemniho opravneni", new Action(() => { ManageVehicleRights(menutitle, vehicle, currentMinGrade, society); }));
 
 			AddButton("Zpet", new Action(() => { ListVehicles(); }));
 		}
@@ -487,7 +535,7 @@ namespace OriginFramework
 			ClearMenu();
 
 			if (!correctJob)
-				AddButton("Nemas spravny job!", null);
+				AddButton("Nemas spravny job/pozici!", null);
 			else if (doesExistNow)
 				AddButton("Vozidlo je nekde vyparkovane!", null);
 			else
@@ -552,6 +600,14 @@ namespace OriginFramework
 
 				controlsLocked = false;
 			}));
+		}
+
+		private static async void SetVehicleJobGrade(VehiclePropertiesBag vehicleData, int grade)
+		{
+			if (vehicleData == null)
+				return;
+
+			bool ret = await OfwFunctions.ServerAsyncCallbackToSync<bool>("ofw_esxgarage:SetVehicleMinJobGrade", vehicleData.plate, grade);
 		}
 
 		private static async void SpawnVehicle(VehiclePropertiesBag vehicleData)

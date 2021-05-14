@@ -71,7 +71,7 @@ namespace OriginFrameworkServer
         param.Add("@id", player.identifier);
         param.Add("@type", type ?? "car");
         param.Add("@society", (playerJob != null) ? $"society:{playerJob}" : null);
-        var result = await VSql.FetchAllAsync("SELECT `plate`, `vehicle`, `type`, `job`, `stored`, `garage` FROM `owned_vehicles` WHERE (`owner` = @id OR `owner` = @society) AND `type` = @type", param);
+        var result = await VSql.FetchAllAsync("SELECT `owner`, `plate`, `vehicle`, `type`, `job`, `stored`, `garage`, `minjobgrade` FROM `owned_vehicles` WHERE (`owner` = @id OR `owner` = @society) AND `type` = @type", param);
 
         _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
       }
@@ -80,7 +80,7 @@ namespace OriginFrameworkServer
         var param = new Dictionary<string, object>();
         param.Add("@garage", garage);
         param.Add("@type", type ?? "car");
-        var result = await VSql.FetchAllAsync("SELECT `plate`, `vehicle`, `type`, `job`, `stored`, `garage` FROM `owned_vehicles` WHERE `garage` = @garage AND `type` = @type", param);
+        var result = await VSql.FetchAllAsync("SELECT `owner`, `plate`, `vehicle`, `type`, `job`, `stored`, `garage`, `minjobgrade` FROM `owned_vehicles` WHERE `garage` = @garage AND `type` = @type", param);
 
         _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
       }
@@ -100,6 +100,23 @@ namespace OriginFrameworkServer
       var result = await VSql.FetchScalarAsync("SELECT 1 FROM `owned_vehicles` WHERE `plate` = @plate AND `type` = @type", param);
 
       _ = callback((result != null && result != DBNull.Value) ? true : false);
+    }
+
+    [EventHandler("ofw_esxgarage:SetVehicleMinJobGrade")]
+    private async void CanParkVehicle([FromSource] Player source, string plate, int minGrade, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@plate", plate);
+      param.Add("@minjobgrade", minGrade);
+      await VSql.ExecuteAsync("UPDATE `owned_vehicles` set `minjobgrade` = @minjobgrade where `plate` = @plate", param);
+
+      _ = callback(true);
     }
 
     [EventHandler("ofw_esxgarage:RecoverVehicle")]
@@ -167,6 +184,43 @@ namespace OriginFrameworkServer
       param2.Add("@garage", garageId);
       param2.Add("@vehicle", vehiclePropsSerialized);
       await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `stored` = 1, `vehicle` = @vehicle, `garage` = @garage WHERE `plate` = @plate", param2);
+    }
+
+    [EventHandler("ofw_esxgarage:UpdateVehicleProperties")]
+    private async void UpdateVehicleProperties([FromSource] Player source, string plate, string vehiclePropsSerialized)
+    {
+      if (vehiclePropsSerialized == null)
+        return;
+
+      var vehicleProps = JsonConvert.DeserializeObject<VehiclePropertiesBag>(vehiclePropsSerialized);
+
+      var player = ESX.GetPlayerFromId(Int32.Parse(source.Handle));
+      string plateInProps = (string)vehicleProps.plate;
+
+      if (plateInProps != plate)
+      {
+        Debug.WriteLine("OFW_ESXGARAGE: UpdateVehicleProperties - provided plate doesnt match plate in vehicle props");
+        return;
+      }
+
+      var param1 = new Dictionary<string, object>();
+      param1.Add("@plate", plate);
+
+      var result1 = await VSql.FetchScalarAsync("SELECT `vehicle` FROM `owned_vehicles` WHERE `plate` = @plate", param1);
+      if (result1 != null && result1 is string)
+      {
+        var storedVeh = JsonConvert.DeserializeObject<VehiclePropertiesBag>((string)result1, jsonSettings);
+        if (storedVeh?.model.ToString() != vehicleProps?.model.ToString())
+        {
+          Debug.WriteLine("Model changed, not saving vehicle! Following player is probably cheater: " + player.identifier);
+          return;
+        }
+      }
+
+      var param2 = new Dictionary<string, object>();
+      param2.Add("@plate", plate);
+      param2.Add("@vehicle", vehiclePropsSerialized);
+      await VSql.ExecuteAsync("UPDATE `owned_vehicles` SET `vehicle` = @vehicle WHERE `plate` = @plate", param2);
     }
 
     #endregion
