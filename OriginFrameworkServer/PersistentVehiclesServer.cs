@@ -171,7 +171,7 @@ namespace OriginFrameworkServer
       {
         await Delay(100);
         frameCounter++;
-        if (frameCounter >= 20)
+        if (frameCounter >= 50)
         {
 
           Debug.WriteLine("OFW_VEH: Vehicle from garage server spawn timeout!");

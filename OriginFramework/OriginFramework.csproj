@@ -93,4 +93,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>del "$(TargetDir)CitizenFX.Core.Client.dll" /q</PostBuildEvent>
+  </PropertyGroup>
 </Project>

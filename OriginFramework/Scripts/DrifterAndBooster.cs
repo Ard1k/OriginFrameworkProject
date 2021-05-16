@@ -49,14 +49,21 @@ namespace OriginFramework
             if ((IsControlPressed(0, (int)actionKey) || IsDisabledControlPressed(0, (int)actionKey)) && (vehicleSpeed * kmh_multiplier) <= speed_limit)
             {
               if (IsDrifterEnabled)
+              {
                 SetVehicleReduceGrip(vehicle, true);
+                SetVehicleReduceTraction(vehicle, true);
+              }
               if (isBoosterEnabled)
                 SetVehicleForwardSpeed(vehicle, vehicleSpeed * 1.3f);
             }
             else
             {
               if (IsDrifterEnabled)
+              {
                 SetVehicleReduceGrip(vehicle, false);
+                SetVehicleReduceTraction(vehicle, false);
+                SetVehicleCheatPowerIncrease(vehicle, 1f);
+              }
             }
           }
         }
