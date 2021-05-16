@@ -160,6 +160,7 @@ namespace OriginFrameworkServer
           }
           DeleteGuards(jobState.Guards);
 
+          jobState.MissionDefinition.IsActive = false;
           JobStates.Remove(jobState);
         }
       }
@@ -209,6 +210,7 @@ namespace OriginFrameworkServer
             p.TriggerEvent("ofw_lcd:JobCancelledUpdate", reason);
           }
 
+          jobState.MissionDefinition.IsActive = false;
           JobStates.Remove(jobState);
         }
       }
@@ -236,13 +238,17 @@ namespace OriginFrameworkServer
         }
         else
         {
-          selectedMission = Missions.OrderBy(m => m.LastRun).FirstOrDefault();
+          selectedMission = Missions.Where(m => m.LastRun < DateTime.Now.AddHours(-2) && m.IsActive == false)?.OrderBy(m => m.LastRun)?.FirstOrDefault();
         }
 
         if (selectedMission == null)
         {
-          Debug.WriteLine("ofw_lcd:StartJob: no suitable mission, job not started");
+          //Debug.WriteLine("ofw_lcd:StartJob: no suitable mission, job not started");
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Sorry, ted uz zadnou praci nemam, ale zkus to pozdeji");
+          return;
         }
+
+        var selectedMissionCopy = JsonConvert.DeserializeObject<LCDMissionDefinitionBag>(JsonConvert.SerializeObject(selectedMission));
 
         var members = GroupServer.GetAllGroupMembersServerID(source);
         if (members == null || members.Length <= 0)
@@ -255,46 +261,35 @@ namespace OriginFrameworkServer
         var jobstateTargets = new List<LCDTargetVehicleBag>();
         for (int i = 0; i < oids.Length; i++)
         {
-          if (selectedMission.Targets.Length <= i)
+          if (selectedMissionCopy.Targets.Length <= i)
             break;
 
           if (i == 1)
             continue;
 
-          jobstateTargets.Add(selectedMission.Targets[i]);
+          jobstateTargets.Add(selectedMissionCopy.Targets[i]);
         }
 
         var js = new LCDJobStateBag
         {
           CurrentState = LCDState.VehicleHunt,
-          DeliverySpot = selectedMission.DeliverySpot,
+          DeliverySpot = selectedMissionCopy.DeliverySpot,
           PlayersOnJob = oids,
           TargetVehicles = jobstateTargets.ToArray(),
-          RewardPerCar = selectedMission.RewardPerCar,
-          Guards = selectedMission.Guards,
+          RewardPerCar = selectedMissionCopy.RewardPerCar,
+          Guards = selectedMissionCopy.Guards,
+          MissionDefinition = selectedMission
         };
-
-        foreach (var i in js.TargetVehicles)
-        {
-          i.Delivered = false;
-          i.HasEntityBlip = false;
-          i.NetID = -1;
-          i.StaticBlip = 0;
-        }
-
-        foreach (var i in js.Guards)
-        {
-          i.NetID = -1;
-        }
 
         if (js.Guards != null)
         {
           foreach (var g in js.Guards)
-            SpawnGuard(g);
+            await SpawnGuard(g);
         }
 
         JobStates.Add(js);
         selectedMission.LastRun = DateTime.Now;
+        selectedMission.IsActive = true;
         foreach (var p in players)
         {
           p.TriggerEvent("ofw_lcd:NewJobStateSent", JsonConvert.SerializeObject(js));

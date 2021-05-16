@@ -14,6 +14,7 @@ namespace OriginFrameworkData.DataBags
 		public LCDLocationGuard[] Guards { get; set; }
 		public PosBag DeliverySpot { get; set; }
 		public int RewardPerCar { get; set; }
+		public LCDMissionDefinitionBag MissionDefinition { get; set; }
 	}
 
 	public class LCDMissionDefinitionBag
@@ -23,6 +24,7 @@ namespace OriginFrameworkData.DataBags
 		public PosBag DeliverySpot { get; set; }
 		public int RewardPerCar { get; set; }
 		public DateTime? LastRun { get; set; }
+		public bool IsActive { get; set; }
 	}
 
 	public class LCDTargetVehicleBag
