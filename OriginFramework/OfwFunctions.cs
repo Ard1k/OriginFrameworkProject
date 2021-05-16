@@ -13,7 +13,7 @@ namespace OriginFramework
 {
 	public static class OfwFunctions
 	{
-		public static bool DebugMode { get; set; } = false;
+		public static bool DebugMode { get; set; } = true;
 
 		#region base script functions wrappers
 		public static void TriggerServerEvent(string eventName, params object[] args)
@@ -33,7 +33,7 @@ namespace OriginFramework
 		#endregion
 
 		#region Optional debug
-		public static void WriteOnlyInDebugMode(string data)
+		public static void DebugLog(string data)
 		{
 			if (DebugMode) Debug.WriteLine(@data);
 		}
@@ -419,6 +419,9 @@ namespace OriginFramework
 		#region callback
 		public static async Task<T> ServerAsyncCallbackToSync<T>(string eventName, params object[] args)
 		{
+			if (args == null)
+				args = new object[0];
+
 			var expandedArgs = new object[args.Length + 1];
 			args.CopyTo(expandedArgs, 0);
 

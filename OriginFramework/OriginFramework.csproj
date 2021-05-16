@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="JobHelpers.cs" />
     <Compile Include="Scripts\GarageMenu.cs" />
     <Compile Include="Menus\Toys.cs" />
     <Compile Include="OfwFunctions.cs" />

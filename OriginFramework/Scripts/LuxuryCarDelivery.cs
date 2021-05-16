@@ -30,7 +30,7 @@ namespace OriginFramework
       EventHandlers["ofw_lcd:TryRestoreJobState"] += new Action(TryRestoreJobState);
       EventHandlers["ofw_lcd:VehicleDeliveredUpdate"] += new Action<string>(VehicleDeliveredUpdate);
       EventHandlers["ofw_lcd:JobFinishedUpdate"] += new Action<int>(JobFinishedUpdate);
-      EventHandlers["ofw_lcd:JobCancelledUpdate"] += new Action(JobCancelledUpdate);
+      EventHandlers["ofw_lcd:JobCancelledUpdate"] += new Action<string>(JobCancelledUpdate);
       EventHandlers["baseevents:onPlayerDied"] += new Action<dynamic, dynamic>(OnPlayerDied);
       EventHandlers["baseevents:onPlayerKilled"] += new Action<dynamic, dynamic>(OnPlayerDied);
     }
@@ -81,45 +81,29 @@ namespace OriginFramework
 
       if (JobState.CurrentState == LCDState.VehicleHunt)
       {
-        var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
-
-        while (!HasScaleformMovieLoaded(scaleform))
-          await Delay(0);
-
-        BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
-        PushScaleformMovieMethodParameterString("job started");
-        PushScaleformMovieMethodParameterString($"Dovez pozadovana auta");
-        EndScaleformMovieMethod();
-
-        float time = 0;
-        while (time <= 5000)
-        {
-          time += (GetFrameTime() * 1000);
-          DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255, 0);
-          await Delay(0);
-        }
-
-        SetScaleformMovieAsNoLongerNeeded(ref scaleform);
+        JobHelpers.MessageFreemodeJobStarted("Dovez pozadovana auta");
       }
     }
 
     private async void TryRestoreJobState()
     {
-      string ret = null;
-      bool completed = false;
-      Func<string, bool> CallbackFunction = (data) =>
-      {
-        ret = data;
-        completed = true;
-        return true;
-      };
+      //string ret = null;
+      //bool completed = false;
+      //Func<string, bool> CallbackFunction = (data) =>
+      //{
+      //  ret = data;
+      //  completed = true;
+      //  return true;
+      //};
 
-      BaseScript.TriggerServerEvent("ofw_lcd:GetJobStateToRestore", CallbackFunction);
+      //BaseScript.TriggerServerEvent("ofw_lcd:GetJobStateToRestore", CallbackFunction);
 
-      while (!completed)
-      {
-        await Delay(0);
-      }
+      //while (!completed)
+      //{
+      //  await Delay(0);
+      //}
+
+      var ret = await OfwFunctions.ServerAsyncCallbackToSync<string>("ofw_lcd:GetJobStateToRestore");
 
       if (ret != null)
       {
@@ -144,56 +128,18 @@ namespace OriginFramework
 
     private async void JobFinishedUpdate(int reward)
     {
-      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
-
-      while (!HasScaleformMovieLoaded(scaleform))
-        await Delay(0);
-
-      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
-      PushScaleformMovieMethodParameterString("Job Done");
-      PushScaleformMovieMethodParameterString($"Odmena: {reward}$");
-      EndScaleformMovieMethod();
-
-      float time = 0;
-
+      JobHelpers.MessageFreemodeJobFinished($"Odmena: {reward}$");
+      
       JobState = null;
       ClearBlips();
-
-      while (time <= 5000)
-      {
-        time += (GetFrameTime() * 1000);
-        DrawScaleformMovieFullscreen(scaleform, 0, 255, 0, 255, 0);
-        await Delay(0);
-      }
-
-      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
     }
 
-    private async void JobCancelledUpdate()
+    private async void JobCancelledUpdate(string message)
     {
-      var scaleform = RequestScaleformMovie("MP_BIG_MESSAGE_FREEMODE");
-
-      while (!HasScaleformMovieLoaded(scaleform))
-        await Delay(0);
-
-      BeginScaleformMovieMethod(scaleform, "SHOW_SHARD_WASTED_MP_MESSAGE");
-      PushScaleformMovieMethodParameterString("Job Failed");
-      PushScaleformMovieMethodParameterString($"Nepodarilo se ti dokoncit ukol!");
-      EndScaleformMovieMethod();
-
-      float time = 0;
+      JobHelpers.MessageFreemodeJobFailed(message);
 
       JobState = null;
       ClearBlips();
-
-      while (time <= 5000)
-      {
-        time += (GetFrameTime() * 1000);
-        DrawScaleformMovieFullscreen(scaleform, 255, 0, 0, 255, 0);
-        await Delay(0);
-      }
-
-      SetScaleformMovieAsNoLongerNeeded(ref scaleform);
     }
 
     private async void OnPlayerDied(dynamic u1, dynamic u2)
@@ -202,7 +148,7 @@ namespace OriginFramework
       if (JobState == null || JobState.CurrentState != LCDState.VehicleHunt)
         return;
 
-      TriggerServerEvent("ofw_lcd:JobCancelled");
+      TriggerServerEvent("ofw_lcd:JobCancelled", "Nekdo ze skupiny zemrel!");
     }
 
 		#endregion
@@ -226,26 +172,34 @@ namespace OriginFramework
         var dist = Vector3.Distance(pos, carPos);
         if (dist < 200f)
         {
-          int netID = -1;
-          bool completed = false;
-          Func<int, bool> CallbackFunction = (data) =>
-          {
-            netID = data;
-            completed = true;
-            return true;
-          };
+          //int netID = -1;
+          //bool completed = false;
+          //Func<int, bool> CallbackFunction = (data) =>
+          //{
+          //  netID = data;
+          //  completed = true;
+          //  return true;
+          //};
+
+          //Debug.WriteLine("Triggering spawn");
+          //var blockingEnt = VehicleClient.GetParkingSpotBlockingEntity(carPos, v.Position.Heading);
+          //int blockingNetID = -1;
+          //if (blockingEnt > 0)
+          //  blockingNetID = NetworkGetNetworkIdFromEntity(blockingNetID);
+          //TriggerServerEvent("ofw_lcd:SpawnJobCar", v.Identifier, blockingNetID, CallbackFunction);
+
+          //while (!completed)
+          //{
+          //  await Delay(0);
+          //}
 
           Debug.WriteLine("Triggering spawn");
           var blockingEnt = VehicleClient.GetParkingSpotBlockingEntity(carPos, v.Position.Heading);
           int blockingNetID = -1;
           if (blockingEnt > 0)
             blockingNetID = NetworkGetNetworkIdFromEntity(blockingNetID);
-          TriggerServerEvent("ofw_lcd:SpawnJobCar", v.Identifier, blockingNetID, CallbackFunction);
 
-          while (!completed)
-          {
-            await Delay(0);
-          }
+          int netID = await OfwFunctions.ServerAsyncCallbackToSync<int>("ofw_lcd:SpawnJobCar", v.Identifier, blockingNetID);
 
           Debug.WriteLine("Spawncar netID returned: " + netID);
           if (netID > 0)
@@ -310,21 +264,28 @@ namespace OriginFramework
               DisplayHelpTextThisFrame("OFW_LCD_DELIVER", false);
               if (IsControlJustPressed(0, (int)InteractionKey))
               {
-                bool ret = false;
-                bool completed = false;
-                Func<bool, bool> CallbackFunction = (data) =>
-                {
-                  ret = data;
-                  completed = true;
-                  return true;
-                };
+                //bool ret = false;
+                //bool completed = false;
+                //Func<bool, bool> CallbackFunction = (data) =>
+                //{
+                //  ret = data;
+                //  completed = true;
+                //  return true;
+                //};
 
-                BaseScript.TriggerServerEvent("ofw_lcd:DeliverVehicle", missionVehicle.NetID, CallbackFunction);
+                //BaseScript.TriggerServerEvent("ofw_lcd:DeliverVehicle", missionVehicle.NetID, CallbackFunction);
 
-                while (!completed)
-                {
+                //while (!completed)
+                //{
+                //  await Delay(0);
+                //}
+                TaskLeaveVehicle(Game.PlayerPed.Handle, vehid, 0);
+
+                while (IsPedInVehicle(Game.PlayerPed.Handle, vehid, true))
                   await Delay(0);
-                }
+                await Delay(1000);
+
+                bool ret = await OfwFunctions.ServerAsyncCallbackToSync<bool>("ofw_lcd:DeliverVehicle", missionVehicle.NetID);
 
                 if (ret == true)
                 {
@@ -467,7 +428,7 @@ namespace OriginFramework
           TextLeft = $"Seru na to, sem sracka!",
           TextDescription = npcTalk,
           OnClick = () => {
-            TriggerServerEvent("ofw_lcd:JobCancelled");
+            TriggerServerEvent("ofw_lcd:JobCancelled", "Vzdal jsi ukol!");
             MenuController.CloseAllMenus();
           }
         });
