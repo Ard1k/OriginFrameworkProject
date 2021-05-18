@@ -228,6 +228,12 @@ namespace OriginFrameworkServer
 
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
+        var jobState = JobStates.Where(j => j.PlayersOnJob.Contains(oidSource)).FirstOrDefault();
+        if (jobState != null)
+        {
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Uz mas job aktivni");
+          return;
+        }
 
         LCDMissionDefinitionBag selectedMission = null;
         var unplayedMissions = Missions.Where(m => m.LastRun == null)?.ToList();
@@ -257,6 +263,16 @@ namespace OriginFrameworkServer
         var players = Players.Where(p => members.Contains(int.Parse(p.Handle))).ToArray();
 
         var oids = OIDServer.GetOIDsFromServerIds(players);
+
+        foreach (var o in oids)
+        {
+          var memberjs = JobStates.Where(j => j.PlayersOnJob.Contains(o)).FirstOrDefault();
+          if (memberjs != null)
+          {
+            source.TriggerEvent("ofw:ValidationErrorNotification", "Nekdo z party uz ma ukol spusteny");
+            return;
+          }
+        }
 
         var jobstateTargets = new List<LCDTargetVehicleBag>();
         for (int i = 0; i < oids.Length; i++)

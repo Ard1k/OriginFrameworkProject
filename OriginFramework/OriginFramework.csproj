@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -46,12 +46,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JobHelpers.cs" />
+    <Compile Include="Scripts\ESXFactionScriptBase.cs" />
+    <Compile Include="Scripts\ESXScriptBase.cs" />
     <Compile Include="Scripts\GarageMenu.cs" />
     <Compile Include="Menus\Toys.cs" />
     <Compile Include="OfwFunctions.cs" />
     <Compile Include="Scripts\Checkpointer.cs" />
     <Compile Include="Scripts\EsxGarage.cs" />
     <Compile Include="Scripts\FlashHeadlightsOnHorn.cs" />
+    <Compile Include="Scripts\OilIndustriesFaction.cs" />
     <Compile Include="Scripts\VehicleClient.cs" />
     <Compile Include="Scripts\LuxuryCarDelivery.cs" />
     <Compile Include="Scripts\GroupManager.cs" />

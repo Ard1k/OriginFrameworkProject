@@ -120,6 +120,42 @@
         "Z": 5.1217,
         "Heading": -89.06
       }
+    },
+    {
+      "UniqueName": "OilIndustries_Manager",
+      "VisibleName": "Oil Industries Manager",
+      "ModelName": "s_m_y_dockwork_01",
+      "WeaponModelName": "weapon_wrench",
+      "IsPositionFrozen": false,
+      "IsInvincible": false,
+      "CanDropWeapon": false,
+      "HasNoColissions": false,
+      "RespawnTimeMinutes": 5,
+      "Group": 1,
+      "Position": {
+        "X": 269.5588,
+        "Y": -3248.5393,
+        "Z": 5.5263,
+        "Heading": 268.3027
+      }
+    },
+    {
+      "UniqueName": "OilIndustries_GarageMister",
+      "VisibleName": "Oil Industries Garaz-mistr",
+      "ModelName": "a_m_m_fatlatin_01",
+      "WeaponModelName": "weapon_knuckle",
+      "IsPositionFrozen": false,
+      "IsInvincible": false,
+      "CanDropWeapon": false,
+      "HasNoColissions": false,
+      "RespawnTimeMinutes": 5,
+      "Group": 1,
+      "Position": {
+        "X": 304.1593,
+        "Y": -3121.6748,
+        "Z": 5.4097,
+        "Heading": 96.8774
+      }
     }
   ],
   "LCDMissions": [
