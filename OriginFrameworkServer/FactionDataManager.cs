@@ -77,6 +77,7 @@ namespace OriginFrameworkServer
         }
         
         var factionData = JsonConvert.DeserializeObject((string)res, definition.FactionDataType);
+        ClearDataOnDBLoad(faction, factionData);
         FactionCache.Add(faction, factionData);
         return factionData;
       }
@@ -136,6 +137,22 @@ namespace OriginFrameworkServer
         }
 
         ChangedFactionData.Clear();
+      }
+    }
+
+    //Nechce se mi to ted vymejslet lip... budiz
+    private static void ClearDataOnDBLoad(eFaction faction, object data)
+    {
+      if (data == null)
+        return;
+
+      switch (faction)
+      {
+        case eFaction.OilIndustries:
+          var d = data as OilIndustriesFactionDataBag;
+          d.Cisterns.Clear();
+          d.Haulers.Clear();
+          break;
       }
     }
   }

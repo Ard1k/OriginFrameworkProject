@@ -59,7 +59,21 @@ namespace OriginFrameworkServer
 
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
-        Data.Cisterns.Add(ret);
+        Data.Cisterns.Add(ret, new Cistern());
+        await FactionDataManager.UpdateFactionData(eFaction.OilIndustries, Data);
+        _ = callback(ret);
+      }
+    }
+
+    [EventHandler("ofw_oilindustries:SpawnHauler")]
+    private async void SpawnHauler([FromSource] Player source, NetworkCallbackDelegate callback)
+    {
+      var ret = await ServerAsyncCallbackToSync<int>("ofw_veh:SpawnServerVehicle", "hauler", new Vector3(OilIndustriesSaticData.TruckSpawnpoint.X, OilIndustriesSaticData.TruckSpawnpoint.Y, OilIndustriesSaticData.TruckSpawnpoint.Z), OilIndustriesSaticData.TruckSpawnpoint.Heading);
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        Data.Haulers.Add(ret);
+        await FactionDataManager.UpdateFactionData(eFaction.OilIndustries, Data);
         _ = callback(ret);
       }
     }
@@ -69,9 +83,14 @@ namespace OriginFrameworkServer
       if (e == null || e.NetID <= 0 || Data == null)
         return;
 
-      if (Data.Cisterns.Any(c => c == e.NetID))
+      if (Data.Cisterns.ContainsKey(e.NetID))
       {
         Data.Cisterns.Remove(e.NetID);
+        await FactionDataManager.UpdateFactionData(eFaction.OilIndustries, Data);
+      }
+      else if (Data.Haulers.Any(h => h == e.NetID))
+      {
+        Data.Haulers.Remove(e.NetID);
         await FactionDataManager.UpdateFactionData(eFaction.OilIndustries, Data);
       }
     }

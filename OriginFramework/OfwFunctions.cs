@@ -113,6 +113,32 @@ namespace OriginFramework
 		}
 		#endregion
 
+		#region noitem storage vehicle
+		public static void DrawNoItemStorageVehicleInfo(Vector3 pos, float distance, string currentItemName, string capacityString)
+		{
+			if (distance < 5f)
+				distance = 5f;
+
+			const float perspectiveScale = 1.8f;
+			float _x = 0, _y = 0;
+			World3dToScreen2d(pos.X, pos.Y, pos.Z + 1f, ref _x, ref _y);
+			var p = GetGameplayCamCoords();
+			//var fov = (1 / GetGameplayCamFov()) * 75;
+			var scale = ((1 / distance) * perspectiveScale) /* * fov*/;
+
+			SetTextScale(1, scale);
+			SetTextFont(0);
+			SetTextProportional(true);
+			SetTextColour(255, 255, 255, 255);
+			SetTextOutline();
+			SetTextEntry("TWOSTRINGS");
+			SetTextCentre(true);
+			AddTextComponentString(currentItemName);
+			AddTextComponentString(capacityString);
+			DrawText(_x, _y);
+		}
+		#endregion
+
 		#region ofw_deserializer
 		public static async Task<dynamic> DeserializeToExpando(string serialized)
 		{

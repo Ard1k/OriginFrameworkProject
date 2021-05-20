@@ -64,8 +64,11 @@ namespace OriginFramework.Scripts
 			}
 			else
 			{
+				factionData = null;
 				ClearStaticBlips();
 				ClearDynamicBlips(true);
+
+				DataUpdated?.Invoke(this, new EventArgs());
 			}
 		}
 
@@ -83,7 +86,9 @@ namespace OriginFramework.Scripts
 			if ((int)factionDefinition.Faction != faction)
 				return;
 
-			if (data != null)
+			Debug.WriteLine("DATA: " + data);
+
+			if (data != null && DoesPlayerHaveJob())
 				factionData = JsonConvert.DeserializeObject(data, factionDefinition.FactionDataType);
 
 			await RefreshDynamicBlips();
