@@ -16,6 +16,7 @@ namespace OriginFramework.Scripts
 	{
 		protected dynamic ESX = null;
 		protected dynamic PlayerJob = null;
+		protected event EventHandler JobChanged;
 
 		public ESXScriptBase()
 		{
@@ -74,7 +75,7 @@ namespace OriginFramework.Scripts
 			}
 		}
 
-		private async void EsxSetJob(dynamic newJob)
+		protected async virtual void EsxSetJob(dynamic newJob)
 		{
 			if (newJob == null)
 			{
@@ -83,6 +84,7 @@ namespace OriginFramework.Scripts
 			}
 
 			PlayerJob = newJob;
+			JobChanged?.Invoke(this, null);
 		}
 
 		protected async Task RegisterNpcOnInteraction(string uniqueNpcName, Action<int, string> interaction)

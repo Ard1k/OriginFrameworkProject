@@ -29,6 +29,7 @@ namespace OriginFramework
     }
 
     private List<PolyTest> Tests = new List<PolyTest>();
+    private PolyTest LastTest = null; 
     private bool testsFrozen = false;
 
     public VehicleClient()
@@ -107,36 +108,6 @@ namespace OriginFramework
       Console.WriteLine(JsonConvert.SerializeObject(vehicleProps));
 
       TriggerServerEvent("ofw_esxgarage:UpdateVehicleProperties", plate, JsonConvert.SerializeObject(vehicleProps));
-    }
-
-    public static int GetParkingSpotBlockingEntity(Vector3 center, float heading)
-    {
-      return GetParkingSpotBlockingEntity(center, heading, 2.3f, 4.5f, 2.0f);
-    }
-
-    public static int GetParkingSpotBlockingEntity(Vector3 center, float heading, float width, float length, float height)
-    {
-      //--2->auta
-      //-- 4->peds
-      //-- 16->objekty
-      //-- 256->rostliny
-      int flags = 2;
-      int ray = StartShapeTestBox(
-        center.X, center.Y, center.Z,
-        width, length, height,
-        0.0f, 0.0f, heading, 2,
-        flags,
-        0, //entita, kterou má raycast ignorovat(např.PlayerPedId() pokud chceme ignorovat sveho peda)
-        4); //neznamy parametr
-
-      bool hit = false;
-      Vector3 endCoords = new Vector3();
-      Vector3 surfaceNormal = new Vector3();
-      int entityHit = 0;
-
-      GetShapeTestResult(ray, ref hit, ref endCoords, ref surfaceNormal, ref entityHit);
-
-      return entityHit;
     }
 
     private Vector3 GetAngledPosition(Vector3 center, float dist, float angle, float mod)

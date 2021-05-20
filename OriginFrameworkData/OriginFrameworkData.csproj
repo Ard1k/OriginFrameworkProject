@@ -46,7 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataBags\CompanyBags.cs" />
-    <Compile Include="DataBags\FactionDefinitionBag.cs" />
+    <Compile Include="DataBags\FactionBags.cs" />
     <Compile Include="DataBags\GarageBags.cs" />
     <Compile Include="DataBags\Global.cs" />
     <Compile Include="DataBags\GroupBags.cs" />

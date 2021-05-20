@@ -86,6 +86,33 @@ namespace OriginFramework
 
 		#endregion
 
+		#region markers
+		public static async void DrawTextedMarker(float distance, string text, int type, Vector3 pos, float size, int r, int g, int b, int a)
+		{
+			if (distance < 5f)
+				distance = 5f;
+
+			const float perspectiveScale = 3f;
+			float _x = 0, _y = 0;
+			World3dToScreen2d(pos.X, pos.Y, pos.Z + 1f, ref _x, ref _y);
+			var p = GetGameplayCamCoords();
+			//var fov = (1 / GetGameplayCamFov()) * 75;
+			var scale = ((1 / distance) * perspectiveScale) /* * fov*/;
+
+			SetTextScale(1, scale);
+			SetTextFont(0);
+			SetTextProportional(true);
+			SetTextColour(255, 255, 255, 255);
+			SetTextOutline();
+			SetTextEntry("STRING");
+			SetTextCentre(true);
+			AddTextComponentString(text);
+			DrawText(_x, _y);
+
+			DrawMarker(type, pos.X, pos.Y, pos.Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0f, size, size, size, r, g, b, a, false, false, 2, false, null, null, false);
+		}
+		#endregion
+
 		#region ofw_deserializer
 		public static async Task<dynamic> DeserializeToExpando(string serialized)
 		{
@@ -416,6 +443,45 @@ namespace OriginFramework
 		}
 		#endregion
 
+		#region Vector3
+		public static Vector3 PosToVector3(PosBag bag)
+		{
+			return new Vector3(bag.X, bag.Y, bag.Z);
+		}
+		#endregion
+
+		#region blocked park spots
+		public static int GetParkingSpotBlockingEntity(Vector3 center, float heading)
+		{
+			return GetParkingSpotBlockingEntity(center, heading, 2.8f, 5.5f, 2.0f);
+		}
+
+		public static int GetParkingSpotBlockingEntity(Vector3 center, float heading, float width, float length, float height)
+		{
+			//--2->auta
+			//-- 4->peds
+			//-- 16->objekty
+			//-- 256->rostliny
+			int flags = 2;
+			int ray = StartShapeTestBox(
+				center.X, center.Y, center.Z,
+				width, length, height,
+				0.0f, 0.0f, heading, 2,
+				flags,
+				0, //entita, kterou má raycast ignorovat(např.PlayerPedId() pokud chceme ignorovat sveho peda)
+				4); //neznamy parametr
+
+			bool hit = false;
+			Vector3 endCoords = new Vector3();
+			Vector3 surfaceNormal = new Vector3();
+			int entityHit = 0;
+
+			GetShapeTestResult(ray, ref hit, ref endCoords, ref surfaceNormal, ref entityHit);
+
+			return entityHit;
+		}
+		#endregion
+
 		#region callback
 		public static async Task<T> ServerAsyncCallbackToSync<T>(string eventName, params object[] args)
 		{
@@ -444,6 +510,51 @@ namespace OriginFramework
 			}
 
 			return ret;
+		}
+
+		public static async Task<T> ServerAsyncCallbackToSyncWithText<T>(string eventName, string waitText, params object[] args)
+		{
+			if (args == null)
+				args = new object[0];
+
+			var expandedArgs = new object[args.Length + 1];
+			args.CopyTo(expandedArgs, 0);
+
+			T ret = default;
+			bool completed = false;
+			Func<T, bool> CallbackFunction = (data) =>
+			{
+				ret = data;
+				completed = true;
+				return true;
+			};
+
+			expandedArgs[args.Length] = CallbackFunction;
+
+			BaseScript.TriggerServerEvent(eventName, expandedArgs);
+
+			while (!completed)
+			{
+				await Delay(0);
+
+				DrawScreenText(waitText, 255, 255, 255, 150);
+			}
+
+			return ret;
+		}
+		private static void DrawScreenText(string text, int red, int green, int blue, int alpha)
+		{
+			SetTextFont(4);
+			SetTextScale(0.0f, 0.5f);
+			SetTextColour(red, green, blue, alpha);
+			SetTextDropshadow(0, 0, 0, 0, 255);
+			SetTextEdge(1, 0, 0, 0, 255);
+			SetTextDropShadow();
+			SetTextOutline();
+			SetTextCentre(true);
+			BeginTextCommandDisplayText("STRING");
+			AddTextComponentSubstringPlayerName(text);
+			EndTextCommandDisplayText(0.5f, 0.5f);
 		}
 		#endregion
 	}

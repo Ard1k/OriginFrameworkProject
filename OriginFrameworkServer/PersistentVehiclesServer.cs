@@ -15,6 +15,7 @@ namespace OriginFrameworkServer
 {
   public class PersistentVehiclesServer : BaseScript
   {
+    public static event EventHandler<PersistentVehicleRemovedArgs> PersistentVehRemoved;
     private static PersistentVehicleDatabaseBag data = null;
     private bool isFirstTick = true;
     private JsonSerializerSettings jsonSettings = new JsonSerializerSettings
@@ -315,6 +316,7 @@ namespace OriginFrameworkServer
           if (NetworkGetEntityFromNetworkId(iveh.NetID) <= 0 || GetEntityModel(NetworkGetEntityFromNetworkId(iveh.NetID)) != iveh.ModelHash)
           {
             Debug.WriteLine($"PersistentVehicles: Removing no longer existing vehicle from sync [NetID: {iveh.NetID}, Model: {iveh.ModelHash}]");
+            PersistentVehRemoved?.Invoke(this, new PersistentVehicleRemovedArgs { NetID = iveh.NetID });
             data.Vehicles.Remove(iveh);
             continue;
           }
@@ -366,5 +368,10 @@ namespace OriginFrameworkServer
       
       return CreateVehicle((uint)hash, pos.X, pos.Y, pos.Z, heading, true, false);
     }
+  }
+
+  public class PersistentVehicleRemovedArgs : EventArgs
+  {
+    public int NetID { get; set; }
   }
 }

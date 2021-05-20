@@ -29,4 +29,19 @@ namespace OriginFrameworkData.DataBags
 	{
 		OilIndustries = 1
 	}
+
+	public class FactionDataBag
+	{
+		public List<FactionBlip> StaticBlips { get; set; }
+		public List<FactionBlip> DynamicBlips { get; set; }
+	}
+
+	public class FactionBlip
+	{
+		public Guid SyncId { get; set; }
+		public string DisplayName { get; set; }
+		public PosBag Pos { get; set; }
+		public int BlipSprite { get; set; }
+		public int BlipColor { get; set; }
+	}
 }
