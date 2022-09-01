@@ -12,7 +12,7 @@ namespace OriginFramework
 	public class DrifterAndBooster : BaseScript
 	{
     public static bool IsDrifterEnabled { get; set; } = GetResourceKvpInt(KvpManager.getKvpString(KvpEnum.DrifterEnabled)) > 0;
-    private static bool isBoosterEnabled = false;
+    public static bool IsBoosterEnabled = false;
 
     private float speed_limit = 1000f;
     private float kmh_multiplier = 3.6f;
@@ -38,7 +38,7 @@ namespace OriginFramework
 		{
       await (Delay(250));
 
-      if (IsDrifterEnabled || isBoosterEnabled)
+      if (IsDrifterEnabled || IsBoosterEnabled)
       {
         if (IsPedInAnyVehicle(Game.PlayerPed.Handle, false))
         {
@@ -53,7 +53,7 @@ namespace OriginFramework
                 SetVehicleReduceGrip(vehicle, true);
                 SetVehicleReduceTraction(vehicle, true);
               }
-              if (isBoosterEnabled)
+              if (IsBoosterEnabled)
                 SetVehicleForwardSpeed(vehicle, vehicleSpeed * 1.3f);
             }
             else
@@ -82,12 +82,12 @@ namespace OriginFramework
     }
     public static void EnableBooster()
     {
-      isBoosterEnabled = true;
+      IsBoosterEnabled = true;
       Notify.Info("Booster aktivovan!");
     }
     public static void DisableBooster()
     {
-      isBoosterEnabled = false;
+      IsBoosterEnabled = false;
       Notify.Info("Booster deaktivovan!");
     }
   }

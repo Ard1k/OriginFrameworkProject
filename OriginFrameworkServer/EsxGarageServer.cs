@@ -44,11 +44,11 @@ namespace OriginFrameworkServer
 
       recoverVehiclePrice = SettingsManager.Settings.GarageRecoverPrice;
 
-      while (ESX == null)
-      {
-        TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
-        await Delay(0);
-      }
+      //while (ESX == null)
+      //{
+      //  TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
+      //  await Delay(0);
+      //}
     }
 
     private async void OnResourceStop(string resourceName)

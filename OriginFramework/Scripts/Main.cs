@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MenuAPI;
 using OriginFramework.Menus;
 using static CitizenFX.Core.Native.API;
+using OriginFrameworkData.DataBags;
 
 namespace OriginFramework
 {
@@ -27,6 +28,7 @@ namespace OriginFramework
 
     public static PlayerList LocalPlayers { get; protected set; }
     public static int MyOriginId { get; set; } = -1;
+    public static bool IsAdmin { get; set; } = false;
 
     public static Control MenuToggleKey { get { return MenuController.MenuToggleKey; } private set { MenuController.MenuToggleKey = value; } }
 
@@ -61,11 +63,13 @@ namespace OriginFramework
 
       Debug.WriteLine($"Waiting for oid...");
       int oid = -1;
+      bool isAdmin = false;
       bool oid_returned = false;
 
-      Func<int, bool> OIDCallback = (soid) =>
+      Func<int, bool, bool> OIDCallback = (soid, sisadmin) =>
       {
         oid = soid;
+        isAdmin = sisadmin;
         oid_returned = true;
         return true;
       };
@@ -78,6 +82,7 @@ namespace OriginFramework
       }
 
       MyOriginId = oid;
+      IsAdmin = isAdmin;
       Debug.WriteLine($"OID retrieved: {oid}");
 
       #region register commands
@@ -149,6 +154,11 @@ namespace OriginFramework
       #endregion
 
       Tick += OnTick;
+
+      RegisterCommand("menu", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        NativeMenuManager.ShowMenu("test", MainMenu_Default.GenerateMenu());
+      }), false);
     }
 
     private async void ValidationErrorNotification(string message)

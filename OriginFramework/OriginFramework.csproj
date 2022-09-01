@@ -46,14 +46,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JobHelpers.cs" />
+    <Compile Include="MainMenu\MainMenu_Admin.cs" />
+    <Compile Include="MainMenu\MainMenu_FunTools.cs" />
+    <Compile Include="MainMenu\MainMenu_DevTools.cs" />
+    <Compile Include="MainMenu\MainMenu_Group.cs" />
+    <Compile Include="MainMenu\MainMenu_Default.cs" />
+    <Compile Include="Menus\NativeMenu.cs" />
     <Compile Include="Scripts\ESXFactionScriptBase.cs" />
     <Compile Include="Scripts\ESXScriptBase.cs" />
+    <Compile Include="Scripts\FontsManager.cs" />
     <Compile Include="Scripts\GarageMenu.cs" />
     <Compile Include="Menus\Toys.cs" />
     <Compile Include="OfwFunctions.cs" />
     <Compile Include="Scripts\Checkpointer.cs" />
     <Compile Include="Scripts\EsxGarage.cs" />
     <Compile Include="Scripts\FlashHeadlightsOnHorn.cs" />
+    <Compile Include="Scripts\NativeMenuManager.cs" />
+    <Compile Include="Scripts\NoClip.cs" />
     <Compile Include="Scripts\OilIndustriesFaction.cs" />
     <Compile Include="Scripts\VehicleClient.cs" />
     <Compile Include="Scripts\LuxuryCarDelivery.cs" />
@@ -92,6 +101,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="index.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="stream\fs.gfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="stream\menu_textures.ytd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -39,12 +39,13 @@ namespace OriginFrameworkServer
       if (source == null)
       {
         Debug.WriteLine("ofw_oid:GetMyOriginID: This event can't be called from server!");
-        callback(-1);
+        callback(-1, false);
       }
 
       var playerOID = GetOriginServerID(source);
+      var isAdmin = IsPlayerAceAllowed(source.Handle, "command");
 
-      _ = callback(playerOID);
+      _ = callback(playerOID, isAdmin);
     }
 
     public static int GetOriginServerID(Player p)

@@ -38,11 +38,11 @@ namespace OriginFrameworkServer
 
       Missions = SettingsManager.Settings.LCDMissions;
 
-      while (ESX == null)
-      {
-        TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
-        await Delay(0);
-      }
+      //while (ESX == null)
+      //{
+      //  TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
+      //  await Delay(0);
+      //}
 
       //Debug.WriteLine("OFW_LCD: ESX object loaded!");
     }

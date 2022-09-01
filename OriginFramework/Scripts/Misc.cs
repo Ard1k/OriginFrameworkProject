@@ -319,6 +319,16 @@ namespace OriginFramework
     }
     #endregion
 
+    #region God mode
+    public static bool IsPlayerGodModeEnabled = false;
+
+    public static void TogglePlayerGodMode()
+    {
+      IsPlayerGodModeEnabled = !IsPlayerGodModeEnabled;
+      SetEntityInvincible(Game.PlayerPed.Handle, IsPlayerGodModeEnabled);
+    }
+    #endregion
+
     public Misc()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);

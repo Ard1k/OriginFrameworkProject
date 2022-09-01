@@ -35,23 +35,23 @@ namespace OriginFramework.Scripts
 			while (SettingsManager.Settings == null)
 				await Delay(0);
 
-			while (ESX == null)
-			{
-				TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
-				await Delay(0);
-			}
+			//while (ESX == null)
+			//{
+			//	TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
+			//	await Delay(0);
+			//}
 
-			while (PlayerJob == null)
-			{
-				try
-				{
-					PlayerJob = ESX.GetPlayerData().job;
-				}
-				catch	{ }
+			//while (PlayerJob == null)
+			//{
+			//	try
+			//	{
+			//		PlayerJob = ESX.GetPlayerData().job;
+			//	}
+			//	catch	{ }
 
-				if (PlayerJob == null)
-					await Delay(100);
-			}
+			//	if (PlayerJob == null)
+			//		await Delay(100);
+			//}
 		}
 
     protected async virtual void OnResourceStop(string resourceName)

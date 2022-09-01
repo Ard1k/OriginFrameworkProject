@@ -37,23 +37,23 @@ namespace OriginFramework.Scripts
 			AddTextEntry("OFW_ESXGARAGE_OPENMENU", $"Stiskni ~INPUT_CONTEXT~ pro otevreni garaze");
 			AddTextEntry("OFW_ESXGARAGE_SAVEVEH", $"Stiskni ~INPUT_CONTEXT~ pro zaparkovani auta");
 
-			while (ESX == null)
-			{
-				TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
-				await Delay(0);
-			}
+			//while (ESX == null)
+			//{
+			//	TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
+			//	await Delay(0);
+			//}
 
-			while (playerJob == null)
-			{
-				try
-				{
-					playerJob = ESX.GetPlayerData().job.name;
-				}
-				catch
-				{ }
-				if (playerJob == null)
-					await Delay(100);
-			}
+			//while (playerJob == null)
+			//{
+			//	try
+			//	{
+			//		playerJob = ESX.GetPlayerData().job.name;
+			//	}
+			//	catch
+			//	{ }
+			//	if (playerJob == null)
+			//		await Delay(100);
+			//}
 
 			RefreshBlips();
 
