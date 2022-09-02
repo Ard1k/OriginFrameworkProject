@@ -28,16 +28,14 @@ namespace OriginFramework.Scripts
     public NoClip()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
-
-      Tick += NoClipHandler;
     }
 
     private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.NoClip))
+        return;
 
       #region register commands
       RegisterCommand("noclip", new Action<int, List<object>, string>((source, args, raw) =>
@@ -46,6 +44,10 @@ namespace OriginFramework.Scripts
           NoclipActive = !NoclipActive;
       }), false);
       #endregion
+
+      Tick += NoClipHandler;
+
+      InternalDependencyManager.Started(eScriptArea.NoClip);
     }
 
     internal static void SetNoclipActive(bool active)

@@ -59,10 +59,12 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.NativeMenuManager))
+        return;
 
       Tick += HandleMenu;
+
+      InternalDependencyManager.Started(eScriptArea.NativeMenuManager);
     }
 
     #endregion
@@ -337,8 +339,7 @@ namespace OriginFramework
             else
               boxColor = new int[] { 45, 45, 45, CurrentMenu.Items[i].IsUnselectable ? 0 : 230 };
           }
-          if (CurrentMenu.Items[i].IsActive)
-            Debug.WriteLine(String.Format($"{boxColor[0]} {boxColor[1]} {boxColor[2]} {boxColor[3]}"));
+
           DrawRect(xOffset, yOffset + (yHeight * (i - indexMin)), xLenght, yHeight - spacing, boxColor[0], boxColor[1], boxColor[2], boxColor[3]);
           if (!string.IsNullOrEmpty(CurrentMenu.Items[i].ExtraLeft) || !string.IsNullOrEmpty(CurrentMenu.Items[i].ExtraRight))
             DrawRect(xOffset + (xLenght + xExtraLenght) / 2.0f + spacing, yOffset + (yHeight * (i - indexMin)), xExtraLenght, yHeight - spacing, 255, 255, 255, 199);

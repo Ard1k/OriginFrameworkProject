@@ -31,12 +31,16 @@ namespace OriginFrameworkServer
     public PersistentVehiclesServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
-      EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
     }
 
     private async void OnResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+
+      if (!await InternalDependencyManager.CanStart(eScriptArea.PersistentVehiclesServer))
+        return;
+
+      EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
 
       RegisterCommand("supercar", new Action<int, List<object>, string>((source, args, raw) =>
       {
@@ -79,6 +83,8 @@ namespace OriginFrameworkServer
 
       Tick += VehicleManagerTick;
       //Tick += PeriodicSave;
+
+      InternalDependencyManager.Started(eScriptArea.PersistentVehiclesServer);
     }
 
     [EventHandler("ofw_veh:SpawnServerVehicle")]

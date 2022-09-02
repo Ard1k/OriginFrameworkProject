@@ -20,15 +20,16 @@ namespace OriginFrameworkServer
     public NPCServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
-      EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
     }
 
     private async void OnResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.NPCServer))
+        return;
+
+      EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
 
       NPCs = SettingsManager.Settings.NPCs;
       respawnDistance = SettingsManager.Settings.NPCRespawnDistance;
@@ -39,6 +40,8 @@ namespace OriginFrameworkServer
       //}
 
       Tick += TakeCareOfNPC;
+
+      InternalDependencyManager.Started(eScriptArea.NPCServer);
     }
 
     private async Task TakeCareOfNPC()

@@ -66,14 +66,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GroupServer.cs" />
-    <Compile Include="EsxGarageServer.cs" />
     <Compile Include="Helpers\OfwServerFunctions.cs" />
     <Compile Include="Helpers\SyncLocker.cs" />
+    <Compile Include="InternalDependencyManager.cs" />
     <Compile Include="LuxuryCarsDeliveryServer.cs" />
     <Compile Include="NPCServer.cs" />
     <Compile Include="OIDServer.cs" />
-    <Compile Include="FactionDataManager.cs" />
-    <Compile Include="OilIndustriesFactionServer.cs" />
     <Compile Include="PersistentVehiclesServer.cs" />
     <Compile Include="MainServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -90,9 +88,6 @@
       <Project>{90058298-e7cc-4a07-805f-677181941308}</Project>
       <Name>OriginFrameworkData</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Sql\oilindustries.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

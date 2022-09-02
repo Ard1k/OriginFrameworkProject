@@ -42,10 +42,15 @@ namespace OriginFrameworkServer
     {
       if (GetCurrentResourceName() != resourceName) return;
 
+      if (!await InternalDependencyManager.CanStart(eScriptArea.VSql))
+        return;
+
       VSql.Init();
       await EnsureDB_cfw_jsondata_table();
 
       tablesEnsured = true;
+
+      InternalDependencyManager.Started(eScriptArea.VSql);
     }
 
     private Task<int> EnsureDB_cfw_jsondata_table()

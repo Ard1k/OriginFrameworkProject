@@ -55,8 +55,8 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.Main))
+        return;
 
       MenuController.MenuAlignment = SettingsManager.Settings.MenuAlignRight ? MenuController.MenuAlignmentOption.Right : MenuController.MenuAlignmentOption.Left;
       MenuToggleKey = (Control)SettingsManager.Settings.MenuKey;
@@ -159,6 +159,8 @@ namespace OriginFramework
       {
         NativeMenuManager.ShowMenu("test", MainMenu_Default.GenerateMenu());
       }), false);
+
+      InternalDependencyManager.Started(eScriptArea.Main);
     }
 
     private async void ValidationErrorNotification(string message)

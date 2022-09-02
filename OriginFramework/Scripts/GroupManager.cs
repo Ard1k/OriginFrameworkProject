@@ -118,14 +118,21 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.GroupManager))
+        return;
+
+      EventHandlers["ofw_grp:RefreshGroupInfo"] += new Action<string>(RefreshGroupInfo);
+      EventHandlers["ofw_grp:NotifyError"] += new Action<string>(NotifyError);
+      EventHandlers["ofw_grp:NotifySuccess"] += new Action<string>(NotifySuccess);
+      EventHandlers["ofw_grp:ConfirmGroupInvite"] += new Action<int>(ConfirmGroupInvite);
 
       TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
 
       Tick += GroupDisplay;
       Tick += ProcessGroupDistance;
       Tick += PeriodicGroupRefresh;
+
+      InternalDependencyManager.Started(eScriptArea.GroupManager);
     }
     #endregion
 
@@ -202,12 +209,6 @@ namespace OriginFramework
     public GroupManager()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
-      EventHandlers["ofw_grp:RefreshGroupInfo"] += new Action<string>(RefreshGroupInfo);
-      EventHandlers["ofw_grp:NotifyError"] += new Action<string>(NotifyError);
-      EventHandlers["ofw_grp:NotifySuccess"] += new Action<string>(NotifySuccess);
-      EventHandlers["ofw_grp:ConfirmGroupInvite"] += new Action<int>(ConfirmGroupInvite);
-
-      TriggerServerEvent("ofw_grp:RequestGroupInfoRefresh");
     }
   }
 }

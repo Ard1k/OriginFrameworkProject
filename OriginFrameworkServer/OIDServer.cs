@@ -16,11 +16,9 @@ namespace OriginFrameworkServer
   {
     private static int index = 10000;
     public static List<OIDBag> OriginServerIdentifiers { get; private set; } = new List<OIDBag>();
-    public static PlayerList ServerPlayers = null;
 
     public OIDServer()
     {
-      ServerPlayers = Players;
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
     }
 
@@ -28,9 +26,10 @@ namespace OriginFrameworkServer
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.OIDServer))
+        return;
 
+      InternalDependencyManager.Started(eScriptArea.OIDServer);
     }
 
     [EventHandler("ofw_oid:GetMyOriginID")]

@@ -24,11 +24,13 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.FontsManager))
+        return;
 
       RegisterFontFile("fs");
       FiraSansFontId = RegisterFontId("Fira Sans");
+
+      InternalDependencyManager.Started(eScriptArea.FontsManager);
     }
 
     public static async Task<int> GetFiraSansIdAsync()

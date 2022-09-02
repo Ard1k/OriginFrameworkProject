@@ -22,10 +22,12 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.FlashHeadlightsAndHorn))
+        return;
 
       Tick += OnTick;
+
+      InternalDependencyManager.Started(eScriptArea.FlashHeadlightsAndHorn);
     }
 
 

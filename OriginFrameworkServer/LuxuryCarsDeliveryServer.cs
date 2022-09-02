@@ -19,7 +19,6 @@ namespace OriginFrameworkServer
 
     private List<LCDJobStateBag> JobStates = new List<LCDJobStateBag>();
     private LockObj syncLock = new LockObj();
-    private dynamic ESX = null;
 
     public LuxuryCarsDeliveryServer()
     {
@@ -33,18 +32,12 @@ namespace OriginFrameworkServer
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.LuxuryCarsDeliveryServer))
+        return;
 
       Missions = SettingsManager.Settings.LCDMissions;
 
-      //while (ESX == null)
-      //{
-      //  TriggerEvent("esx:getSharedObject", new object[] { new Action<dynamic>(esx => { ESX = esx; }) });
-      //  await Delay(0);
-      //}
-
-      //Debug.WriteLine("OFW_LCD: ESX object loaded!");
+      InternalDependencyManager.Started(eScriptArea.LuxuryCarsDeliveryServer);
     }
 
     private async void OnResourceStop(string resourceName)
@@ -146,15 +139,15 @@ namespace OriginFrameworkServer
 
           foreach (var p in players)
           {
-            var xPlayer = ESX.GetPlayerFromId(p.Handle);
-            if (xPlayer == null)
-            {
-              Debug.WriteLine("OFW_LCD: esx player is null!");
-            }
-            else
-            {
-              xPlayer.addMoney(reward);
-            }
+            //var xPlayer = ESX.GetPlayerFromId(p.Handle);
+            //if (xPlayer == null)
+            //{
+            //  Debug.WriteLine("OFW_LCD: esx player is null!");
+            //}
+            //else
+            //{
+            //  xPlayer.addMoney(reward);
+            //}
 
             p.TriggerEvent("ofw_lcd:JobFinishedUpdate", reward);
           }

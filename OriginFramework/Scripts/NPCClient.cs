@@ -29,8 +29,8 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.NPCClient))
+        return;
 
       AddTextEntry("OFW_NPC_INTERACT", $"Stiskni {NPCInteractionKeyString} pro interakci");
 
@@ -56,6 +56,8 @@ namespace OriginFramework
 
       Tick += NPCSlowTick;
       Tick += NPCFastTick;
+
+      InternalDependencyManager.Started(eScriptArea.NPCClient);
     }
 
     private async Task NPCSlowTick()

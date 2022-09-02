@@ -35,14 +35,18 @@ namespace OriginFramework
     public VehicleClient()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
-      EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
-      EventHandlers["ofw_veh:UpdateSavedVehicleProperties"] += new Action<int, string>(UpdateSavedVehicleProperties);
     }
 
 
     private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+
+      if (!await InternalDependencyManager.CanStart(eScriptArea.VehicleClient))
+        return;
+
+      EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
+      EventHandlers["ofw_veh:UpdateSavedVehicleProperties"] += new Action<int, string>(UpdateSavedVehicleProperties);
 
       RegisterCommand("tpoly", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
@@ -57,6 +61,8 @@ namespace OriginFramework
       }), false);
 
       Tick += DoShapetests;
+
+      InternalDependencyManager.Started(eScriptArea.VehicleClient);
     }
 
     public async Task DoShapetests()

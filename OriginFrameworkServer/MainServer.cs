@@ -25,8 +25,8 @@ namespace OriginFrameworkServer
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.MainServer))
+        return;
 
       RegisterCommand("identcopy", new Action<int, List<object>, string>((source, args, raw) =>
       {
@@ -59,6 +59,8 @@ namespace OriginFrameworkServer
 
         sourcePlayer.TriggerEvent("ofw_misc:CopyStringToClipboard", sb.ToString());
       }), false);
+
+      InternalDependencyManager.Started(eScriptArea.MainServer);
     }
 
     [EventHandler("ofw_misc:GetJobGrades")]

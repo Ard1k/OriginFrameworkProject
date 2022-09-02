@@ -332,15 +332,16 @@ namespace OriginFramework
     public Misc()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
-      EventHandlers["ofw_misc:CopyStringToClipboard"] += new Action<string>(CopyStringToClipboard);
     }
 
     private async void OnClientResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.Misc))
+        return;
+
+      EventHandlers["ofw_misc:CopyStringToClipboard"] += new Action<string>(CopyStringToClipboard);
 
       Tick += DynamicMenuCleanup;
 
@@ -355,6 +356,8 @@ namespace OriginFramework
         Debug.WriteLine("Island loading enabled");
         Tick += IslandLoader;
       }
+
+      InternalDependencyManager.Started(eScriptArea.Misc);
     }
 
     private async void CopyStringToClipboard(string toCopy)

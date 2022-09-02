@@ -26,6 +26,17 @@ namespace OriginFramework
     public LuxuryCarDelivery()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
+
+    }
+
+		#region event handlers
+		private async void OnClientResourceStart(string resourceName)
+    {
+      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+
+      if (!await InternalDependencyManager.CanStart(eScriptArea.LuxuryCarsDelivery, eScriptArea.NPCClient))
+        return;
+
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
       EventHandlers["ofw_lcd:NewJobStateSent"] += new Action<string>(NewJobStateSent);
       EventHandlers["ofw_lcd:TryRestoreJobState"] += new Action(TryRestoreJobState);
@@ -34,12 +45,6 @@ namespace OriginFramework
       EventHandlers["ofw_lcd:JobCancelledUpdate"] += new Action<string>(JobCancelledUpdate);
       EventHandlers["baseevents:onPlayerDied"] += new Action<dynamic, dynamic>(OnPlayerDied);
       EventHandlers["baseevents:onPlayerKilled"] += new Action<dynamic, dynamic>(OnPlayerDied);
-    }
-
-		#region event handlers
-		private async void OnClientResourceStart(string resourceName)
-    {
-      if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       AddTextEntry("OFW_LCD_DELIVER", $"Stiskni {InteractionKeyString} pro interakci");
       AddTextEntry("OFW_LCD_BADVEH", $"Kamo, tohle neni to auto!");
@@ -64,6 +69,8 @@ namespace OriginFramework
       Tick += CheckEntityBlips;
       Tick += VehicleDeliveryHandler;
       Tick += GuardsTick;
+
+      InternalDependencyManager.Started(eScriptArea.LuxuryCarsDelivery);
     }
 
     private async void OnResourceStop(string resourceName)

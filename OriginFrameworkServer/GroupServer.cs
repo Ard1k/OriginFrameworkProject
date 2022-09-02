@@ -26,8 +26,10 @@ namespace OriginFrameworkServer
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      while (SettingsManager.Settings == null)
-        await Delay(0);
+      if (!await InternalDependencyManager.CanStart(eScriptArea.GroupServer))
+        return;
+
+      InternalDependencyManager.Started(eScriptArea.GroupServer);
     }
 
     [EventHandler("ofw_grp:RequestGroupInfoRefresh")]
