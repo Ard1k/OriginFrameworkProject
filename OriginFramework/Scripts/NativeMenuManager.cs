@@ -17,7 +17,7 @@ namespace OriginFramework
   {
     public static bool IsHidden { get; set; } = true;
     public static NativeMenu CurrentMenu { get; set; }
-    public static string ResourceNameMenu { get; set; }
+    public static string CurrentMenuName { get; set; }
 
     private static float xOffset = 0.7f;
     private static float xLenght = 0.15f;
@@ -419,17 +419,31 @@ namespace OriginFramework
       else
       {
         CurrentMenu = null;
-        ResourceNameMenu = null;
+        CurrentMenuName = null;
         IsHidden = true;
       }
     }
     #endregion
 
     #region public metody
-    public static void ShowMenu(string resourceName, NativeMenu menu)
+    public static void ToggleMenu(string menuName, Func<NativeMenu> getMenu)
     {
-      CurrentMenu = menu;
-      ResourceNameMenu = resourceName;
+      if (CurrentMenuName == menuName)
+      {
+        if (!IsHidden)
+        {
+          IsHidden = true;
+          return;
+        }
+        else if (CurrentMenu != null)
+        {
+          IsHidden = false;
+          return;
+        }
+      }
+
+      CurrentMenu = getMenu();
+      CurrentMenuName = menuName;
       IsHidden = false;
     }
     #endregion

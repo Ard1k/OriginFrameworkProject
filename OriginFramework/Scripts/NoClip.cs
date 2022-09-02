@@ -87,44 +87,44 @@ namespace OriginFramework.Scripts
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(0);
           PushScaleformMovieMethodParameterString("~INPUT_SPRINT~");
-          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Change Speed ({speeds[MovingSpeed]})");
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Zmenit rychlost ({speeds[MovingSpeed]})");
           EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(1);
           PushScaleformMovieMethodParameterString("~INPUT_MOVE_LR~");
-          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Turn Left/Right");
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Pohyb Levá/Pravá");
           EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(2);
           PushScaleformMovieMethodParameterString("~INPUT_MOVE_UD~");
-          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Move");
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Pohyb");
           EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(3);
           PushScaleformMovieMethodParameterString("~INPUT_MULTIPLAYER_INFO~");
-          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Down");
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Dolu");
           EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(4);
           PushScaleformMovieMethodParameterString("~INPUT_COVER~");
-          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Up");
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Nahoru");
           EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(5);
           PushScaleformMovieMethodParameterString("~INPUT_VEH_HEADLIGHT~");
-          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Cam Mode");
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Cam Mód");
           EndScaleformMovieMethod();
 
-          //BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
-          //ScaleformMovieMethodAddParamInt(6);
-          //PushScaleformMovieMethodParameterString(GetControlInstructionalButton(0, MainMenu.NoClipKey, 1));
-          //PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Toggle NoClip");
-          //EndScaleformMovieMethod();
+          BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
+          ScaleformMovieMethodAddParamInt(6);
+          PushScaleformMovieMethodParameterString(GetControlInstructionalButton(0, 344, 1));
+          PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Vypnout");
+          EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "DRAW_INSTRUCTIONAL_BUTTONS");
           ScaleformMovieMethodAddParamInt(0);
@@ -220,7 +220,8 @@ namespace OriginFramework.Scripts
         // After the next game tick, reset the entity properties.
         await Delay(0);
         FreezeEntityPosition(noclipEntity, false);
-        SetEntityInvincible(noclipEntity, false);
+        if (!Misc.IsPlayerGodModeEnabled)
+          SetEntityInvincible(noclipEntity, false);
         SetEntityCollision(noclipEntity, true, true);
 
         // If the player is not set as invisible by PlayerOptions or if the noclip entity is not the player ped, reset the visibility

@@ -8,6 +8,8 @@ using MenuAPI;
 using OriginFramework.Menus;
 using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;
+using System.Text.RegularExpressions;
+using OriginFramework.Scripts;
 
 namespace OriginFramework
 {
@@ -30,18 +32,6 @@ namespace OriginFramework
     public static int MyOriginId { get; set; } = -1;
     public static bool IsAdmin { get; set; } = false;
 
-    public static Control MenuToggleKey { get { return MenuController.MenuToggleKey; } private set { MenuController.MenuToggleKey = value; } }
-
-		#region Menu static variables
-		public static Menu OriginMainMenu { get; set; }
-    public static Group GroupMenu { get; set; }
-    public static About AboutMenu { get; set; }
-    public static Tools ToolsMenu { get; set; }
-    public static Toys ToysMenu { get; set; }
-    #endregion
-
-    public bool firstTick = true;
-
     public Main()
     {
       LocalPlayers = Players;
@@ -57,9 +47,6 @@ namespace OriginFramework
 
       if (!await InternalDependencyManager.CanStart(eScriptArea.Main))
         return;
-
-      MenuController.MenuAlignment = SettingsManager.Settings.MenuAlignRight ? MenuController.MenuAlignmentOption.Right : MenuController.MenuAlignmentOption.Left;
-      MenuToggleKey = (Control)SettingsManager.Settings.MenuKey;
 
       Debug.WriteLine($"Waiting for oid...");
       int oid = -1;
@@ -157,10 +144,21 @@ namespace OriginFramework
 
       RegisterCommand("menu", new Action<int, List<object>, string>((source, args, raw) =>
       {
-        NativeMenuManager.ShowMenu("test", MainMenu_Default.GenerateMenu());
+        NativeMenuManager.ToggleMenu("MainMenu", MainMenu_Default.GenerateMenu);
       }), false);
 
+      Tick += OnTick;
+
       InternalDependencyManager.Started(eScriptArea.Main);
+    }
+
+    private async Task OnTick()
+    {
+      if (IsControlJustPressed(0, 344)) //F11
+        NativeMenuManager.ToggleMenu("MainMenu", MainMenu_Default.GenerateMenu);
+
+      if (IsControlJustPressed(0, 57)) //F10
+        NoClip.SetNoclipSwitch();
     }
 
     private async void ValidationErrorNotification(string message)
@@ -171,109 +169,6 @@ namespace OriginFramework
     private async void SuccessNotification(string message)
     {
       Notify.Success(message);
-    }
-
-    private async Task OnTick()
-    {
-      #region FirstTick
-      if (firstTick)
-      {
-        firstTick = false;
-        
-        //Wait for data loaded
-        while (Game.Player.Name == "**Invalid**" || Game.Player.Name == "** Invalid **")
-        {
-          await Delay(0);
-        }
-
-        // Create the main menu.
-        OriginMainMenu = new Menu("OriginRP", "Main Menu");
-
-        // Add the main menu to the menu pool.
-        MenuController.AddMenu(OriginMainMenu);
-        MenuController.MainMenu = OriginMainMenu;
-
-        // Create all (sub)menus.
-        CreateSubmenus();
-
-        Debug.WriteLine("Initialized");
-      }
-      #endregion
-
-      if (!firstTick)
-      {
-        // Menu toggle button.
-        Game.DisableControlThisFrame(0, MenuToggleKey);
-      }
-    }
-
-    #region Add Menu Function
-    /// <summary>
-    /// Add the menu to the menu pool and set it up correctly.
-    /// Also add and bind the menu buttons.
-    /// </summary>
-    /// <param name="submenu"></param>
-    /// <param name="menuButton"></param>
-    private void AddMenu(Menu parentMenu, Menu submenu, MenuItem menuButton)
-    {
-      parentMenu.AddMenuItem(menuButton);
-      MenuController.BindMenuItem(parentMenu, submenu, menuButton);
-      submenu.RefreshIndex();
-    }
-    #endregion
-
-    #region Create Submenus
-    /// <summary>
-    /// Creates all the submenus depending on the permissions of the user.
-    /// </summary>
-    private void CreateSubmenus()
-    {
-      GroupMenu = new Group();
-      Menu menu1 = GroupMenu.GetMenu();
-      MenuItem button1 = new MenuItem("Skupina", "Zorganizuj si svoji skupinu. Nektere mise od NPC s ni umi pracovat. Pokud ano, zjistis to, kdyz si s nima pokecas. Pro spusteni mise jako skupina musi byt vsichni clenove skupiny do vzdalenosti 20m (zeleni v party)")
-      {
-        Label = "→→→"
-      };
-      AddMenu(OriginMainMenu, menu1, button1);
-      OriginMainMenu.OnItemSelect += async (sender, item, index) =>
-      {
-        if (item == button1)
-        {
-          await GroupMenu.RefreshMenu();
-          menu1.RefreshIndex();
-        }
-      };
-
-      ToysMenu = new Toys();
-      Menu menu2 = ToysMenu.GetMenu();
-      MenuItem button2 = new MenuItem("Blbustky", "Blbiny a vychytavky")
-      {
-        Label = "→→→"
-      };
-      AddMenu(OriginMainMenu, menu2, button2);
-
-      ToolsMenu = new Tools();
-      Menu menu3 = ToolsMenu.GetMenu();
-      MenuItem button3 = new MenuItem("Dev Nastroje", "Nastroje pro vyvoj. Nic moc zajimavyho")
-      {
-        Label = "→→→"
-      };
-      AddMenu(OriginMainMenu, menu3, button3);
-
-      AboutMenu = new About();
-      Menu menu4 = AboutMenu.GetMenu();
-      MenuItem button4 = new MenuItem("About OFW", "Informace o Origin frameworku")
-      {
-        Label = "→→→"
-      };
-      AddMenu(OriginMainMenu, menu4, button4);
-
-    }
-    #endregion
-
-    public static void UnlockFun()
-    {
-      ToolsMenu.UnlockFunTools();
     }
   }
 }
