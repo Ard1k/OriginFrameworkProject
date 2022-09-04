@@ -47,6 +47,7 @@ namespace OriginFrameworkServer
 
       VSql.Init();
       await EnsureDB_cfw_jsondata_table();
+      EnsureDB_tables();
 
       tablesEnsured = true;
 
@@ -56,6 +57,11 @@ namespace OriginFrameworkServer
     private Task<int> EnsureDB_cfw_jsondata_table()
     {
       return VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `cfw_jsondata` (`key` varchar(60) NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`key`)) DEFAULT CHARSET=latin1;", null);
+    }
+    private async void EnsureDB_tables()
+    {
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map` (`id` int NOT NULL AUTO_INCREMENT, `name` varchar(200) NOT NULL, PRIMARY KEY (`id`));", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map_item` (`id` int NOT NULL AUTO_INCREMENT, `prop_map_id` int NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_prop_map_item_id` FOREIGN KEY (`prop_map_id`) REFERENCES prop_map (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT );", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }

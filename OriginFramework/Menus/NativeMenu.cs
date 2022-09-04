@@ -52,7 +52,7 @@ namespace OriginFramework.Menus
 
     public Action OnHover { get; set; }
     public Action<NativeMenuItem> OnSelected { get; set; }
-    public Action<string> OnTextInput { get; set; }
+    public Action<NativeMenuItem,string> OnTextInput { get; set; }
     public Action<NativeMenuItem> OnRefresh { get; set; }
     public Func<NativeMenu> GetSubMenu { get; set; }
 

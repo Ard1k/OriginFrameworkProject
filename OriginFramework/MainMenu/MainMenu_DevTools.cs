@@ -18,6 +18,7 @@ namespace OriginFramework.Menus
         Items = new List<NativeMenuItem>
           {
             new NativeMenuItem { Name = "Checkpoint positioner", NameRight = ">>>", GetSubMenu = GenerateSubMenu_Checkpoint },
+            new NativeMenuItem { Name = "Entity positioner", NameRight = ">>>", GetSubMenu = GenerateSubMenu_Entitier },
             new NativeMenuItem { Name = "Entity info", NameRight = Misc.IsEntityInfoEnabled ? "ZAP" : "VYP",
               OnSelected = (item) => {
                 Misc.IsEntityInfoEnabled = !Misc.IsEntityInfoEnabled;
@@ -53,6 +54,34 @@ namespace OriginFramework.Menus
             new NativeMenuItem { Name = "Directional", IsHide = true,
             OnSelected = (item) => {
                 Checkpointer.SetCheckpointerActivate(Checkpointer.ExportMode.Directional);
+              }
+            },
+          }
+      };
+
+      return menu;
+    }
+
+    public static NativeMenu GenerateSubMenu_Entitier()
+    {
+      NativeMenu menu = new NativeMenu
+      {
+        MenuTitle = "Entitier tool",
+        Items = new List<NativeMenuItem>
+          {
+            new NativeMenuItem { Name = "Spawn", IsHide = true,
+              OnSelected = (item) => {
+                Entitier.SetEntitierActivate(Entitier.EntityMode.Spawn);
+              }
+            },
+            new NativeMenuItem { Name = "Copy info", IsHide = true,
+            OnSelected = (item) => {
+                Entitier.SetEntitierActivate(Entitier.EntityMode.CopyInfo);
+              }
+            },
+            new NativeMenuItem { Name = "Spawn and Copy", IsHide = true,
+            OnSelected = (item) => {
+                Entitier.SetEntitierActivate(Entitier.EntityMode.SpawnAndCopyInfo);
               }
             },
           }

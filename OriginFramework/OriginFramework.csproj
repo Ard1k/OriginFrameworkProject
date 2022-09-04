@@ -53,6 +53,7 @@
     <Compile Include="MainMenu\MainMenu_Group.cs" />
     <Compile Include="MainMenu\MainMenu_Default.cs" />
     <Compile Include="Menus\NativeMenu.cs" />
+    <Compile Include="Scripts\Entitier.cs" />
     <Compile Include="Scripts\FontsManager.cs" />
     <Compile Include="OfwFunctions.cs" />
     <Compile Include="Scripts\Checkpointer.cs" />

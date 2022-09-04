@@ -214,7 +214,7 @@ namespace OriginFramework
             string result = GetOnscreenKeyboardResult();
             await Delay(50);
             if (currentItem.OnTextInput != null)
-              currentItem.OnTextInput(result);
+              currentItem.OnTextInput(currentItem, result);
             Refresh();
           }
           else
@@ -368,6 +368,8 @@ namespace OriginFramework
             SetTextColour(255, 255, 255, 255);
             SetTextEntry("STRING");
             AddTextComponentString(FontsManager.FiraSansString + CurrentMenu.Items[i].NameRight);
+            SetTextWrap(0f, xOffset + xLenght / 2f - textMarginName); //text margin name je odsazeni name od leveho okraje, tak at je to stejny
+            SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
             DrawText(xOffset - xLenght / 2.0f + textMarginNameRight, (yOffset + (yHeight * (i - indexMin)) - textYOffset));
           }
 
@@ -447,6 +449,21 @@ namespace OriginFramework
       IsHidden = false;
     }
     #endregion
+
+    public static void OpenNewMenu(string menuName, Func<NativeMenu> getMenu)
+    {
+      CurrentMenu = getMenu();
+      CurrentMenuName = menuName;
+      IsHidden = false;
+    }
+
+    public static bool IsMenuOpen(string menuName)
+    {
+      if ((menuName == null || menuName == CurrentMenuName) && !IsHidden)
+        return true;
+      else
+        return false;
+    }
 
     public NativeMenuManager()
     {
