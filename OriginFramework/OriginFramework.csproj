@@ -61,7 +61,6 @@
     <Compile Include="Scripts\NativeMenuManager.cs" />
     <Compile Include="Scripts\NoClip.cs" />
     <Compile Include="Scripts\VehicleClient.cs" />
-    <Compile Include="Scripts\LuxuryCarDelivery.cs" />
     <Compile Include="Scripts\GroupManager.cs" />
     <Compile Include="Scripts\NPCClient.cs" />
     <Compile Include="Scripts\Misc.cs" />

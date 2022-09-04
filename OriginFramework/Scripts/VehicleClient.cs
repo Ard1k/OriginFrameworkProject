@@ -1,5 +1,4 @@
 ﻿using CitizenFX.Core;
-using MenuAPI;
 using Newtonsoft.Json;
 using OriginFramework.Menus;
 using OriginFrameworkData.DataBags;

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MenuAPI;
 using OriginFramework.Menus;
 using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;

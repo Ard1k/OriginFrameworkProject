@@ -1,6 +1,5 @@
 ﻿using CitizenFX.Core;
 using CitizenFX.Core.UI;
-using MenuAPI;
 using Newtonsoft.Json;
 using OriginFramework.Menus;
 using OriginFrameworkData;
@@ -52,30 +51,6 @@ namespace OriginFramework
       }
 
       await Delay(1000);
-    }
-    #endregion
-
-    #region dynamic menu cleanup
-    private float timeMinuteCounter = 0;
-
-    private async Task DynamicMenuCleanup()
-    {
-      timeMinuteCounter += (GetFrameTime() * 1000);
-      if (timeMinuteCounter > 60000)
-      {
-        timeMinuteCounter = 0;
-        //Debug.WriteLine("Dynamic menu cleanup now!");
-
-        if (!MenuController.IsAnyMenuOpen() && DynamicMenu.OwnedMenus.Count > 0)
-        {
-          //lock fivem nedava, chci se vyhnout vykydleni menu, ktery zrovna vytvarim
-          var localMenus = DynamicMenu.OwnedMenus;
-          DynamicMenu.OwnedMenus = new List<Menu>();
-
-          foreach (var it in localMenus)
-            MenuController.Menus.Remove(it);
-        }
-      }
     }
     #endregion
 
@@ -342,8 +317,6 @@ namespace OriginFramework
         return;
 
       EventHandlers["ofw_misc:CopyStringToClipboard"] += new Action<string>(CopyStringToClipboard);
-
-      Tick += DynamicMenuCleanup;
 
       Tick += EntityInfoRefresh;
       Tick += EntityInfoDrawing;
