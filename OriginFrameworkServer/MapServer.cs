@@ -52,6 +52,25 @@ namespace OriginFrameworkServer
       {
         if (Players != null && Players.Count() > 0 || Players.Any(p => p.Character != null))
         {
+          for (int i = loadedMaps.Count - 1; i >= 0; i--)
+          {
+            if (loadedMaps[i].IsDestroy)
+            {
+              foreach (var prop in loadedMaps[i].Props)
+              {
+                if (prop.IsNetworked)
+                  continue;
+
+                if (prop.LocalID > 0)
+                {
+                  DeleteEntity(prop.LocalID);
+                }
+              }
+
+              loadedMaps.Remove(loadedMaps[i]);
+            }
+          }
+
           foreach (var map in loadedMaps)
           {
             foreach (var prop in map.Props)
@@ -177,14 +196,33 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_map:DestroyMap")]
-    private async void DestroyMap([FromSource] Player source, string reason)
+    private async void DestroyMap([FromSource] Player source, string mapName)
     {
-      
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var map = loadedMaps.Where(m => m.Name.Equals(mapName)).FirstOrDefault();
+        if (map != null)
+        {
+          map.IsDestroy = true;
+          source?.TriggerEvent("ofw:SuccessNotification", "Map destroyed");
+          TriggerClientEvent("ofw_map:MapDestroyed", mapName);
+        }
+        else
+        {
+          source?.TriggerEvent("ofw:ErrorNotification", "Map not found");
+        }
+      }
     }
 
-		#endregion
+    [EventHandler("ofw_map:GetAllMaps")]
+    private async void GetAllMaps([FromSource] Player source)
+    {
+      if (loadedMaps != null && loadedMaps.Count > 0)
+        source?.TriggerEvent("ofw_map:AllMapsSync", JsonConvert.SerializeObject(loadedMaps));
+    }
+    #endregion
 
-		#region private
+    #region private
 
 
     #endregion

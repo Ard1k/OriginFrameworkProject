@@ -11,6 +11,8 @@ namespace OriginFrameworkData.DataBags
   {
     public int Id { get; set; }
     public string Name { get; set; }
+    [JsonIgnore]
+    public bool IsDestroy { get; set; }
     public List<MapPropBag> Props { get; set; }
   }
 
@@ -22,6 +24,8 @@ namespace OriginFrameworkData.DataBags
     public int LocalID { get; set; }
     [JsonIgnore]
     public bool SpawnFailed { get; set; }
+    [JsonIgnore]
+    public float PlayerDistance { get; set; }
     public bool IsNetworked { get; set; }
 
     public int MapId { get; set; }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using Newtonsoft.Json;
+using OriginFramework.Helpers;
 using OriginFramework.Menus;
 using OriginFrameworkData.DataBags;
 using static CitizenFX.Core.Native.API;
@@ -13,9 +14,10 @@ namespace OriginFramework.Scripts
 {
   public class MapClient : BaseScript
   {
+    private bool isLocked = false;
     private List<MapBag> loadedMaps = new List<MapBag>();
     private double distanceLimit = 200;
-    private int propLimit = 50;
+    private int mapPropLimit = 50;
 
     public MapClient()
     {
@@ -31,6 +33,8 @@ namespace OriginFramework.Scripts
 
       Tick += KeepObjectsUp;
 
+      TriggerServerEvent("ofw_map:GetAllMaps");
+
       RegisterCommand("loadmap", new Action<int, List<object>, string>((source, args, raw) =>
       {
         if (args == null || args.Count <= 0)
@@ -41,35 +45,88 @@ namespace OriginFramework.Scripts
         TriggerServerEvent("ofw_map:LoadMap", args[0]);
       }), false);
 
+      RegisterCommand("destroymap", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        if (args == null || args.Count <= 0)
+        {
+          Notify.Error("You must enter map name");
+          return;
+        }
+        TriggerServerEvent("ofw_map:DestroyMap", args[0]);
+      }), false);
+
+      RegisterCommand("mapproplimit", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        if (args == null || args.Count <= 0)
+        {
+          Notify.Error("You must enter map name");
+          return;
+        }
+        if (args[0] is string newPropLimit)
+          mapPropLimit = Int32.Parse(newPropLimit);
+      }), false);
+
       InternalDependencyManager.Started(eScriptArea.MapClient);
     }
 
     private async Task KeepObjectsUp()
     {
+      await Delay(200);
       var playerPos = Game.PlayerPed.Position;
 
-      foreach (var map in loadedMaps)
+      for (int i = loadedMaps.Count - 1; i >= 0; i--)
       {
-        foreach (var prop in map.Props)
+        if (loadedMaps[i].IsDestroy)
         {
-          if (prop.IsNetworked)
-            continue;
+          foreach (var prop in loadedMaps[i].Props)
+          {
+            if (prop.IsNetworked)
+              continue;
 
-          if (Vector3.Distance(new Vector3(prop.EntityPosX, prop.EntityPosY, prop.EntityPosZ), playerPos) < distanceLimit)
-          {
-            if (prop.LocalID <= 0)
-            {
-              prop.LocalID = CreateObject(prop.PropHash, prop.EntityPosX, prop.EntityPosY, prop.EntityPosZ, false, false, false);
-              SetEntityRotation(prop.LocalID, prop.EntityPitch, prop.EntityRoll, prop.EntityYaw, 0, true);
-            }
-          }
-          else
-          {
             if (prop.LocalID > 0)
             {
               int _id = prop.LocalID;
               DeleteObject(ref _id);
               prop.LocalID = _id;
+            }
+          }
+
+          loadedMaps.Remove(loadedMaps[i]);
+        }
+      }
+
+      foreach (var map in loadedMaps)
+      {
+        if (isLocked)
+          break;
+        foreach (var prop in map.Props)
+        {
+          if (prop.IsNetworked)
+            prop.PlayerDistance = 999999999999999999999f; //blah
+          prop.PlayerDistance = Vector3.Distance(new Vector3(prop.EntityPosX, prop.EntityPosY, prop.EntityPosZ), playerPos);
+        }
+        map.Props = map.Props.OrderBy(p => p.PlayerDistance).ToList();
+        
+        for (int i = 0; i < map.Props.Count; i++)
+        {
+          if (map.Props[i].IsNetworked)
+            continue;
+
+          if (map.Props[i].PlayerDistance < distanceLimit && i < mapPropLimit)
+          {
+            if (map.Props[i].LocalID <= 0)
+            {
+              map.Props[i].LocalID = CreateObject(map.Props[i].PropHash, map.Props[i].EntityPosX, map.Props[i].EntityPosY, map.Props[i].EntityPosZ, false, false, false);
+              SetEntityRotation(map.Props[i].LocalID, map.Props[i].EntityPitch, map.Props[i].EntityRoll, map.Props[i].EntityYaw, 0, true);
+            }
+          }
+          else
+          {
+            if (map.Props[i].LocalID > 0)
+            {
+              int _id = map.Props[i].LocalID;
+              DeleteObject(ref _id);
+              map.Props[i].LocalID = _id;
             }
           }
         }
@@ -86,8 +143,46 @@ namespace OriginFramework.Scripts
       }
 
       var map = JsonConvert.DeserializeObject<MapBag>(mapData);
+
+      isLocked = true;
       loadedMaps.Add(map);
-      Debug.WriteLine($"OFW_MAP: loaded {map.Name}");
+      isLocked = false;
+    }
+
+    [EventHandler("ofw_map:MapDestroyed")]
+    private void MapDestroyed(string mapName)
+    {
+      if (string.IsNullOrEmpty(mapName))
+      {
+        Debug.WriteLine("OFW_MAP: invalid map to destroy");
+        return;
+      }
+
+      var map = loadedMaps.Where(m => m.Name.Equals(mapName)).FirstOrDefault();
+      if (map != null)
+        map.IsDestroy = true;
+    }
+
+    [EventHandler("ofw_map:AllMapsSync")]
+    private void AllMapsSync(string mapData)
+    {
+      if (string.IsNullOrEmpty(mapData))
+      {
+        Debug.WriteLine("OFW_MAP: invalid map sync data");
+        return;
+      }
+
+      List<MapBag> maps = JsonConvert.DeserializeObject<List<MapBag>>(mapData);
+      if (maps != null)
+      {
+        isLocked = true;
+        foreach (var m in maps)
+        {
+          if (!loadedMaps.Any(l => l.Name.Equals(m.Name)))
+            loadedMaps.Add(m);
+        }
+        isLocked = false;
+      }
     }
   }
 }
