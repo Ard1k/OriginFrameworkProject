@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\MapHelper.cs" />
     <Compile Include="InternalDependencyManager.cs" />
     <Compile Include="JobHelpers.cs" />
     <Compile Include="MainMenu\MainMenu_Admin.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="Scripts\Checkpointer.cs" />
     <Compile Include="Scripts\FlashHeadlightsOnHorn.cs" />
     <Compile Include="Scripts\NativeMenuManager.cs" />
+    <Compile Include="Scripts\MapClient.cs" />
     <Compile Include="Scripts\NoClip.cs" />
     <Compile Include="Scripts\VehicleClient.cs" />
     <Compile Include="Scripts\GroupManager.cs" />

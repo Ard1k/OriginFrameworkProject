@@ -141,13 +141,6 @@ namespace OriginFramework
 
       Tick += OnTick;
 
-      RegisterCommand("menu", new Action<int, List<object>, string>((source, args, raw) =>
-      {
-        NativeMenuManager.ToggleMenu("MainMenu", MainMenu_Default.GenerateMenu);
-      }), false);
-
-      Tick += OnTick;
-
       InternalDependencyManager.Started(eScriptArea.Main);
     }
 

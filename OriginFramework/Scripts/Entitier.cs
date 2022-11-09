@@ -8,6 +8,7 @@ using CitizenFX.Core;
 using static CitizenFX.Core.UI.Screen;
 using static CitizenFX.Core.Native.API;
 using OriginFramework.Menus;
+using OriginFramework.Helpers;
 
 namespace OriginFramework
 {
@@ -26,14 +27,12 @@ namespace OriginFramework
     private static float RotationOffset { get; set; } = 90f;
     private static float RotationOffsetRad { get { return (float)(RotationOffset * Math.PI) / 180; } }
     private static float ViewDistance { get; set; } = 10f;
+    private static MapHelper MapHelper { get; set; }
 
 
-    private List<string> speeds = new List<string>()
+    private List<float> speeds = new List<float>()
         {
-            "Very Slow",
-            "Slow",
-            "Normal",
-            "Fast"
+            0.1f, 1f, 10f
         };
 
     public Entitier()
@@ -41,14 +40,15 @@ namespace OriginFramework
       Tick += EntitierHandler;
     }
 
-    internal static void SetEntitierActivate(EntityMode mode)
+    internal static void SetEntitierActivate(EntityMode mode, MapHelper helper)
     {
       EntitierActive = true;
 
       Mode = mode;
+      MapHelper = helper;
 
       var isInVeh = Game.PlayerPed.IsInVehicle();
-      var coordsEntity = isInVeh ? Game.PlayerPed.CurrentVehicle.Handle : Game.PlayerPed.Handle;
+      var coordsEntity = Game.PlayerPed.Handle;
 
       EntityPosition = GetEntityCoords(coordsEntity, true);
       //EntityYaw = GetEntityHeading(coordsEntity);
@@ -57,11 +57,21 @@ namespace OriginFramework
     internal static void SetEntitierDeactivate()
     {
       EntitierActive = false;
-      if (Mode == EntityMode.CopyInfo)
-      {
-        int _id = 0; 
-        DeleteObject(ref _id);
-      }
+      //if (Mode == EntityMode.CopyInfo)
+      //{
+      //  int _id = 0; 
+      //  DeleteObject(ref _id);
+      //}
+
+      MapHelper = null;
+      EntityId = -1;
+      SetModelAsNoLongerNeeded((uint)ModelHash);
+    }
+
+    internal static void DespawnCurrentEntity()
+    {
+      int _id = EntityId;
+      DeleteObject(ref _id);
       EntityId = -1;
       SetModelAsNoLongerNeeded((uint)ModelHash);
     }
@@ -138,7 +148,7 @@ namespace OriginFramework
           BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
           ScaleformMovieMethodAddParamInt(6);
           PushScaleformMovieMethodParameterString("~INPUT_VEH_EXIT~");
-          PushScaleformMovieMethodParameterString($"Confirm");
+          PushScaleformMovieMethodParameterString($"{(MapHelper != null ? "Add" : "Confirm")}");
           EndScaleformMovieMethod();
 
           BeginScaleformMovieMethod(Scale, "DRAW_INSTRUCTIONAL_BUTTONS");
@@ -199,35 +209,20 @@ namespace OriginFramework
         {
           if (Game.IsDisabledControlJustPressed(0, Control.VehicleExit))
           {
-            SetEntitierDeactivate();
+            if (MapHelper == null)
+            {
+              SetEntitierDeactivate();
+              return;
+            }
 
-            //if (Mode == EntityMode.Indirectional)
-            //{
-            //  var message = new
-            //  {
-            //    type = "copyCoords",
-            //    x = MarkerPosition.X,
-            //    y = MarkerPosition.Y,
-            //    z = MarkerPosition.Z
-            //  };
-            //  SendNuiMessage(JsonConvert.SerializeObject(message));
-
-            //  Notify.Info("Marker copied to clipboard!");
-            //}
-            //else if (Mode == ExportMode.Directional)
-            //{
-            //  var message = new
-            //  {
-            //    type = "copyCoordsAndHeading",
-            //    x = MarkerPosition.X,
-            //    y = MarkerPosition.Y,
-            //    z = MarkerPosition.Z,
-            //    h = MarkerHeading
-            //  };
-            //  SendNuiMessage(JsonConvert.SerializeObject(message));
-
-            //  Notify.Info("Marker copied to clipboard!");
-            //}
+            MapHelper.AddProp(ModelHash, EntityPosition.X, EntityPosition.Y, EntityPosition.Z, EntityPitch, EntityRoll, EntityYaw + RotationOffset);
+            if (NetworkGetEntityIsNetworked(EntityId))
+            {
+              var netId = ObjToNet(EntityId);
+              if (netId > 0)
+                MapHelper.spawnedNetIds.Add(netId);
+            }
+            EntityId = -1;
           }
 
           if (Game.IsControlJustPressed(0, Control.Sprint))
@@ -272,24 +267,20 @@ namespace OriginFramework
           {
             var menu = new NativeMenu
             {
-              MenuTitle = "Rotace",
+              MenuTitle = "Props",
               Items = new List<NativeMenuItem>
               {
                 new NativeMenuItem
                 {
-                  Name = "Set custom",
+                  Name = "Set custom prop",
                   IsHide = true,
                   IsTextInput = true,
                   OnTextInput = (item, input) =>
                   {
                     int res = -1;
                     int.TryParse(input, out res);
-                    
-                    int _id = EntityId;
-                    DeleteObject(ref _id);
-                    EntityId = -1;
-                    SetModelAsNoLongerNeeded((uint)ModelHash);
-                    
+
+                    DespawnCurrentEntity();
                     ModelHash = res;
                   }
                 },
@@ -298,11 +289,7 @@ namespace OriginFramework
                   Name = "Road_MED_x3",
                   OnSelected = (item) =>
                   {
-                    int _id = EntityId;
-                    DeleteObject(ref _id);
-                    EntityId = -1;
-                    SetModelAsNoLongerNeeded((uint)ModelHash);
-
+                    DespawnCurrentEntity();
                     ModelHash = 1317858860;
                   }
                 },
@@ -311,11 +298,7 @@ namespace OriginFramework
                   Name = "Road_SML_x3",
                   OnSelected = (item) =>
                   {
-                    int _id = EntityId;
-                    DeleteObject(ref _id);
-                    EntityId = -1;
-                    SetModelAsNoLongerNeeded((uint)ModelHash);
-
+                    DespawnCurrentEntity();
                     ModelHash = 1261306399;
                   }
                 },
@@ -324,16 +307,36 @@ namespace OriginFramework
                   Name = "Ramp_ITS_2",
                   OnSelected = (item) =>
                   {
-                    int _id = EntityId;
-                    DeleteObject(ref _id);
-                    EntityId = -1;
-                    SetModelAsNoLongerNeeded((uint)ModelHash);
-
+                    DespawnCurrentEntity();
                     ModelHash = -1061569318;
                   }
                 },
               }
             };
+
+            if (MapHelper != null)
+            {
+              menu.Items.Insert(0, new NativeMenuItem {
+                Name = "Finish map",
+                IsHide = true,
+                OnSelected = (item) => {
+                  TriggerServerEvent("ofw_map:SaveMap", JsonConvert.SerializeObject(MapHelper.Map));
+
+                  if (MapHelper.spawnedNetIds != null && MapHelper.spawnedNetIds.Count >= 0)
+                  {
+                    foreach (var netId in MapHelper.spawnedNetIds)
+                    {
+                      var localId = NetToEnt(netId);
+                      if (localId > 0)
+                        DeleteObject(ref localId);
+                    }
+                  }
+
+                  DespawnCurrentEntity();
+                  SetEntitierDeactivate();
+                }
+              });
+            }
 
             NativeMenuManager.OpenNewMenu("Entitier_Entity", () => { return menu; });
           }
@@ -377,7 +380,7 @@ namespace OriginFramework
           }
         }
 
-        float moveSpeed = (float)(MovingSpeed + 1);
+        float moveSpeed = (float)speeds[MovingSpeed];
         moveSpeed = (moveSpeed / (1f / GetFrameTime())) * 5;
 
         EntityYaw += moveSpeed * rotoff;
@@ -447,8 +450,9 @@ namespace OriginFramework
     public enum EntityMode : int
     {
       Spawn = 0,
-      CopyInfo = 1,
-      SpawnAndCopyInfo = 2
+      //CopyInfo = 1,
+      //SpawnAndCopyInfo = 2,
+      MapEditor = 3
     }
   }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,12 +10,20 @@ namespace OriginFrameworkData.DataBags
   public class MapBag
   {
     public int Id { get; set; }
-    public int Name { get; set; }
+    public string Name { get; set; }
+    public List<MapPropBag> Props { get; set; }
   }
 
   public class MapPropBag
   {
-    public int Id { get; set; }
+    [JsonIgnore]
+    public int NetID { get; set; }
+    [JsonIgnore]
+    public int LocalID { get; set; }
+    [JsonIgnore]
+    public bool SpawnFailed { get; set; }
+    public bool IsNetworked { get; set; }
+
     public int MapId { get; set; }
     public int PropHash { get; set; }
 

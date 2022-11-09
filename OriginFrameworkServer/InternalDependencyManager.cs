@@ -61,6 +61,7 @@ namespace OriginFrameworkServer
     MainServer = 4,
     NPCServer = 5,
     OIDServer = 6,
-    PersistentVehiclesServer = 7
+    PersistentVehiclesServer = 7,
+    MapServer = 8,
   }
 }

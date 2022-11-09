@@ -1,4 +1,5 @@
-﻿using OriginFrameworkData;
+﻿using OriginFramework.Helpers;
+using OriginFrameworkData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,17 +72,23 @@ namespace OriginFramework.Menus
           {
             new NativeMenuItem { Name = "Spawn", IsHide = true,
               OnSelected = (item) => {
-                Entitier.SetEntitierActivate(Entitier.EntityMode.Spawn);
+                Entitier.SetEntitierActivate(Entitier.EntityMode.Spawn, null);
               }
             },
-            new NativeMenuItem { Name = "Copy info", IsHide = true,
-            OnSelected = (item) => {
-                Entitier.SetEntitierActivate(Entitier.EntityMode.CopyInfo);
-              }
-            },
-            new NativeMenuItem { Name = "Spawn and Copy", IsHide = true,
-            OnSelected = (item) => {
-                Entitier.SetEntitierActivate(Entitier.EntityMode.SpawnAndCopyInfo);
+            //new NativeMenuItem { Name = "Copy info", IsHide = true,
+            //OnSelected = (item) => {
+            //    Entitier.SetEntitierActivate(Entitier.EntityMode.CopyInfo, null);
+            //  }
+            //},
+            //new NativeMenuItem { Name = "Spawn and Copy", IsHide = true,
+            //OnSelected = (item) => {
+            //    Entitier.SetEntitierActivate(Entitier.EntityMode.SpawnAndCopyInfo, null);
+            //  }
+            //},
+            new NativeMenuItem { Name = "Create map", IsHide = true,
+            IsTextInput = true,
+            OnTextInput = (item, input) => {
+                Entitier.SetEntitierActivate(Entitier.EntityMode.MapEditor, MapHelper.InitializeNewMap(input));
               }
             },
           }

@@ -72,5 +72,6 @@ namespace OriginFramework
     FontsManager = 9,
     FlashHeadlightsAndHorn = 10,
     DrifterAndBooster = 11,
+    MapClient = 12,
   }
 }
