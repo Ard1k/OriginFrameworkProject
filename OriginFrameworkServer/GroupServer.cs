@@ -44,7 +44,7 @@ namespace OriginFrameworkServer
     private void CreateGroup([FromSource] Player source)
     {
       //var spH = int.Parse(source.Handle);
-      var oid = OIDServer.GetOriginServerID(source);
+      var oid = OIDServer.GetOriginServerID(source).OID;
 
       //Debug.WriteLine($"triggered ofw_grp:CreateGroup [OID: {oid}]");
 
@@ -72,8 +72,8 @@ namespace OriginFrameworkServer
         source.TriggerEvent("ofw_grp:NotifyError", "Interni chyba");
         return;
       }
-      var targetOID = OIDServer.GetOriginServerID(targetPlayer);
-      var sourceOID = OIDServer.GetOriginServerID(source);
+      var targetOID = OIDServer.GetOriginServerID(targetPlayer).OID;
+      var sourceOID = OIDServer.GetOriginServerID(source).OID;
 
       //Debug.WriteLine($"triggered ofw_grp:InviteToGroup [Handle: {spH}][TargetPlayer: {targetPlayerID}]");
 
@@ -123,7 +123,7 @@ namespace OriginFrameworkServer
         return;
       }
 
-      var senderOID = OIDServer.GetOriginServerID(senderPlayer);
+      var senderOID = OIDServer.GetOriginServerID(senderPlayer).OID;
 
       if (!accepted)
       {
@@ -145,13 +145,13 @@ namespace OriginFrameworkServer
         return;
       }
 
-      if (DictionaryPlayerInGroup.ContainsKey(sourceOID))
+      if (DictionaryPlayerInGroup.ContainsKey(sourceOID.OID))
       {
         source.TriggerEvent("ofw_grp:NotifyError", "Hrac uz je v nejake skupine!");
         return;
       }
 
-      DictionaryPlayerInGroup.Add(sourceOID, groupId);
+      DictionaryPlayerInGroup.Add(sourceOID.OID, groupId);
       senderPlayer.TriggerEvent("ofw_grp:NotifySuccess", "Pozvanka prijata!");
       SendGroupToSource(source, true);
     }
@@ -159,7 +159,7 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_grp:LeaveGroup")]
     private void LeaveGroup([FromSource] Player source)
     {
-      var oid = OIDServer.GetOriginServerID(source);
+      var oid = OIDServer.GetOriginServerID(source).OID;
 
       if (!DictionaryPlayerInGroup.ContainsKey(oid))
       {
@@ -190,7 +190,7 @@ namespace OriginFrameworkServer
       }
 
       //int spH = int.Parse(source.Handle);
-      int oid = OIDServer.GetOriginServerID(source);
+      int oid = OIDServer.GetOriginServerID(source).OID;
 
       int groupId = -1;
       if (DictionaryPlayerInGroup.ContainsKey(oid))
@@ -260,7 +260,7 @@ namespace OriginFrameworkServer
 
     public static int[] GetAllGroupMembersServerID(Player player)
     {
-      var oid = OIDServer.GetOriginServerID(player);
+      var oid = OIDServer.GetOriginServerID(player).OID;
 
       if (!DictionaryPlayerInGroup.ContainsKey(oid))
       {

@@ -15,6 +15,7 @@ namespace OriginFrameworkServer
   public class OIDServer : BaseScript
   {
     private static int index = 10000;
+    private static bool allowNosteamName = true;
     public static List<OIDBag> OriginServerIdentifiers { get; private set; } = new List<OIDBag>();
 
     public OIDServer()
@@ -44,38 +45,47 @@ namespace OriginFrameworkServer
       var playerOID = GetOriginServerID(source);
       var isAdmin = IsPlayerAceAllowed(source.Handle, "command");
 
-      _ = callback(playerOID, isAdmin);
+      _ = callback(playerOID.OID, isAdmin);
     }
 
-    public static int GetOriginServerID(Player p)
+    public static OIDBag GetOriginServerID(Player p)
     {
       if (p == null)
       {
         Debug.WriteLine("OID: Player is null, cannot return OID");
-        return -1;
+        return null;
       }
 
       var lic = p.Identifiers.ToArray().Where(l => l.StartsWith("license:")).FirstOrDefault();
+      var steam = p.Identifiers.ToArray().Where(l => l.StartsWith("steam:")).FirstOrDefault();
+      var discord = p.Identifiers.ToArray().Where(l => l.StartsWith("discord:")).FirstOrDefault();
+      var ip = p.Identifiers.ToArray().Where(l => l.StartsWith("ip:")).FirstOrDefault();
+      string primary_identifier = steam;
 
-      if (lic == null)
+      if (steam == null)
       {
-        Debug.WriteLine("OID: Player doesn't have license identifier, return server ID");
-        return int.Parse(p.Handle);
+        if (allowNosteamName)
+          primary_identifier = p.Name;
+        else
+        {
+          p.Drop("Nepodařilo se spojit se službou steam!");
+          return null;
+        }
       }
 
-      var known = OriginServerIdentifiers.Where(oid => oid.License == lic).FirstOrDefault();
+      var known = OriginServerIdentifiers.Where(oid => oid.PrimaryIdentifier == primary_identifier).FirstOrDefault();
 
       if (known != null)
       {
         known.LastServerID = Int32.Parse(p.Handle);
-        return known.OID;
+        return known;
       }
 
-      var newOID = new OIDBag { License = lic, LastServerID = Int32.Parse(p.Handle), OID = ++index };
+      var newOID = new OIDBag { PrimaryIdentifier = primary_identifier, Discord = discord, IP = ip, License = lic, Steam = steam, LastServerID = Int32.Parse(p.Handle), OID = ++index };
       OriginServerIdentifiers.Add(newOID);
 
-      Debug.WriteLine($"OID: Created new OID:[{newOID.OID}] License:[{newOID.License}]");
-      return newOID.OID;
+      Debug.WriteLine($"OID: Created new OID:[{newOID.OID}]");
+      return newOID;
     }
 
     public static int[] GetOIDsFromServerIds(Player[] players)
@@ -84,7 +94,7 @@ namespace OriginFrameworkServer
 
       foreach (var p in players)
       {
-        oids.Add(GetOriginServerID(p));
+        oids.Add(GetOriginServerID(p)?.OID ?? -1);
       }
 
       return oids.ToArray();

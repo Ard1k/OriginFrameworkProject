@@ -71,6 +71,7 @@
     <Compile Include="InternalDependencyManager.cs" />
     <Compile Include="MapServer.cs" />
     <Compile Include="LuxuryCarsDeliveryServer.cs" />
+    <Compile Include="LoginServer.cs" />
     <Compile Include="NPCServer.cs" />
     <Compile Include="OIDServer.cs" />
     <Compile Include="PersistentVehiclesServer.cs" />

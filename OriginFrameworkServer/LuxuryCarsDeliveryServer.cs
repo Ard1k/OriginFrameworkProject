@@ -49,7 +49,7 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_lcd:GetJobStateToRestore")]
     private async void GetJobStateToRestore([FromSource] Player source, NetworkCallbackDelegate callback)
     {
-      int oidSource = OIDServer.GetOriginServerID(source);
+      int oidSource = OIDServer.GetOriginServerID(source).OID;
       if (oidSource == -1)
         Debug.WriteLine("ofw_lcd:GetJobStateToRestore: unresolved player oid");
 
@@ -68,7 +68,7 @@ namespace OriginFrameworkServer
       {
         //Zkontolovat, jestli uz v serverstate nemam pro auto netID. Kdyz ne, spawnu. Kdyz jo, tak ho rovnou vratim. Nemusim pak delat zadny harakiri.
 
-        int oidSource = OIDServer.GetOriginServerID(source);
+        int oidSource = OIDServer.GetOriginServerID(source).OID;
         if (oidSource == -1)
           Debug.WriteLine("ofw_lcd:SpawnJobCar: unresolved player oid");
 
@@ -105,7 +105,7 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_lcd:JobFinished")]
     private async void JobFinished([FromSource] Player source)
     {
-      int oidSource = OIDServer.GetOriginServerID(source);
+      int oidSource = OIDServer.GetOriginServerID(source).OID;
       if (oidSource == -1)
       {
         Debug.WriteLine("ofw_lcd:JobFinished: unresolved player oid, cannot deliver");
@@ -162,7 +162,7 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_lcd:JobCancelled")]
     private async void JobCancelled([FromSource] Player source, string reason)
     {
-      int oidSource = OIDServer.GetOriginServerID(source);
+      int oidSource = OIDServer.GetOriginServerID(source).OID;
       if (oidSource == -1)
       {
         Debug.WriteLine("ofw_lcd:JobCancelled: unresolved player oid, cannot deliver");
@@ -212,7 +212,7 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_lcd:StartJob")]
     private async void StartJob([FromSource] Player source)
     {
-      int oidSource = OIDServer.GetOriginServerID(source);
+      int oidSource = OIDServer.GetOriginServerID(source).OID;
       if (oidSource == -1)
       {
         Debug.WriteLine("ofw_lcd:StartJob: unresolved player oid, cannot start job");
@@ -309,7 +309,7 @@ namespace OriginFrameworkServer
     [EventHandler("ofw_lcd:DeliverVehicle")]
     private async void DeliverVehicle([FromSource] Player source, int netID, NetworkCallbackDelegate callback)
     {
-      int oidSource = OIDServer.GetOriginServerID(source);
+      int oidSource = OIDServer.GetOriginServerID(source).OID;
       if (oidSource == -1)
       {
         Debug.WriteLine("ofw_lcd:DeliverVehicle: unresolved player oid, cannot deliver");
