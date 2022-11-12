@@ -62,7 +62,7 @@ namespace OriginFrameworkServer
       var ip = p.Identifiers.ToArray().Where(l => l.StartsWith("ip:")).FirstOrDefault();
       string primary_identifier = steam;
 
-      if (steam == null)
+      if (primary_identifier == null)
       {
         if (allowNosteamName)
           primary_identifier = p.Name;

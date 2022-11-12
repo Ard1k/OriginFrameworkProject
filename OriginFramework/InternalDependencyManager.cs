@@ -73,5 +73,8 @@ namespace OriginFramework
     FlashHeadlightsAndHorn = 10,
     DrifterAndBooster = 11,
     MapClient = 12,
+    Login = 13,
+    CharacterCreator = 14,
+    CharacterCaretaker = 15
   }
 }

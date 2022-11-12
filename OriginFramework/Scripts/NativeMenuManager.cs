@@ -17,9 +17,10 @@ namespace OriginFramework
     public static bool IsHidden { get; set; } = true;
     public static NativeMenu CurrentMenu { get; set; }
     public static string CurrentMenuName { get; set; }
+    public static string LockedInMenuName { get; set; }
 
-    private static float xOffset = 0.7f;
-    private static float xLenght = 0.15f;
+    private static float xOffset = 0.65f;
+    private static float xLenght = 0.20f;
     private static float xExtraLenght = 0.11f;
 
     private static float yOffset = 0.25f;
@@ -419,16 +420,27 @@ namespace OriginFramework
       }
       else
       {
-        CurrentMenu = null;
-        CurrentMenuName = null;
-        IsHidden = true;
+        Close();
       }
+    }
+
+    private static void Close()
+    {
+      if (IsHidden || CurrentMenu == null)
+        return;
+
+      CurrentMenu = null;
+      CurrentMenuName = null;
+      IsHidden = true;
     }
     #endregion
 
     #region public metody
     public static void ToggleMenu(string menuName, Func<NativeMenu> getMenu)
     {
+      if (LockedInMenuName != null && LockedInMenuName != menuName)
+        return;
+
       if (CurrentMenuName == menuName)
       {
         if (!IsHidden)
@@ -436,8 +448,10 @@ namespace OriginFramework
           IsHidden = true;
           return;
         }
-        else if (CurrentMenu != null)
+        else
         {
+          if (CurrentMenu == null)
+            CurrentMenu = getMenu();
           IsHidden = false;
           return;
         }
@@ -447,10 +461,28 @@ namespace OriginFramework
       CurrentMenuName = menuName;
       IsHidden = false;
     }
-    #endregion
 
     public static void OpenNewMenu(string menuName, Func<NativeMenu> getMenu)
     {
+      if (LockedInMenuName != null && LockedInMenuName != menuName)
+        return;
+
+      CurrentMenu = getMenu();
+      CurrentMenuName = menuName;
+      IsHidden = false;
+    }
+
+    public static void EnsureMenuOpen(string menuName, Func<NativeMenu> getMenu)
+    {
+      if (LockedInMenuName != null && LockedInMenuName != menuName)
+        return;
+
+      if (CurrentMenuName == menuName && CurrentMenu != null && IsHidden)
+      {
+        IsHidden = false;
+        return;
+      }
+
       CurrentMenu = getMenu();
       CurrentMenuName = menuName;
       IsHidden = false;
@@ -463,6 +495,45 @@ namespace OriginFramework
       else
         return false;
     }
+
+    public static void CloseAndUnlockMenu(string menuName)
+    {
+      if (LockedInMenuName != null)
+      {
+        if (LockedInMenuName != menuName)
+          return;
+
+        LockedInMenuName = null;
+      }
+
+      if (CurrentMenuName == menuName)
+        Close();
+    }
+
+    public static bool LockInMenu(string menuName)
+    {
+      if (LockedInMenuName != null && LockedInMenuName != menuName)
+        return false;
+
+      if (LockedInMenuName != null && LockedInMenuName == menuName)
+        return true;
+
+      LockedInMenuName = menuName;
+      return true;
+    }
+
+    public static bool UnlockMenu(string menuName)
+    {
+      if (LockedInMenuName == null)
+        return true;
+
+      if (LockedInMenuName != menuName)
+        return false;
+
+      LockedInMenuName = null;
+      return true;
+    }
+    #endregion
 
     public NativeMenuManager()
     {

@@ -62,8 +62,8 @@ namespace OriginFrameworkServer
     {
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map` (`id` int NOT NULL AUTO_INCREMENT, `name` varchar(200) NOT NULL, PRIMARY KEY (`id`));", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map_item` (`id` int NOT NULL AUTO_INCREMENT, `prop_map_id` int NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_prop_map_item_id` FOREIGN KEY (`prop_map_id`) REFERENCES prop_map (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT );", null);
-      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `user` (`identifier` varchar(200) NOT NULL, `name` varchar(200) NOT NULL, `steam` varchar(200) NOT NULL, `licence` varchar(200) NOT NULL, `discord` varchar(200) NOT NULL, `ip` varchar(200) NOT NULL, `adminLevel` int NOT NULL DEFAULT(0), PRIMARY KEY (`identifier`));", null);
-      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `character` (`id` int NOT NULL AUTO_INCREMENT, `user_identifier` varchar(200) NOT NULL, `name` varchar(200) NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_character_user_identifier` FOREIGN KEY (`user_identifier`) REFERENCES user (`identifier`) ON DELETE RESTRICT ON UPDATE RESTRICT);", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `user` (`identifier` varchar(200) NOT NULL, `name` varchar(200) NULL, `steam` varchar(200) NULL, `license` varchar(200) NULL, `discord` varchar(200) NULL, `ip` varchar(200) NULL, `admin_level` int NOT NULL DEFAULT(0), `active_character` int NULL, PRIMARY KEY (`identifier`));", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `character` (`id` int NOT NULL AUTO_INCREMENT, `user_identifier` varchar(200) NOT NULL, `name` varchar(200) NOT NULL, `is_disabled` int NOT NULL DEFAULT(0), PRIMARY KEY (`id`), CONSTRAINT `fk_character_user_identifier` FOREIGN KEY (`user_identifier`) REFERENCES user (`identifier`) ON DELETE RESTRICT ON UPDATE RESTRICT);", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }

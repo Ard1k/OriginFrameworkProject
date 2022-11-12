@@ -538,7 +538,50 @@ namespace OriginFramework
 			return ret;
 		}
 
-		public static async Task<T> ServerAsyncCallbackToSyncWithText<T>(string eventName, string waitText, params object[] args)
+		/// <summary>
+		/// Pouziva dvouparametrovy callback kde prvni parametr je bool jestli se operace povedla a druha error message. Pokud se callback vrati s false, automaticky se vyhodi error notifikace
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="eventName"></param>
+		/// <param name="args"></param>
+		/// <returns></returns>
+    public static async Task<bool> ServerAsyncCallbackToSyncWithErrorMessage(string eventName, params object[] args)
+    {
+      if (args == null)
+        args = new object[0];
+
+      var expandedArgs = new object[args.Length + 1];
+      args.CopyTo(expandedArgs, 0);
+
+      bool ret = default;
+			string errorMessage = default;
+      bool completed = false;
+      Func<bool, string, bool> CallbackFunction = (data, data2) =>
+      {
+        ret = data;
+				errorMessage = data2;
+        completed = true;
+        return true;
+      };
+
+      expandedArgs[args.Length] = CallbackFunction;
+
+      BaseScript.TriggerServerEvent(eventName, expandedArgs);
+
+      while (!completed)
+      {
+        await Delay(0);
+      }
+
+			if (ret == false)
+			{
+				Notify.Error(errorMessage ?? String.Empty);
+			}
+
+      return ret;
+    }
+
+    public static async Task<T> ServerAsyncCallbackToSyncWithText<T>(string eventName, string waitText, params object[] args)
 		{
 			if (args == null)
 				args = new object[0];
