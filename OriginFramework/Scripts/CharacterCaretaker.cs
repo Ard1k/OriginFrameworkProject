@@ -33,12 +33,20 @@ namespace OriginFramework
         return;
 
       Tick += OnTick;
+      Tick += ServerSync;
 
       InternalDependencyManager.Started(eScriptArea.CharacterCaretaker);
     }
 
     private async Task OnTick()
 		{
+      if (!Login.IsInLoginScreen && !CharacterCreator.IsInCharacterCreator && LoggedCharacter == null)
+      {
+        FirstSpawn();
+        Login.ReturnToLogin();
+        return;
+      }
+
       if (NetworkIsPlayerActive(Game.Player.Handle) && LoggedCharacter != null)
       {
         if (LoggedCharacter.IsDead == true)
@@ -61,6 +69,26 @@ namespace OriginFramework
           LoggedCharacter.DiedServerTime = DateTime.Now;
         }
       }
+
+      await Delay(100);
+    }
+
+    private async Task ServerSync()
+    {
+      await Delay(5000);
+
+      if (LoggedCharacter == null || spawnLock == true)
+        return;
+
+      if (LoggedCharacter.LastKnownPos == null)
+        LoggedCharacter.LastKnownPos = new PlayerPosBag();
+
+      LoggedCharacter.LastKnownPos.X = Game.PlayerPed.Position.X;
+      LoggedCharacter.LastKnownPos.Y = Game.PlayerPed.Position.Y;
+      LoggedCharacter.LastKnownPos.Z = Game.PlayerPed.Position.Z;
+      LoggedCharacter.LastKnownPos.H = Game.PlayerPed.Heading;
+
+      TriggerServerEvent("ofw_char_caretaker:UpdateCharacterServer", JsonConvert.SerializeObject(LoggedCharacter));
     }
 
     private void ReviveCharacter()
@@ -80,6 +108,16 @@ namespace OriginFramework
     private async void OnMapStart()
     {
       FirstSpawn();
+    }
+
+    [EventHandler("ofw_char_caretaker:ForceRelogin")]
+    private async void ForceRelogin()
+    {
+      Notify.Error("Chyba synchronizace se serverem!");
+
+      FirstSpawn();
+      Login.ReturnToLogin();
+      return;
     }
 
     private static void FreezePlayer(bool isFreeze)

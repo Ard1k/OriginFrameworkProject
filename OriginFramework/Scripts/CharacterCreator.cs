@@ -15,7 +15,7 @@ namespace OriginFramework
 {
 	public class CharacterCreator : BaseScript
 	{
-    private static bool isInCharacterCreator = false;
+    public static bool IsInCharacterCreator { get; private set; } = false;
     private const string charCreatorMenuName = "characterCreatorMenu";
     private static CharacterBag NewCharacter = null;
 
@@ -38,7 +38,7 @@ namespace OriginFramework
 
     private async Task OnTick()
 		{
-      if (isInCharacterCreator)
+      if (IsInCharacterCreator)
       {
         if (!NativeMenuManager.IsMenuOpen(charCreatorMenuName))
           NativeMenuManager.EnsureMenuOpen(charCreatorMenuName, getCreatorMenu);
@@ -99,7 +99,7 @@ namespace OriginFramework
               OnSelected = (item) =>
               {
                 NativeMenuManager.UnlockMenu(charCreatorMenuName);
-                isInCharacterCreator = false;
+                IsInCharacterCreator = false;
                 Login.ReturnToLogin();
               }
             },
@@ -122,7 +122,7 @@ namespace OriginFramework
       NewCharacter = null;
       while (NativeMenuManager.LockInMenu(charCreatorMenuName) == false)
         await Delay(0);
-      isInCharacterCreator = true;
+      IsInCharacterCreator = true;
     }
 
     public static async void CreateCharacter()
@@ -132,7 +132,7 @@ namespace OriginFramework
       if (result == true)
       {
         NativeMenuManager.UnlockMenu(charCreatorMenuName);
-        isInCharacterCreator = false;
+        IsInCharacterCreator = false;
         Login.ReturnToLogin();
       }
     }

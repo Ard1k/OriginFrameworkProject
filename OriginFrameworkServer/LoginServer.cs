@@ -71,12 +71,7 @@ namespace OriginFrameworkServer
 
       foreach (var row in result2)
       {
-        characters.Add(new CharacterBag { 
-          Id = Convert.ToInt32(row["id"]),
-          UserIdentifier = Convert.ToString(row["user_identifier"]),
-          Name = Convert.ToString(row["name"]),
-          AdminLevel = Convert.ToInt32(row["admin_level"])
-        });
+        characters.Add(CharacterBag.ParseFromSql(row));
       }
 
       _ = callback(JsonConvert.SerializeObject(characters));
@@ -140,6 +135,13 @@ namespace OriginFrameworkServer
       int rowsUpdated = await VSql.ExecuteAsync("update `user` as u inner join `character` as c on u.`identifier` = c.`user_identifier` set u.`active_character` = @idChar where u.`identifier` = @identifier and c.`id` = @idChar", param);
 
       if (rowsUpdated != 1)
+      {
+        _ = callback(false, "Přihlášení se nezdařilo");
+        return;
+      }
+
+      bool logResult = await CharacterCaretakerServer.LoginPlayer(oid, idChar);
+      if (logResult != true)
       {
         _ = callback(false, "Přihlášení se nezdařilo");
         return;

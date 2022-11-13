@@ -15,7 +15,7 @@ namespace OriginFramework
 {
 	public class Login : BaseScript
 	{
-    private static bool isInLoginScreen = false;
+    public static bool IsInLoginScreen { get; private set; } = false;
     private const string loginMenuName = "loginMenu";
     private static List<CharacterBag> ExistingCaracters = null;
 
@@ -38,7 +38,7 @@ namespace OriginFramework
 
     private async Task OnTick()
 		{
-      if (isInLoginScreen)
+      if (IsInLoginScreen)
       {
         if (!NativeMenuManager.IsMenuOpen(loginMenuName))
           NativeMenuManager.EnsureMenuOpen(loginMenuName, getLoginMenu);
@@ -57,7 +57,7 @@ namespace OriginFramework
               Name = "Nová postava",
               OnSelected = (item) => 
               {
-                isInLoginScreen = false;
+                IsInLoginScreen = false;
                 NativeMenuManager.UnlockMenu(loginMenuName);
                 CharacterCreator.EnterCreator();
               }
@@ -95,7 +95,7 @@ namespace OriginFramework
       if (ExistingCaracters != null)
         ExistingCaracters = ExistingCaracters.OrderByDescending(c => c.Name).ToList();
 
-      isInLoginScreen = true;
+      IsInLoginScreen = true;
     }
 
     public static async void LoginCharacter(CharacterBag character)
@@ -105,7 +105,7 @@ namespace OriginFramework
       if (result == true)
       {
         CharacterCaretaker.LoggedIn(character);
-        isInLoginScreen = false;
+        IsInLoginScreen = false;
         NativeMenuManager.CloseAndUnlockMenu(loginMenuName);
       }
     }

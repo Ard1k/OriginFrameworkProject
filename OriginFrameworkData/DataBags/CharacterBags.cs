@@ -19,6 +19,25 @@ namespace OriginFrameworkData.DataBags
 		[JsonIgnore]
 		public int? DiedGameTime { get; set; }
 		public DateTime? DiedServerTime { get; set; }
+
+		public static CharacterBag ParseFromSql(Dictionary<string, object> row)
+		{
+			var it = new CharacterBag
+			{
+				Id = Convert.ToInt32(row["id"]),
+				UserIdentifier = Convert.ToString(row["user_identifier"]),
+				Name = Convert.ToString(row["name"]),
+				AdminLevel = Convert.ToInt32(row["admin_level"])
+			};
+
+			if (row.ContainsKey("pos") && row["pos"] != null)
+				it.LastKnownPos = JsonConvert.DeserializeObject<PlayerPosBag>(Convert.ToString(row["pos"]));
+			
+			if (row.ContainsKey("model") && row["model"] != null)
+				it.Model = Convert.ToInt32(row["model"]);
+
+			return it;
+    }
 	}
 
 	public class PlayerPosBag
