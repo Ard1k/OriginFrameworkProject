@@ -127,7 +127,7 @@ namespace OriginFramework
 
     public static async void CreateCharacter()
     {
-      var result = await OfwFunctions.ServerAsyncCallbackToSyncWithErrorMessage("ofw_login:CreateCharacter", JsonConvert.SerializeObject(NewCharacter));
+      var result = await Callbacks.ServerAsyncCallbackToSyncWithErrorMessage("ofw_login:CreateCharacter", JsonConvert.SerializeObject(NewCharacter));
 
       if (result == true)
       {

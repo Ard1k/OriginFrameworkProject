@@ -131,7 +131,7 @@ namespace OriginFramework
             dstr = $"~o~ID {v.Handle}~n~Hash {model}~n~NOT NETWORKED";
 
           SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z, 0);
-          DrawTextOnScreen(dstr, 0f, 0f, 0.3f, Alignment.Center, 0);
+          TextUtils.DrawTextOnScreen(dstr, 0f, 0f, 0.3f, Alignment.Center, 0);
           ClearDrawOrigin();
         }
       }
@@ -164,7 +164,7 @@ namespace OriginFramework
             dstr = $"~c~ID {p.Handle}~n~Hash {model}~n~NOT NETWORKED";
 
           SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z, 0);
-          DrawTextOnScreen(dstr, 0f, 0f, 0.3f, Alignment.Center, 0);
+          TextUtils.DrawTextOnScreen(dstr, 0f, 0f, 0.3f, Alignment.Center, 0);
           ClearDrawOrigin();
         }
       }
@@ -200,7 +200,7 @@ namespace OriginFramework
             dstr = $"~p~ID {p.Handle}~n~Hash {model}~n~NOT NETWORKED";
 
           SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 1f, 0);
-          DrawTextOnScreen(dstr, 0f, 0f, 0.3f, Alignment.Center, 0);
+          TextUtils.DrawTextOnScreen(dstr, 0f, 0f, 0.3f, Alignment.Center, 0);
           ClearDrawOrigin();
         }
       }

@@ -88,7 +88,7 @@ namespace OriginFramework
       while (NativeMenuManager.LockInMenu(loginMenuName) == false)
         await Delay(0);
 
-      string charData = await OfwFunctions.ServerAsyncCallbackToSync<string>("ofw_login:GetCharacters");
+      string charData = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_login:GetCharacters");
       if (!string.IsNullOrEmpty(charData) && charData != "nochar")
         ExistingCaracters = JsonConvert.DeserializeObject<List<CharacterBag>>(charData);
 
@@ -100,7 +100,7 @@ namespace OriginFramework
 
     public static async void LoginCharacter(CharacterBag character)
     {
-      var result = await OfwFunctions.ServerAsyncCallbackToSyncWithErrorMessage("ofw_login:LoginCharacter", character.Id);
+      var result = await Callbacks.ServerAsyncCallbackToSyncWithErrorMessage("ofw_login:LoginCharacter", character.Id);
 
       if (result == true)
       {

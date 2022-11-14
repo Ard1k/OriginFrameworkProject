@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static CitizenFX.Core.Native.API;
-using static OriginFramework.OfwFunctions;
 
 namespace OriginFramework.Menus
 {
@@ -26,7 +25,7 @@ namespace OriginFramework.Menus
           Name = "Založit skupinu",
           OnSelected = (item) =>
           {
-            TriggerServerEvent("ofw_grp:CreateGroup");
+            BaseScript.TriggerServerEvent("ofw_grp:CreateGroup");
           },
           IsBack = true
         }); ;
@@ -65,7 +64,7 @@ namespace OriginFramework.Menus
         menu.Items.Add(new NativeMenuItem
         {
           Name = "Opustit skupinu",
-          OnSelected = (item) => { TriggerServerEvent("ofw_grp:LeaveGroup"); },
+          OnSelected = (item) => { BaseScript.TriggerServerEvent("ofw_grp:LeaveGroup"); },
           IsBack = true
         });
       }
@@ -92,8 +91,8 @@ namespace OriginFramework.Menus
           new NativeMenuItem
           { 
             Name = $"{p.Name} ID:{p.ServerId}",
-            OnSelected = (item) => { 
-              TriggerServerEvent("ofw_grp:InviteToGroup", p.ServerId);
+            OnSelected = (item) => {
+              BaseScript.TriggerServerEvent("ofw_grp:InviteToGroup", p.ServerId);
               },
             IsBack = true
           });

@@ -45,6 +45,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Functions\Callbacks.cs" />
+    <Compile Include="Functions\Blips.cs" />
+    <Compile Include="Functions\TextUtils.cs" />
+    <Compile Include="Functions\Markers.cs" />
+    <Compile Include="Functions\TheBugger.cs" />
+    <Compile Include="Functions\Vehicles.cs" />
     <Compile Include="Helpers\MapHelper.cs" />
     <Compile Include="Helpers\InternalDependencyManager.cs" />
     <Compile Include="Helpers\JobHelpers.cs" />

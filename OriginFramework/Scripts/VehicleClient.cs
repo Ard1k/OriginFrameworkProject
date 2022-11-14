@@ -108,7 +108,7 @@ namespace OriginFramework
         return;
       }
 
-      var vehicleProps = GetVehicleProperties(veh);
+      var vehicleProps = Vehicles.GetVehicleProperties(veh);
 
       Console.WriteLine(JsonConvert.SerializeObject(vehicleProps));
 
