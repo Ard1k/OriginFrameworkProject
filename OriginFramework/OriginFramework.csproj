@@ -47,6 +47,8 @@
   <ItemGroup>
     <Compile Include="Functions\Callbacks.cs" />
     <Compile Include="Functions\Blips.cs" />
+    <Compile Include="Functions\DrawUtils.cs" />
+    <Compile Include="Functions\Tooltip.cs" />
     <Compile Include="Functions\TextUtils.cs" />
     <Compile Include="Functions\Markers.cs" />
     <Compile Include="Functions\TheBugger.cs" />

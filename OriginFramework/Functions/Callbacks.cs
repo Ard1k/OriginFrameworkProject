@@ -107,7 +107,7 @@ namespace OriginFramework
       {
         await BaseScript.Delay(0);
 
-        TextUtils.DrawScreenText(waitText, 255, 255, 255, 150);
+        TextUtils.DrawCenterScreenText(waitText, 255, 255, 255, 150);
       }
 
       return ret;

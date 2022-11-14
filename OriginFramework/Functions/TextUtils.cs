@@ -47,7 +47,7 @@ namespace OriginFramework
         EndTextCommandDisplayText(xPosition, yPosition);
       }
     }
-    public static void DrawScreenText(string text, int red, int green, int blue, int alpha)
+    public static void DrawCenterScreenText(string text, int red, int green, int blue, int alpha)
     {
       SetTextFont(4);
       SetTextScale(0.0f, 0.5f);
