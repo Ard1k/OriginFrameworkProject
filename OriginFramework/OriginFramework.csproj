@@ -56,6 +56,7 @@
     <Compile Include="Menus\NativeMenu.cs" />
     <Compile Include="Scripts\CharacterCaretaker.cs" />
     <Compile Include="Scripts\CharacterCreator.cs" />
+    <Compile Include="Scripts\InventoryManager.cs" />
     <Compile Include="Scripts\Login.cs" />
     <Compile Include="Scripts\Entitier.cs" />
     <Compile Include="Scripts\FontsManager.cs" />

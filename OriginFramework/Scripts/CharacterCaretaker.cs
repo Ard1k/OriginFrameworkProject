@@ -36,17 +36,21 @@ namespace OriginFramework
       Tick += ServerSync;
 
       InternalDependencyManager.Started(eScriptArea.CharacterCaretaker);
-    }
 
-    private async Task OnTick()
-		{
+      await Delay(2000);
+
+      //tohle pomuze pri restartu resource misto eventu onClientMapStart
       if (!Login.IsInLoginScreen && !CharacterCreator.IsInCharacterCreator && LoggedCharacter == null)
       {
+        Debug.WriteLine("force relogin client");
         FirstSpawn();
         Login.ReturnToLogin();
         return;
       }
+    }
 
+    private async Task OnTick()
+		{
       if (NetworkIsPlayerActive(Game.Player.Handle) && LoggedCharacter != null)
       {
         if (LoggedCharacter.IsDead == true)

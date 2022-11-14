@@ -75,6 +75,7 @@ namespace OriginFramework
     MapClient = 12,
     Login = 13,
     CharacterCreator = 14,
-    CharacterCaretaker = 15
+    CharacterCaretaker = 15,
+    InventoryManager = 16
   }
 }
