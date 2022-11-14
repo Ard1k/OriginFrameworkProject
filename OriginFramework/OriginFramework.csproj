@@ -46,8 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\MapHelper.cs" />
-    <Compile Include="InternalDependencyManager.cs" />
-    <Compile Include="JobHelpers.cs" />
+    <Compile Include="Helpers\InternalDependencyManager.cs" />
+    <Compile Include="Helpers\JobHelpers.cs" />
     <Compile Include="MainMenu\MainMenu_Admin.cs" />
     <Compile Include="MainMenu\MainMenu_FunTools.cs" />
     <Compile Include="MainMenu\MainMenu_DevTools.cs" />
@@ -60,7 +60,7 @@
     <Compile Include="Scripts\Login.cs" />
     <Compile Include="Scripts\Entitier.cs" />
     <Compile Include="Scripts\FontsManager.cs" />
-    <Compile Include="OfwFunctions.cs" />
+    <Compile Include="Functions\OfwFunctions.cs" />
     <Compile Include="Scripts\Checkpointer.cs" />
     <Compile Include="Scripts\FlashHeadlightsOnHorn.cs" />
     <Compile Include="Scripts\NativeMenuManager.cs" />
@@ -72,9 +72,9 @@
     <Compile Include="Scripts\Misc.cs" />
     <Compile Include="Scripts\DrifterAndBooster.cs" />
     <Compile Include="Scripts\Main.cs" />
-    <Compile Include="Notification.cs" />
+    <Compile Include="Functions\Notification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SettingsManager.cs" />
+    <Compile Include="Helpers\SettingsManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CitizenFX.Core.Client">

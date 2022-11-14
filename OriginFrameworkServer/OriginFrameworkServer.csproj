@@ -68,7 +68,7 @@
     <Compile Include="GroupServer.cs" />
     <Compile Include="Helpers\OfwServerFunctions.cs" />
     <Compile Include="Helpers\SyncLocker.cs" />
-    <Compile Include="InternalDependencyManager.cs" />
+    <Compile Include="Helpers\InternalDependencyManager.cs" />
     <Compile Include="CharacterCaretakerServer.cs" />
     <Compile Include="MapServer.cs" />
     <Compile Include="LuxuryCarsDeliveryServer.cs" />
@@ -78,7 +78,7 @@
     <Compile Include="PersistentVehiclesServer.cs" />
     <Compile Include="MainServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SettingsManager.cs" />
+    <Compile Include="Helpers\SettingsManager.cs" />
     <Compile Include="VSql.cs" />
   </ItemGroup>
   <ItemGroup>
