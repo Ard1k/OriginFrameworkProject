@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,5 +24,13 @@ namespace OriginFrameworkData.DataBags
     public int? YSpan { get; set; }
     public string Name { get; set; }
     public int[] Color { get; set; }
+    public string Texture { get; set; }
+    [JsonIgnore]
+    public bool IsDragged { get; set; }
+  }
+
+  public class ItemDefinition
+  {
+    public int Id { get; set; }
   }
 }

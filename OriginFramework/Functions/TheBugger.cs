@@ -14,7 +14,7 @@ namespace OriginFramework
 
     public static void DebugLog(string data)
     {
-      if (DebugMode) Debug.WriteLine(@data);
+      if (DebugMode) Debug.WriteLine("DEBUG: " + @data);
     }
   }
 }
