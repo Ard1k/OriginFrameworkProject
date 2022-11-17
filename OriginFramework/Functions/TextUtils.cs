@@ -80,16 +80,11 @@ namespace OriginFramework
 
     #endregion
 
-    public static async Task<string> GetUserInput() => await GetUserInput(null, null, 30);
-    public static async Task<string> GetUserInput(int maxInputLength) => await GetUserInput(null, null, maxInputLength);
-    public static async Task<string> GetUserInput(string windowTitle) => await GetUserInput(windowTitle, null, 30);
-    public static async Task<string> GetUserInput(string windowTitle, int maxInputLength) => await GetUserInput(windowTitle, null, maxInputLength);
-    public static async Task<string> GetUserInput(string windowTitle, string defaultText) => await GetUserInput(windowTitle, defaultText, 30);
     public static async Task<string> GetUserInput(string windowTitle, string defaultText, int maxInputLength)
     {
       // Create the window title string.
       var spacer = "\t";
-      AddTextEntry($"{GetCurrentResourceName().ToUpper()}_WINDOW_TITLE", $"{windowTitle ?? "Enter"}:{spacer}(MAX {maxInputLength} Characters)");
+      AddTextEntry($"{GetCurrentResourceName().ToUpper()}_WINDOW_TITLE", $"{FontsManager.FiraSansString}{windowTitle ?? "Enter"}");
 
       // Display the input box.
       DisplayOnscreenKeyboard(1, $"{GetCurrentResourceName().ToUpper()}_WINDOW_TITLE", "", defaultText ?? "", "", "", "", maxInputLength);

@@ -192,6 +192,54 @@ namespace OriginFrameworkServer
       return null;
     }
 
+    private async Task<string> SplitItem(int id, string targetPlace, int target_x, int target_y, int count)
+    {
+      if (id <= 0 || string.IsNullOrEmpty(targetPlace))
+        return "Neznámý předmět nebo inventář";
+
+      var srcItem = await FetchItem(id);
+      var targetItem = await FetchItem(targetPlace, target_x, target_y);
+
+      if (srcItem == null)
+        return "Rozdělovaný předmět nenalezen";
+
+      if (srcItem.Place == targetPlace && srcItem.X == target_x && srcItem.Y == target_y)
+        return "Nelze rozdělit sám do sebe";
+
+      if (targetItem != null)
+        return "Nelze rozdělit do plného slotu";
+
+      if (count <= 0)
+        return "Neplatný počet";
+
+      if (count > srcItem.Count)
+        count = srcItem.Count;
+
+      if (srcItem.Count == count)
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@id_source", id);
+        param.Add("@place", targetPlace);
+        param.Add("@target_x", target_x);
+        param.Add("@target_y", target_y);
+        await VSql.ExecuteAsync($" update `inventory_item` set `x` = @target_x, `y` = @target_y, `place` = @place where `id` = @id_source; ", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
+        return null;
+      }
+      else
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@id_source", id);
+        param.Add("@place", targetPlace);
+        param.Add("@target_x", target_x);
+        param.Add("@target_y", target_y);
+        await VSql.ExecuteAsync($" update `inventory_item` set `count` = '{srcItem.Count - count}' where `id` = @id_source; " +
+                                $" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`) VALUES (@place, '{srcItem.ItemId}', @target_x, @target_y, '{count}');", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
+        return null;
+      }
+    }
+      
     private async Task<string> MoveOrMergeItem(int id, string targetPlace, int target_x, int target_y)
     {
       if (id <= 0 || string.IsNullOrEmpty(targetPlace))
@@ -288,6 +336,27 @@ namespace OriginFrameworkServer
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
         string result = await MoveOrMergeItem(id, target_place, target_x, target_y);
+        if (result != null)
+          source.TriggerEvent("ofw_inventory:InventoryNotUpdated", result);
+      }
+    }
+
+    [EventHandler("ofw_inventory:Operation_Split")]
+    private async void Operation_Split([FromSource] Player source, int id, string target_place, int target_x, int target_y, int count)
+    {
+      if (source == null)
+        return;
+
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        string result = await SplitItem(id, target_place, target_x, target_y, count);
         if (result != null)
           source.TriggerEvent("ofw_inventory:InventoryNotUpdated", result);
       }

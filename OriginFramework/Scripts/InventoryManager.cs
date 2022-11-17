@@ -1,6 +1,7 @@
 ﻿using CitizenFX.Core;
 using CitizenFX.Core.UI;
 using Newtonsoft.Json;
+using OriginFramework.Helpers;
 using OriginFramework.Menus;
 using OriginFrameworkData;
 using OriginFrameworkData.DataBags;
@@ -17,7 +18,9 @@ namespace OriginFramework
 {
   public class InventoryManager : BaseScript
   {
+    private static int ScaleForm { get; set; } = -1;
     public bool IsWaiting { get; private set; } = false;
+    public bool IsWaitingInput { get; set; } = false;
     public bool IsInventoryOpen { get; private set; } = false;
     private double invSizeOverHeight = 0.5d;
     private double invBorderOverHeight = 0.01d;
@@ -74,6 +77,12 @@ namespace OriginFramework
       if (!IsInventoryOpen)
         return;
 
+      if (IsWaitingInput)
+      {
+        Render(); //jen vykreslim inv ale nic kolem neupdatuju
+        return;
+      }
+
       Game.DisableControlThisFrame(0, Control.LookLeftRight);
       Game.DisableControlThisFrame(0, Control.LookUpDown);
       Game.DisableControlThisFrame(0, Control.Attack);
@@ -109,9 +118,14 @@ namespace OriginFramework
       ComputeCursorData(cursor_x, cursor_y);
 
       HandleDragAndDrop();
+
+      if (IsWaitingInput) //Cekam na input, nechci nic dal kreslit
+        return;
+
       HandleCursorSprites();
 
       ShowCursorThisFrame();
+      RenderInstructionalButtons();
       Render();
 
       if (dragData.SrcItem == null)
@@ -253,7 +267,36 @@ namespace OriginFramework
       cursorData.YGrid = -1;
     }
 
-    private void HandleDragAndDrop()
+    private bool IsShiftKeyPressed()
+    {
+      return (Game.IsControlPressed(0, Control.Sprint) || Game.IsDisabledControlPressed(0, Control.Sprint));
+    }
+
+    private async void RenderInstructionalButtons()
+    {
+      ScaleForm = RequestScaleformMovie("INSTRUCTIONAL_BUTTONS");
+      while (!HasScaleformMovieLoaded(ScaleForm))
+      {
+        return;
+      }
+
+      BeginScaleformMovieMethod(ScaleForm, "CLEAR_ALL");
+      EndScaleformMovieMethod();
+
+      BeginScaleformMovieMethod(ScaleForm, "SET_DATA_SLOT");
+      ScaleformMovieMethodAddParamInt(0);
+      PushScaleformMovieMethodParameterString("~INPUT_SPRINT~");
+      PushScaleformMovieMethodParameterString($"{FontsManager.FiraSansString}Rozdeleni stacku");
+      EndScaleformMovieMethod();
+
+      BeginScaleformMovieMethod(ScaleForm, "DRAW_INSTRUCTIONAL_BUTTONS");
+      ScaleformMovieMethodAddParamInt(0);
+      EndScaleformMovieMethod();
+
+      DrawScaleformMovieFullscreen(ScaleForm, 255, 255, 255, 255, 0);
+    }
+
+    private async void HandleDragAndDrop()
     {
       if (IsWaiting)
       {
@@ -273,24 +316,45 @@ namespace OriginFramework
 
       if (Game.IsDisabledControlJustReleased(0, Control.Attack) && dragData.SrcItem != null)
       {
-        if (cursorData.InvData != null && (cursorData.HoverItem == null || cursorData.HoverItem.ItemId == dragData.SrcItem.ItemId) && cursorData.IsHoverOnValidSlot && dragData.SrcItem?.Id != cursorData.HoverItem?.Id)
+        if (cursorData.InvData != null && 
+            (cursorData.HoverItem == null || (cursorData.HoverItem.ItemId == dragData.SrcItem.ItemId && IsShiftKeyPressed() == false)) && 
+            cursorData.IsHoverOnValidSlot && 
+            dragData.SrcItem?.Id != cursorData.HoverItem?.Id)
         {
           dragData.TargetInv = cursorData.InvData;
           dragData.targetX = cursorData.XGrid;
           dragData.targetY = cursorData.YGrid;
 
-          TriggerServerEvent("ofw_inventory:Operation_MoveOrMerge", dragData.SrcItem.Id, dragData.TargetInv.Place, dragData.targetX, dragData.targetY);
+          if (IsShiftKeyPressed())
+          {
+            dragData.SrcItem.IsWaitingActionResult = true;
+            dragData.SrcItem.IsDragged = false;
+            IsWaitingInput = true;
+            SetMouseCursorVisibleInMenus(false);
+            string input = await TextUtils.GetUserInput($"Kolik chcete přesunout z {dragData.SrcItem.Count}?", null, 7);
+            int splitCount;
+            if (Int32.TryParse(input, out splitCount))
+            {
+              TriggerServerEvent("ofw_inventory:Operation_Split", dragData.SrcItem.Id, dragData.TargetInv.Place, dragData.targetX, dragData.targetY, splitCount);
+            }
+            else
+            {
+              dragData.SrcItem.IsWaitingActionResult = false;
+              Notify.Error("Neplatné číslo");
+            }
+            IsWaitingInput = false;
+            SetMouseCursorVisibleInMenus(true);
 
-          dragData.SrcItem.IsWaitingActionResult = true;
-          dragData.SrcItem.IsDragged = false;
-          //samotny presun
-          //dragData.SrcInv.Items.Remove(dragData.SrcItem);
-          //dragData.SrcItem.IsDragged = false;
-          //dragData.SrcItem.X = dragData.targetX;
-          //dragData.SrcItem.Y = dragData.targetY;
-          //dragData.TargetInv.Items.Add(dragData.SrcItem);
+            dragData.Clear();
+          }
+          else
+          {
+            TriggerServerEvent("ofw_inventory:Operation_MoveOrMerge", dragData.SrcItem.Id, dragData.TargetInv.Place, dragData.targetX, dragData.targetY);
 
-          dragData.Clear();
+            dragData.SrcItem.IsWaitingActionResult = true;
+            dragData.SrcItem.IsDragged = false;
+            dragData.Clear();
+          }
         }
         else
         {
@@ -309,7 +373,10 @@ namespace OriginFramework
         else
           SetCursorSprite(0);
       }
-      else if (cursorData.InvData != null && (cursorData.HoverItem == null || cursorData.HoverItem.ItemId == dragData.SrcItem.ItemId) && cursorData.IsHoverOnValidSlot && dragData.SrcItem?.Id != cursorData.HoverItem?.Id)
+      else if (cursorData.InvData != null && 
+               (cursorData.HoverItem == null || (cursorData.HoverItem.ItemId == dragData.SrcItem.ItemId && IsShiftKeyPressed() == false)) &&
+               cursorData.IsHoverOnValidSlot && 
+               dragData.SrcItem?.Id != cursorData.HoverItem?.Id)
       {
         SetCursorSprite(9);
       }
@@ -372,7 +439,7 @@ namespace OriginFramework
 
     private void RenderDragged()
     {
-      if (dragData.SrcItem == null)
+      if (dragData.SrcItem == null || IsWaitingInput == true)
         return;
 
       var it = dragData.SrcItem;
