@@ -10,11 +10,13 @@ using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;
 using CitizenFX.Core.Native;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace OriginFrameworkServer
 {
   public class InventoryServer : BaseScript
   {
+    private LockObj syncLock = new LockObj("InventoryServer");
     public InventoryServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
@@ -54,10 +56,14 @@ namespace OriginFrameworkServer
         var item_id = Convert.ToInt32(args[1]);
         var count = Convert.ToInt32(args[2]);
 
-        if (await GiveItem($"char_{charId}", item_id, count) == true)
-          sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Ma to tam");
-        else
-          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neco se pokazilo");
+        using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+        {
+          string result = await GiveItem($"char_{charId}", item_id, count);
+          if (result == null)
+            sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Má to tam");
+          else
+            sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", result);
+        }
       }), false);
     }
 
@@ -95,51 +101,156 @@ namespace OriginFrameworkServer
 
       return inv;
     }
+
+    private async Task<InventoryItemBag> FetchItem(int id)
+    {
+      if (id <= 0)
+        return null;
+
+      var param = new Dictionary<string, object>();
+      param.Add("@id", id);
+      var result = await VSql.FetchAllAsync("select * from `inventory_item` where `id` = @id", param);
+
+      if (result == null || result.Count <= 0)
+        return null;
+
+      return InventoryItemBag.ParseFromSql(result[0]);
+    }
+
+    private async Task<InventoryItemBag> FetchItem(string place, int x, int y)
+    {
+      if (string.IsNullOrEmpty(place))
+        return null;
+
+      var param = new Dictionary<string, object>();
+      param.Add("@place", place);
+      param.Add("@x", x);
+      param.Add("@y", y);
+      var result = await VSql.FetchAllAsync("select * from `inventory_item` where `place` = @place and `x` = @x and `y` = @y", param);
+
+      if (result == null || result.Count <= 0)
+        return null;
+
+      return InventoryItemBag.ParseFromSql(result[0]);
+    }
     #endregion
 
     #region inventory operations
-    private async Task<bool> GiveItem(string place, int item_id, int count)
+    private async Task<string> GiveItem(string place, int item_id, int count)
     {
       if (item_id <= 0 || string.IsNullOrEmpty(place))
-        return false;
+        return "Neznámý předmět nebo inventář";
 
       if (count <= 0)
-        return false;
+        return $"Neplatné množství: {count}";
 
       var itemDef = ItemsDefinitions.Items[item_id];
       if (itemDef == null)
-        return false;
+        return $"Neplatné id předmětu: {item_id}";
 
       var inv = await FetchInventory(place);
 
       if (inv == null)
-        return false;
+        return "Nezdařilo se načtení dat inventáře";
 
       var sql = new StringBuilder();
 
       int x, y;
       while (count > 0)
       {
-        if (!inv.GetNextEmptySlot(out x, out y))
-          return false;
+        InventoryItemBag partialStack;
 
-        inv.Items.Add(new InventoryItemBag { X = x, Y = y });
-        int amt = itemDef.StackSize;
-        if (count - amt < 0)
-          amt = count;
-        count -= amt;
+        if (!inv.GetNextPossibleSlot(out x, out y, item_id, out partialStack))
+          return "V inventáři není místo";
 
-        sql.AppendLine($" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`) VALUES ('{place}', '{item_id}', '{x}', '{y}', '{amt}'); ");
+        if (partialStack != null)
+        {
+          int amt = itemDef.StackSize - partialStack.Count;
+          if (count - amt < 0)
+            amt = count;
+          count -= amt;
+
+          partialStack.Count += amt;
+
+          sql.AppendLine($" update `inventory_item` set `count` = '{partialStack.Count}' where `id` = '{partialStack.Id}'; ");
+        }
+        else
+        {
+          inv.Items.Add(new InventoryItemBag { X = x, Y = y });
+          int amt = itemDef.StackSize;
+          if (count - amt < 0)
+            amt = count;
+          count -= amt;
+
+          sql.AppendLine($" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`) VALUES ('{place}', '{item_id}', '{x}', '{y}', '{amt}'); ");
+        }
       }
 
       //Debug.WriteLine("INVENTORY - GiveItem sql: " + sql.ToString());
       await VSql.ExecuteAsync(sql.ToString(), null);
-      return true;
+      BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      return null;
+    }
+
+    private async Task<string> MoveOrMergeItem(int id, string targetPlace, int target_x, int target_y)
+    {
+      if (id <= 0 || string.IsNullOrEmpty(targetPlace))
+        return "Neznámý předmět nebo inventář";
+
+      var srcItem = await FetchItem(id);
+      var targetItem = await FetchItem(targetPlace, target_x, target_y);
+
+      if (srcItem == null)
+        return "Přesouvaný předmět nenalezen";
+
+      if (srcItem.Place == targetPlace && srcItem.X == target_x && srcItem.Y == target_y)
+        return "Nelze přesunout sám na sebe";
+
+      if (targetItem == null) //move
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@id_source", id);
+        param.Add("@place", targetPlace);
+        param.Add("@target_x", target_x);
+        param.Add("@target_y", target_y);
+        await VSql.ExecuteAsync($" update `inventory_item` set `x` = @target_x, `y` = @target_y, `place` = @place where `id` = @id_source; ", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
+        return null;
+      }
+      else //merge
+      {
+        if (srcItem.Id == targetItem.Id)
+          return "Nelze přesunout sám na sebe";
+
+        var sql = new StringBuilder();
+
+        if (srcItem.ItemId != targetItem.ItemId || srcItem.Metadata != targetItem.Metadata)
+          return "Předmět nelze sloučit";
+
+        int stackSize = ItemsDefinitions.Items[targetItem.ItemId].StackSize;
+
+        if (targetItem.Count >= stackSize)
+          return "Cílový předmět už je plný stack";
+
+        if (srcItem.Count + targetItem.Count <= stackSize)
+          sql.AppendLine($" delete from `inventory_item` where `id` = '{id}'; ");
+        else
+          sql.AppendLine($" update `inventory_item` set `count` = {srcItem.Count - (stackSize - targetItem.Count)} where `id` = '{id}'; ");
+
+        int newCount = srcItem.Count + targetItem.Count;
+        if (newCount > stackSize)
+          newCount = stackSize;
+        sql.AppendLine($" update `inventory_item` set `count` = {newCount} where `id` = '{targetItem.Id}'; ");
+
+        await VSql.ExecuteAsync(sql.ToString(), null);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetItem.Place);
+        return null;
+      }
     }
     #endregion
 
-    [EventHandler("ofw_inventory:GetMyCharacterInventory")]
-    private async void GetMyCharacterInventory([FromSource] Player source)
+    [EventHandler("ofw_inventory:ReloadInventory")]
+    private async void ReloadInventory([FromSource] Player source, string rightInvPlace)
     {
       if (source == null)
         return;
@@ -151,9 +262,35 @@ namespace OriginFrameworkServer
         return;
       }
 
-      var inv = await FetchInventory(PlayerOIDToPlace(oid));
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var inv = await FetchInventory(PlayerOIDToPlace(oid));
+        InventoryBag rightInv = null;
+        if (!string.IsNullOrEmpty(rightInvPlace))
+          rightInv = await FetchInventory(rightInvPlace);
+        source.TriggerEvent("ofw_inventory:InventoryLoaded", JsonConvert.SerializeObject(inv), JsonConvert.SerializeObject(rightInv));
+      }
+    }
 
-      source.TriggerEvent("ofw_inventory:InventoryUpdated", JsonConvert.SerializeObject(inv));
+    [EventHandler("ofw_inventory:Operation_MoveOrMerge")]
+    private async void Operation_MoveOrMerge([FromSource] Player source, int id, string target_place, int target_x, int target_y)
+    {
+      if (source == null)
+        return;
+
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        string result = await MoveOrMergeItem(id, target_place, target_x, target_y);
+        if (result != null)
+          source.TriggerEvent("ofw_inventory:InventoryNotUpdated", result);
+      }
     }
   }
 }

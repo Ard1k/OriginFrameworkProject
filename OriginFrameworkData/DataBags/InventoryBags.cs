@@ -45,11 +45,19 @@ namespace OriginFrameworkData.DataBags
       return (rows * 5) - itemCount;
     }
 
-    public bool GetNextEmptySlot(out int x, out int y)
+    public bool GetNextPossibleSlot(out int x, out int y, int item_id, out InventoryItemBag slot)
     {
       x = 0;
       y = 0;
       int rowCnt = RowCount;
+      slot = null;
+
+      if (item_id > 0)
+      {
+        slot = Items.Where(it => it.ItemId == item_id && it.Count < ItemsDefinitions.Items[item_id].StackSize && (it.Metadata == null || it.Metadata.Count() <= 0)).FirstOrDefault();
+        if (slot != null)
+          return true;
+      }
 
       for (int j = 0; rowCnt < 0 || j < rowCnt; j++)
       {
@@ -79,6 +87,8 @@ namespace OriginFrameworkData.DataBags
     public string[] Metadata { get; set; }
     [JsonIgnore]
     public bool IsDragged { get; set; }
+    [JsonIgnore]
+    public bool IsWaitingActionResult { get; set; }
 
     public static InventoryItemBag ParseFromSql(Dictionary<string, object> row)
     {

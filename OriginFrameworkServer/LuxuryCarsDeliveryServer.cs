@@ -18,7 +18,7 @@ namespace OriginFrameworkServer
     private LCDMissionDefinitionBag[] Missions = null;
 
     private List<LCDJobStateBag> JobStates = new List<LCDJobStateBag>();
-    private LockObj syncLock = new LockObj();
+    private LockObj syncLock = new LockObj("LCD");
 
     public LuxuryCarsDeliveryServer()
     {

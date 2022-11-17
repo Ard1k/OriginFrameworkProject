@@ -15,7 +15,7 @@ namespace OriginFramework
     public static void Custom(string message, bool blink = true, bool saveToBrief = true)
     {
       SetNotificationTextEntry("CELL_EMAIL_BCON"); // 10x ~a~
-      foreach (string s in CitizenFX.Core.UI.Screen.StringToArray(message))
+      foreach (string s in CitizenFX.Core.UI.Screen.StringToArray(FontsManager.FiraSansString + (message ?? String.Empty)))
       {
         AddTextComponentSubstringPlayerName(s);
       }
@@ -23,20 +23,20 @@ namespace OriginFramework
     }
     public static void Alert(string message, bool blink = true, bool saveToBrief = true)
     {
-      Custom("~y~~h~Alert~h~~s~: " + message, blink, saveToBrief);
+      Custom("~y~~h~Alert~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
     }
     public static void Error(string message, bool blink = true, bool saveToBrief = true)
     {
-      Custom("~r~~h~Error~h~~s~: " + message, blink, saveToBrief);
-      Debug.Write("[OFW] [ERROR] " + message + "\n");
+      Custom("~r~~h~Error~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
+      Debug.Write("[OFW] [ERROR] " + (message ?? String.Empty) + "\n");
     }
     public static void Info(string message, bool blink = true, bool saveToBrief = true)
     {
-      Custom("~b~~h~Info~h~~s~: " + message, blink, saveToBrief);
+      Custom("~b~~h~Info~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
     }
     public static void Success(string message, bool blink = true, bool saveToBrief = true)
     {
-      Custom("~g~~h~Success~h~~s~: " + message, blink, saveToBrief);
+      Custom("~g~~h~Success~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
     }
   }
 

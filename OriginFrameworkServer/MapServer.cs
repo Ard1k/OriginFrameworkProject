@@ -17,7 +17,7 @@ namespace OriginFrameworkServer
 {
   public class MapServer : BaseScript
   {
-    private LockObj syncLock = new LockObj();
+    private LockObj syncLock = new LockObj("MapServer");
     private List<MapBag> loadedMaps = new List<MapBag>();
 
     public MapServer()

@@ -67,7 +67,7 @@ namespace OriginFramework
         if (IsInventoryOpen)
         {
           IsWaiting = true;
-          TriggerServerEvent("ofw_inventory:GetMyCharacterInventory");
+          TriggerServerEvent("ofw_inventory:ReloadInventory", null);
         }
       }
 
@@ -119,10 +119,10 @@ namespace OriginFramework
     }
 
     #region event handlers
-    [EventHandler("ofw_inventory:InventoryUpdated")]
-    private void InventoryUpdated(string inventory)
+    [EventHandler("ofw_inventory:InventoryLoaded")]
+    private void InventoryLoaded(string leftInventory, string rightInventory)
     {
-      if (string.IsNullOrEmpty(inventory))
+      if (string.IsNullOrEmpty(leftInventory))
       {
         TheBugger.DebugLog("INVENTORY - InventoryUpdated: invalid inventory data");
         IsInventoryOpen = false;
@@ -130,9 +130,51 @@ namespace OriginFramework
         return;
       }
 
-      var inv = JsonConvert.DeserializeObject<InventoryBag>(inventory);
-      LeftInv = inv;
+      var leftInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
+      LeftInv = leftInv;
+
+      if (!string.IsNullOrEmpty(rightInventory))
+      {
+        var rightInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
+        LeftInv = rightInv;
+      }
+
       IsWaiting = false;
+    }
+
+    [EventHandler("ofw_inventory:InventoryNotUpdated")]
+    private void InventoryNotUpdated(string reason)
+    {
+      Notify.Error(reason ?? "INV: Akce se nezdařila");
+      if (LeftInv?.Items != null)
+      {
+        foreach (var invItem in LeftInv.Items.Where(it => it.IsWaitingActionResult).ToList())
+        {
+          invItem.IsWaitingActionResult = false;
+        }
+      }
+
+      if (RightInv?.Items != null)
+      {
+        foreach (var invItem in RightInv.Items.Where(it => it.IsWaitingActionResult).ToList())
+        {
+          invItem.IsWaitingActionResult = false;
+        }
+      }
+    }
+
+    [EventHandler("ofw_inventory:InventoryUpdated")]
+    private void InventoryUpdated(string place1, string place2)
+    {
+      if (IsInventoryOpen)
+      {
+        if ((place1 != null && (LeftInv?.Place == place1 || RightInv?.Place == place1)) ||
+            (place2 != null && (LeftInv?.Place == place2 || RightInv?.Place == place2)))
+        {
+          IsWaiting = true;
+          TriggerServerEvent("ofw_inventory:ReloadInventory", null);
+        }
+      }
     }
     #endregion
 
@@ -176,7 +218,7 @@ namespace OriginFramework
       double xRelative = (double)x / (double)screen_width;
       double yRelative = (double)y / (double)screen_height;
 
-      TheBugger.DebugLog($"X:{x}({xRelative}) Y:{y}({yRelative})");
+      //TheBugger.DebugLog($"X:{x}({xRelative}) Y:{y}({yRelative})");
 
       if (cursorData == null)
         cursorData = new CursorData();
@@ -213,7 +255,16 @@ namespace OriginFramework
 
     private void HandleDragAndDrop()
     {
-      if (Game.IsDisabledControlJustPressed(0, Control.Attack) && dragData.SrcItem == null && cursorData.HoverItem != null)
+      if (IsWaiting)
+      {
+        if (dragData?.SrcItem?.IsDragged == true)
+          dragData.SrcItem.IsDragged = false;
+        dragData.Clear();
+
+        return;
+      }
+
+      if (Game.IsDisabledControlJustPressed(0, Control.Attack) && dragData.SrcItem == null && cursorData.HoverItem != null && cursorData.HoverItem.IsWaitingActionResult == false)
       {
         dragData.SrcItem = cursorData.HoverItem;
         dragData.SrcInv = cursorData.InvData;
@@ -222,18 +273,22 @@ namespace OriginFramework
 
       if (Game.IsDisabledControlJustReleased(0, Control.Attack) && dragData.SrcItem != null)
       {
-        if (cursorData.InvData != null && cursorData.HoverItem == null && cursorData.IsHoverOnEmptySlot)
+        if (cursorData.InvData != null && (cursorData.HoverItem == null || cursorData.HoverItem.ItemId == dragData.SrcItem.ItemId) && cursorData.IsHoverOnValidSlot && dragData.SrcItem?.Id != cursorData.HoverItem?.Id)
         {
           dragData.TargetInv = cursorData.InvData;
           dragData.targetX = cursorData.XGrid;
           dragData.targetY = cursorData.YGrid;
 
-          //samotny presun
-          dragData.SrcInv.Items.Remove(dragData.SrcItem);
+          TriggerServerEvent("ofw_inventory:Operation_MoveOrMerge", dragData.SrcItem.Id, dragData.TargetInv.Place, dragData.targetX, dragData.targetY);
+
+          dragData.SrcItem.IsWaitingActionResult = true;
           dragData.SrcItem.IsDragged = false;
-          dragData.SrcItem.X = dragData.targetX;
-          dragData.SrcItem.Y = dragData.targetY;
-          dragData.TargetInv.Items.Add(dragData.SrcItem);
+          //samotny presun
+          //dragData.SrcInv.Items.Remove(dragData.SrcItem);
+          //dragData.SrcItem.IsDragged = false;
+          //dragData.SrcItem.X = dragData.targetX;
+          //dragData.SrcItem.Y = dragData.targetY;
+          //dragData.TargetInv.Items.Add(dragData.SrcItem);
 
           dragData.Clear();
         }
@@ -254,7 +309,7 @@ namespace OriginFramework
         else
           SetCursorSprite(0);
       }
-      else if (cursorData.InvData != null && cursorData.HoverItem == null && cursorData.YGrid < cursorData.InvData.RowCount)
+      else if (cursorData.InvData != null && (cursorData.HoverItem == null || cursorData.HoverItem.ItemId == dragData.SrcItem.ItemId) && cursorData.IsHoverOnValidSlot && dragData.SrcItem?.Id != cursorData.HoverItem?.Id)
       {
         SetCursorSprite(9);
       }
@@ -308,7 +363,7 @@ namespace OriginFramework
         return;
       }
 
-      if (!it.IsDragged)
+      if (!it.IsDragged && !it.IsWaitingActionResult)
       {
         DrawUtils.DrawSprite2("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 255);
         RenderItemCount(x, y, it, bounds);
@@ -362,8 +417,8 @@ namespace OriginFramework
       public double xRelative { get; set; }
       public double yRelative { get; set; }
 
-      public bool IsHoverOnEmptySlot { get {
-          if (InvData != null && HoverItem == null)
+      public bool IsHoverOnValidSlot { get {
+          if (InvData != null)
           {
             return YGrid < InvData.RowCount;
           }

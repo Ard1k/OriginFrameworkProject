@@ -62,6 +62,22 @@ namespace OriginFramework
       EndTextCommandDisplayText(0.5f, 0.5f);
     }
 
+    public static void Draw3dTextNonPrespective(Vector3 pos, float zOffset, float scale, string text, int r, int g, int b, int a)
+    {
+      float _x = 0, _y = 0;
+      World3dToScreen2d(pos.X, pos.Y, pos.Z + zOffset, ref _x, ref _y);
+
+      SetTextScale(1, scale);
+      SetTextFont(0);
+      SetTextProportional(true);
+      SetTextColour(r, g, b, a);
+      SetTextOutline();
+      SetTextEntry("STRING");
+      SetTextCentre(true);
+      AddTextComponentString(FontsManager.FiraSansString + text);
+      DrawText(_x, _y);
+    }
+
     #endregion
 
     public static async Task<string> GetUserInput() => await GetUserInput(null, null, 30);
