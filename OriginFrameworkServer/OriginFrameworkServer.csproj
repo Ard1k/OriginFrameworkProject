@@ -70,6 +70,7 @@
     <Compile Include="Helpers\SyncLocker.cs" />
     <Compile Include="Helpers\InternalDependencyManager.cs" />
     <Compile Include="CharacterCaretakerServer.cs" />
+    <Compile Include="InventoryServer.cs" />
     <Compile Include="MapServer.cs" />
     <Compile Include="LuxuryCarsDeliveryServer.cs" />
     <Compile Include="LoginServer.cs" />

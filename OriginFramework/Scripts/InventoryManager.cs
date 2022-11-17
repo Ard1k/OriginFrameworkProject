@@ -17,9 +17,12 @@ namespace OriginFramework
 {
   public class InventoryManager : BaseScript
   {
+    public bool IsWaiting { get; private set; } = false;
     public bool IsInventoryOpen { get; private set; } = false;
     private double invSizeOverHeight = 0.5d;
     private double invBorderOverHeight = 0.01d;
+    private float itemCountScale = 0.4f;
+    private float itemCountYOffset { get { return itemCountScale / 28f; } }
     private int gridXCount = 5;
     private int gridYCount = 5;
     private double gridCenterSpace = 1d;
@@ -34,93 +37,8 @@ namespace OriginFramework
     DragAndDropData dragData = new DragAndDropData();
 
     #region Mockup
-    InventoryBag leftInv = new InventoryBag
-    {
-      Name = "Test player",
-      RowCount = 5,
-      Items = new List<InventoryItemBag> {
-        new InventoryItemBag
-        {
-          X = 0,
-          Y = 0,
-          Name = "Fun",
-          Color = new int[] { 255,0,0,255 },
-          Texture = "crate"
-        },
-        new InventoryItemBag
-        {
-          X = 4,
-          Y = 4,
-          Name = "Fun",
-          Color = new int[] { 255,0,0,255 },
-          Texture = "crate"
-        },
-        new InventoryItemBag
-        {
-          X = 1,
-          Y = 0,
-          Name = "Fun",
-          Color = new int[] { 0,255,0,255 },
-          Texture = "crate"
-        },
-        new InventoryItemBag
-        {
-          X = 2,
-          Y = 0,
-          Name = "Fun",
-          Color = new int[] { 0,0,255,255 },
-          Texture = "crate"
-        }
-      }
-    };
-
-    InventoryBag rightInv = new InventoryBag
-    {
-      Name = "Test target",
-      RowCount = 3,
-      Items = new List<InventoryItemBag> {
-        new InventoryItemBag
-        {
-          X = 1,
-          Y = 1,
-          Name = "Fun",
-          Color = new int[] { 255,0,0,255 },
-          Texture = "crate"
-        },
-        new InventoryItemBag
-        {
-          X = 1,
-          Y = 2,
-          Name = "Fun",
-          Color = new int[] { 255,0,0,255 },
-          Texture = "crate"
-        },
-        new InventoryItemBag
-        {
-          X = 2,
-          Y = 1,
-          Name = "Fun",
-          Color = new int[] { 0,255,0,255 },
-          Texture = "crate"
-        },
-        new InventoryItemBag
-        {
-          X = 2,
-          Y = 2,
-          Name = "Fun",
-          Color = new int[] { 0,0,255,255 },
-          Texture = "crate"
-        },       
-        new InventoryItemBag
-        {
-          X = 0,
-          Y = 0,
-          Name = "Fun",
-          Color = new int[] { 255,255,255,255 },
-          Texture = "item_component"
-        }
-      }
-    };
+    InventoryBag LeftInv = null;
+    InventoryBag RightInv = null;
     #endregion
 
     public InventoryManager()
@@ -145,6 +63,12 @@ namespace OriginFramework
       if (Game.IsControlJustPressed(0, Control.ReplayStartStopRecordingSecondary)) //F2
       {
         IsInventoryOpen = !IsInventoryOpen;
+
+        if (IsInventoryOpen)
+        {
+          IsWaiting = true;
+          TriggerServerEvent("ofw_inventory:GetMyCharacterInventory");
+        }
       }
 
       if (!IsInventoryOpen)
@@ -158,6 +82,15 @@ namespace OriginFramework
       Game.DisableControlThisFrame(0, Control.MeleeAttack2);
       Game.DisableControlThisFrame(0, Control.Aim);
       Game.DisableControlThisFrame(0, Control.VehicleMouseControlOverride);
+
+      Game.DisableControlThisFrame(0, Control.FrontendRright);
+      Game.DisableControlThisFrame(0, Control.FrontendPauseAlternate);
+
+      if (Game.IsDisabledControlJustPressed(0, Control.FrontendRright) || Game.IsDisabledControlJustPressed(0, Control.FrontendPauseAlternate))
+      {
+        IsInventoryOpen = false;
+        return;
+      }
 
       int screen_w = 1, screen_h = 1;
       GetActiveScreenResolution(ref screen_w, ref screen_h);
@@ -184,6 +117,24 @@ namespace OriginFramework
       if (dragData.SrcItem == null)
         Tooltip.DrawTooltip((float)cursorData.xRelative + 0.05f, (float)cursorData.yRelative, $"INV:{cursorData.InvType} X:{cursorData.XGrid} Y:{cursorData.YGrid}", null);
     }
+
+    #region event handlers
+    [EventHandler("ofw_inventory:InventoryUpdated")]
+    private void InventoryUpdated(string inventory)
+    {
+      if (string.IsNullOrEmpty(inventory))
+      {
+        TheBugger.DebugLog("INVENTORY - InventoryUpdated: invalid inventory data");
+        IsInventoryOpen = false;
+        IsWaiting = false;
+        return;
+      }
+
+      var inv = JsonConvert.DeserializeObject<InventoryBag>(inventory);
+      LeftInv = inv;
+      IsWaiting = false;
+    }
+    #endregion
 
     #region private functions
     private void RefreshBounds()
@@ -236,8 +187,8 @@ namespace OriginFramework
       int xGrid, yGrid;
       if (DrawUtils.IsInBounds(leftInvBounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(leftInvBounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
       {
-        cursorData.InvData = leftInv;
-        cursorData.HoverItem = leftInv.Items?.Where(it => it.X == xGrid && it.Y == yGrid).FirstOrDefault();
+        cursorData.InvData = LeftInv;
+        cursorData.HoverItem = LeftInv?.Items?.Where(it => it.X == xGrid && it.Y == yGrid).FirstOrDefault();
         cursorData.InvType = "left";
         cursorData.XGrid = xGrid;
         cursorData.YGrid = yGrid;
@@ -245,8 +196,8 @@ namespace OriginFramework
       }
       else if (DrawUtils.IsInBounds(rightInvBounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(rightInvBounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
       {
-        cursorData.InvData = rightInv;
-        cursorData.HoverItem = rightInv.Items?.Where(it => it.X == xGrid && it.Y == yGrid).FirstOrDefault();
+        cursorData.InvData = RightInv;
+        cursorData.HoverItem = RightInv?.Items?.Where(it => it.X == xGrid && it.Y == yGrid).FirstOrDefault();
         cursorData.InvType = "right";
         cursorData.XGrid = xGrid;
         cursorData.YGrid = yGrid;
@@ -292,8 +243,6 @@ namespace OriginFramework
           dragData.Clear();
         }
       }
-
-
     }
 
     private void HandleCursorSprites()
@@ -320,29 +269,29 @@ namespace OriginFramework
       if (!HasStreamedTextureDictLoaded("inventory_textures"))
         RequestStreamedTextureDict("inventory_textures", true);
 
-      DrawRect2(backgroundBounds, 0, 0, 0, 30);
+      DrawRect2(backgroundBounds, IsWaiting ? 255 : 0, 0, 0, 30);
       DrawRect2(leftInvBounds, 0, 0, 0, 100);
       DrawRect2(rightInvBounds, 0, 0, 0, 100);
 
-      if (leftInv != null)
+      if (LeftInv != null)
       {
-        for (int y = 0; y < leftInv.RowCount; y++)
+        for (int y = 0; y < LeftInv.RowCount; y++)
         {
           for (int x = 0; x < 5; x++)
           {
-            var it = leftInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
+            var it = LeftInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
             RenderItem(x, y, leftInvBounds, it);
           }
         }
       }
 
-      if (rightInv != null)
+      if (RightInv != null)
       {
-        for (int y = 0; y < rightInv.RowCount; y++)
+        for (int y = 0; y < RightInv.RowCount; y++)
         {
           for (int x = 0; x < 5; x++)
           {
-            var it = rightInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
+            var it = RightInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
             RenderItem(x, y, rightInvBounds, it);
           }
         }
@@ -354,10 +303,16 @@ namespace OriginFramework
     private void RenderItem(int x, int y, RectBounds bounds, InventoryItemBag it)
     {
       if (it == null)
-        it = new InventoryItemBag { Name = "Empty", X = x, Y = y, Color = new int[] { 255, 255, 255, 30 }, Texture = "empty_slot" };
+      {
+        DrawUtils.DrawSprite2("inventory_textures", "empty_slot", bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 30);
+        return;
+      }
 
       if (!it.IsDragged)
-        DrawUtils.DrawSprite2("inventory_textures", it.Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, it.Color[0], it.Color[1], it.Color[2], it.Color[3]);
+      {
+        DrawUtils.DrawSprite2("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 255);
+        RenderItemCount(x, y, it, bounds);
+      }
     }
 
     private void RenderDragged()
@@ -367,7 +322,32 @@ namespace OriginFramework
 
       var it = dragData.SrcItem;
 
-      DrawSprite("inventory_textures", it.Texture, (float)cursorData.xRelative, (float)cursorData.yRelative, (float)cellWidth, (float)cellHeight, 0f, it.Color[0], it.Color[1], it.Color[2], it.Color[3]);
+      DrawSprite("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, (float)cursorData.xRelative, (float)cursorData.yRelative, (float)cellWidth, (float)cellHeight, 0f, 255, 255, 255, 255);
+      RenderDraggedItemCount(it);
+    }
+
+    private void RenderItemCount(int x, int y, InventoryItemBag it, RectBounds bounds)
+    {
+      SetTextFont(4);
+      SetTextScale(itemCountScale, itemCountScale);
+      SetTextColour(255, 255, 255, 255);
+      SetTextEntry("STRING");
+      AddTextComponentString(FontsManager.FiraSansString + it.Count);
+      SetTextWrap((float)(bounds.X1 + x * cellWidth + cellWidth/10), (float)(bounds.X1 + (x + 1) * cellWidth - cellWidth/10));
+      SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
+      DrawText((float)(bounds.X1 + x * cellWidth), (float)(bounds.Y1 + (y + 1) * cellHeight - itemCountYOffset - cellHeight / 10));
+    }
+
+    private void RenderDraggedItemCount(InventoryItemBag it)
+    {
+      SetTextFont(4);
+      SetTextScale(itemCountScale, itemCountScale);
+      SetTextColour(255, 255, 255, 255);
+      SetTextEntry("STRING");
+      AddTextComponentString(FontsManager.FiraSansString + it.Count);
+      SetTextWrap((float)(cursorData.xRelative - cellWidth / 2f + cellWidth / 10), (float)(cursorData.xRelative + cellWidth / 2f - cellWidth / 10));
+      SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
+      DrawText((float)(cursorData.xRelative - cellWidth / 2f), (float)(cursorData.yRelative + cellHeight / 2f - itemCountYOffset - cellHeight / 10));
     }
     #endregion
 

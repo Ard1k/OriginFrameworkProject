@@ -79,5 +79,42 @@ namespace OriginFrameworkServer
       LoggedPlayers[oid.OID] = CharacterBag.ParseFromSql(result[0]);
       return true;
     }
+
+    public static int GetPlayerLoggedCharacterId(int oid)
+    {
+      if (!LoggedPlayers.ContainsKey(oid))
+        return -1;
+
+      return LoggedPlayers[oid].Id;
+    }
+
+    public static int GetPlayerLoggedCharacterId(Player player)
+    {
+      var oid = OIDServer.GetOriginServerID(player);
+      if (oid == null)
+      {
+        return -1;
+      }
+
+      if (!LoggedPlayers.ContainsKey(oid.OID))
+        return -1;
+
+      return LoggedPlayers[oid.OID].Id;
+    }
+
+    public static bool HasPlayerAdminLevel(Player source, int level)
+    {
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return false;
+      }
+
+      if (!LoggedPlayers.ContainsKey(oid.OID))
+        return false;
+
+      return LoggedPlayers[oid.OID].AdminLevel >= level;
+    }
   }
 }

@@ -64,6 +64,17 @@ namespace OriginFrameworkServer
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map_item` (`id` int NOT NULL AUTO_INCREMENT, `prop_map_id` int NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_prop_map_item_id` FOREIGN KEY (`prop_map_id`) REFERENCES prop_map (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT );", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `user` (`identifier` varchar(200) NOT NULL, `name` varchar(200) NULL, `steam` varchar(200) NULL, `license` varchar(200) NULL, `discord` varchar(200) NULL, `ip` varchar(200) NULL, `admin_level` int NOT NULL DEFAULT(0), `active_character` int NULL, PRIMARY KEY (`identifier`));", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `character` (`id` int NOT NULL AUTO_INCREMENT, `user_identifier` varchar(200) NOT NULL, `name` varchar(200) NOT NULL, `pos` varchar(500) NULL, `model` int NULL, `is_disabled` int NOT NULL DEFAULT(0), PRIMARY KEY (`id`), CONSTRAINT `fk_character_user_identifier` FOREIGN KEY (`user_identifier`) REFERENCES user (`identifier`) ON DELETE RESTRICT ON UPDATE RESTRICT);", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `inventory_item` " +
+                                " (`id` int NOT NULL AUTO_INCREMENT, " +
+                                "  `place` varchar(200) NOT NULL, " +
+                                "  `item_id` int NOT NULL, " +
+                                "  `x` int NOT NULL, " +
+                                "  `y` int NOT NULL, " +
+                                "  `count` int NOT NULL, " +
+                                "  `metadata` varchar(2000) NULL, " +
+                                " PRIMARY KEY (`id`), " +
+                                " INDEX (`place`) " +
+                                " );", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }
