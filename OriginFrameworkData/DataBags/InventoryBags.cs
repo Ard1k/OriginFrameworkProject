@@ -31,8 +31,30 @@ namespace OriginFrameworkData.DataBags
         return -1;
       if (place.StartsWith("char_"))
         return 5;
+      if (place.StartsWith("world_"))
+        return 5;
+      if (place.StartsWith("trunk_"))
+        return 5;
+      if (place.StartsWith("glovebox_"))
+        return 5;
 
       return 5;
+    }
+
+    public static string GetPlaceName(string place)
+    {
+      if (string.IsNullOrEmpty(place))
+        return "---";
+      if (place.StartsWith("char_"))
+        return "Hráč";
+      if (place.StartsWith("world_"))
+        return $"Svět {place.Substring(6)}";
+      if (place.StartsWith("trunk_"))
+        return $"Kufr {place.Substring(6)}";
+      if (place.StartsWith("glovebox_"))
+        return $"Přihrádka {place.Substring(9)}";
+
+      return "---";
     }
 
     public int GetEmptySlotCount()
@@ -117,7 +139,7 @@ namespace OriginFrameworkData.DataBags
     public int StackSize { get; set; }
     [JsonIgnore]
     public bool Stackable { get { return StackSize > 0; } }
-    public eItemClothingSlot ClothingSlot { get; set; }
+    public eSpecialSlotType? SpecialSlotType { get; set; }
   }
 
   public enum eItemCarryType : int
@@ -127,17 +149,22 @@ namespace OriginFrameworkData.DataBags
     Forklift = 2
   }
 
-  public enum eItemClothingSlot : int
+  public enum eSpecialSlotType : int
   {
-    None = 0,
-    Head = 1,
+    Head = 0,
+    Mask = 1,
+
     Glasses = 2,
-    Earring = 3,
-    Necklace = 4,
-    Mask = 5,
+    Necklace = 3,
+
+    Earring = 4,
+    Wrist = 5,
+
     Torso = 6,
     Legs = 7,
-    Boots = 8
+
+    Boots = 8,
+    Gloves = 9,
   }
 
   public static class ItemsDefinitions

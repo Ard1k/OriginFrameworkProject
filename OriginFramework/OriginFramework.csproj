@@ -57,6 +57,7 @@
     <Compile Include="Helpers\InternalDependencyManager.cs" />
     <Compile Include="Helpers\JobHelpers.cs" />
     <Compile Include="MainMenu\MainMenu_Admin.cs" />
+    <Compile Include="MainMenu\SkinMenu.cs" />
     <Compile Include="MainMenu\MainMenu_FunTools.cs" />
     <Compile Include="MainMenu\MainMenu_DevTools.cs" />
     <Compile Include="MainMenu\MainMenu_Group.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Menus\NativeMenu.cs" />
     <Compile Include="Scripts\CharacterCaretaker.cs" />
     <Compile Include="Scripts\CharacterCreator.cs" />
+    <Compile Include="Scripts\SkinManager.cs" />
     <Compile Include="Scripts\ZKeyHud.cs" />
     <Compile Include="Scripts\InventoryManager.cs" />
     <Compile Include="Scripts\Login.cs" />

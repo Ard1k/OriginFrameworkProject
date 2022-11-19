@@ -16,6 +16,9 @@ namespace OriginFramework
       return CitizenFX.Core.UI.Screen.StringToArray(inputString);
     }
 
+    public const float TxtHConst = 14f;
+    public const float TextHalfHConst = 28f;
+
 
     #region Draw text
     public static void DrawTextOnScreen(string text, float xPosition, float yPosition) =>
@@ -43,7 +46,7 @@ namespace OriginFramework
         SetTextJustification((int)justification);
         if (!disableTextOutline) { SetTextOutline(); }
         BeginTextCommandDisplayText("STRING");
-        AddTextComponentSubstringPlayerName(text);
+        AddTextComponentSubstringPlayerName(FontsManager.FiraSansString + text);
         EndTextCommandDisplayText(xPosition, yPosition);
       }
     }

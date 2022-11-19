@@ -20,6 +20,14 @@ namespace OriginFrameworkData.DataBags
 		public int? DiedGameTime { get; set; }
 		public DateTime? DiedServerTime { get; set; }
 
+		private CharacterBag()
+		{ 
+		}
+		public CharacterBag(int model)
+		{
+			Model = model;
+		}
+
 		public static CharacterBag ParseFromSql(Dictionary<string, object> row)
 		{
 			var it = new CharacterBag

@@ -23,17 +23,19 @@ namespace OriginFramework
     public bool IsWaitingInput { get; set; } = false;
     public bool IsInventoryOpen { get; private set; } = false;
     private double invSizeOverHeight = 0.5d;
-    private double invBorderOverHeight = 0.01d;
+    private double invBorderOverHeight = 0.00d;
     private float itemCountScale = 0.4f;
     private float itemCountYOffset { get { return itemCountScale / 28f; } }
     private int gridXCount = 5;
     private int gridYCount = 5;
-    private double gridCenterSpace = 1d;
+    private double gridCenterSpace = 0.5d; //modifier pro cell width
+    private double invCenterWidth = 0.55d;
     private int screen_width = 1;
     private int screen_height = 1;
     double cellWidth = 0d;
     double cellHeight = 0d;
     RectBounds leftInvBounds = null;
+    RectBounds leftInv2Bounds = null;
     RectBounds rightInvBounds = null;
     RectBounds backgroundBounds = null;
     CursorData cursorData = new CursorData();
@@ -63,6 +65,12 @@ namespace OriginFramework
 
     private async Task OnTick()
     {
+      if (CharacterCaretaker.LoggedCharacter == null)
+      {
+        IsInventoryOpen = false;
+        return;
+      }
+
       if (Game.IsControlJustPressed(0, Control.ReplayStartStopRecordingSecondary)) //F2
       {
         IsInventoryOpen = !IsInventoryOpen;
@@ -204,24 +212,32 @@ namespace OriginFramework
 
       leftInvBounds = new RectBounds
       {
-        X1 = (0.5d - invWidth) - (cellWidth * (gridCenterSpace / 2)),
+        X1 = (invCenterWidth - invWidth) - (cellWidth * (gridCenterSpace / 2)),
         Y1 = 0.5d - (invHeight / 2),
-        X2 = 0.5d - (cellWidth * (gridCenterSpace / 2)),
+        X2 = invCenterWidth - (cellWidth * (gridCenterSpace / 2)),
+        Y2 = 0.5d + (invHeight / 2)
+      };
+
+      leftInv2Bounds = new RectBounds
+      {
+        X1 = leftInvBounds.X1 - (cellWidth * 2) - cellWidth * gridCenterSpace,
+        Y1 = 0.5d - (invHeight / 2),
+        X2 = leftInvBounds.X1 - cellWidth * gridCenterSpace,
         Y2 = 0.5d + (invHeight / 2)
       };
 
       rightInvBounds = new RectBounds
       {
-        X1 = 0.5d + cellWidth * (gridCenterSpace / 2),
+        X1 = invCenterWidth + cellWidth * (gridCenterSpace / 2),
         Y1 = 0.5d - (invHeight / 2),
-        X2 = 0.5d + invWidth + cellWidth * (gridCenterSpace / 2),
+        X2 = invCenterWidth + invWidth + cellWidth * (gridCenterSpace / 2),
         Y2 = 0.5d + (invHeight / 2)
       };
 
       backgroundBounds = new RectBounds
       {
         X1 = leftInvBounds.X1 - (invBorderOverHeight / aspectFactor),
-        Y1 = leftInvBounds.Y1 - invBorderOverHeight,
+        Y1 = (leftInvBounds.Y1 - invBorderOverHeight),
         X2 = rightInvBounds.X2 + (invBorderOverHeight / aspectFactor),
         Y2 = rightInvBounds.Y2 + invBorderOverHeight
       };
@@ -248,6 +264,15 @@ namespace OriginFramework
         cursorData.InvType = "left";
         cursorData.XGrid = xGrid;
         cursorData.YGrid = yGrid;
+        return;
+      }
+      else if (DrawUtils.IsInBounds(leftInv2Bounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(leftInv2Bounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
+      {
+        cursorData.InvData = LeftInv;
+        cursorData.HoverItem = LeftInv?.Items?.Where(it => it.X == -1 && it.Y == yGrid * 2 + xGrid).FirstOrDefault();
+        cursorData.InvType = "left2";
+        cursorData.YGrid = yGrid * 2 + xGrid;
+        cursorData.XGrid = -1;
         return;
       }
       else if (DrawUtils.IsInBounds(rightInvBounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(rightInvBounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
@@ -391,9 +416,13 @@ namespace OriginFramework
       if (!HasStreamedTextureDictLoaded("inventory_textures"))
         RequestStreamedTextureDict("inventory_textures", true);
 
-      DrawRect2(backgroundBounds, IsWaiting ? 255 : 0, 0, 0, 30);
-      DrawRect2(leftInvBounds, 0, 0, 0, 100);
-      DrawRect2(rightInvBounds, 0, 0, 0, 100);
+      DrawRect2(backgroundBounds, IsWaiting ? 255 : 0, 0, 0, 60);
+      DrawRect2(leftInvBounds, 0, 0, 0, 120);
+      DrawRect2(rightInvBounds, 0, 0, 0, 120);
+      DrawRect2(leftInv2Bounds, 0, 0, 0, 180);
+
+      TextUtils.DrawTextOnScreen("Tvůj inventář", (float)leftInvBounds.X1, (float)leftInvBounds.Y1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Left);
+      TextUtils.DrawTextOnScreen(InventoryBag.GetPlaceName(RightInv?.Place), (float)rightInvBounds.X2, (float)rightInvBounds.Y1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Right);
 
       if (LeftInv != null)
       {
@@ -402,8 +431,14 @@ namespace OriginFramework
           for (int x = 0; x < 5; x++)
           {
             var it = LeftInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
-            RenderItem(x, y, leftInvBounds, it);
+            RenderItem(x, y, leftInvBounds, it, false);
           }
+        }
+
+        for (int y = 0; y < 10; y++)
+        {
+          var it = LeftInv.Items.Where(a => a.Y == y && a.X == -1).FirstOrDefault();
+          RenderItem(y % 2, y / 2, leftInv2Bounds, it, true);
         }
       }
 
@@ -414,26 +449,29 @@ namespace OriginFramework
           for (int x = 0; x < 5; x++)
           {
             var it = RightInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
-            RenderItem(x, y, rightInvBounds, it);
+            RenderItem(x, y, rightInvBounds, it, false);
           }
         }
       }
 
+      //TextUtils.DrawTextOnScreen
+
       RenderDragged(); //Kreslim na sebe, takze to s cim hybu budu malovat uplne nahoru
     }
 
-    private void RenderItem(int x, int y, RectBounds bounds, InventoryItemBag it)
+    private void RenderItem(int x, int y, RectBounds bounds, InventoryItemBag it, bool isExtraSlots)
     {
       if (it == null)
       {
-        DrawUtils.DrawSprite2("inventory_textures", "empty_slot", bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 30);
+        DrawUtils.DrawSprite2("inventory_textures", isExtraSlots ? $"empty_slot_{y * 2 + x}" : "empty_slot", bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 100);
         return;
       }
 
       if (!it.IsDragged && !it.IsWaitingActionResult)
       {
         DrawUtils.DrawSprite2("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 255);
-        RenderItemCount(x, y, it, bounds);
+        if (it.Count > 1)
+          RenderItemCount(x, y, it, bounds);
       }
     }
 
@@ -445,7 +483,8 @@ namespace OriginFramework
       var it = dragData.SrcItem;
 
       DrawSprite("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, (float)cursorData.xRelative, (float)cursorData.yRelative, (float)cellWidth, (float)cellHeight, 0f, 255, 255, 255, 255);
-      RenderDraggedItemCount(it);
+      if (it.Count > 1)
+        RenderDraggedItemCount(it);
     }
 
     private void RenderItemCount(int x, int y, InventoryItemBag it, RectBounds bounds)

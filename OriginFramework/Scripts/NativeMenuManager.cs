@@ -41,6 +41,8 @@ namespace OriginFramework
     private int control_nav_hide = (int)Control.FrontendPauseAlternate;
     private int control_nav_down = (int)Control.PhoneDown;
     private int control_nav_up = (int)Control.Phone;
+    private int control_nav_left = (int)Control.PhoneLeft;
+    private int control_nav_right = (int)Control.PhoneRight;
     private int control_nav_select = (int)Control.FrontendAccept;
     private int control_nav_select2 = -1;
 
@@ -249,6 +251,28 @@ namespace OriginFramework
         {
           BackOrClose();
           return;
+        }
+      }
+      else if (IsControlJustPressed(0, control_nav_left))
+      {
+        PlaySound(-1, "NAV_LEFT_RIGHT", "HUD_MINI_GAME_SOUNDSET", false, 0, true);
+        
+        var currentItem = CurrentMenu.Items[CurrentMenu.SelectedIndex];
+        if (currentItem.OnLeft != null)
+        {
+          currentItem.OnLeft(currentItem);
+          Refresh();
+        }
+      }
+      else if (IsControlJustPressed(0, control_nav_right))
+      {
+        PlaySound(-1, "NAV_LEFT_RIGHT", "HUD_MINI_GAME_SOUNDSET", false, 0, true);
+
+        var currentItem = CurrentMenu.Items[CurrentMenu.SelectedIndex];
+        if (currentItem.OnRight != null)
+        {
+          currentItem.OnRight(currentItem);
+          Refresh();
         }
       }
 

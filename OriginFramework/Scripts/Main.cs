@@ -115,27 +115,10 @@ namespace OriginFramework
 
       //}), false);
 
-      //  RegisterCommand("testdb", new Action<int, List<object>, string>(async (source, args, raw) =>
-      //  {
-      //    string ret = String.Empty;
-      //    bool completed = false;
-
-      //    Func<string, bool> CallbackFunction = (data) =>
-      //    {
-      //      ret = data;
-      //      completed = true;
-      //      return true;
-      //    };
-
-      //    TriggerServerEvent("ofw:TestDB", CallbackFunction);
-
-      //    while (!completed)
-      //    {
-      //      await Delay(0);
-      //    }
-
-      //    Debug.WriteLine(ret);
-      //  }), false);
+      RegisterCommand("skin", new Action<int, List<object>, string>(async (source, args, raw) =>
+      {
+        NativeMenuManager.OpenNewMenu("skin_menu", () => { return SkinMenu.GenerateMenu(SkinManager.ComponentsAll, null); });
+      }), false);
 
       #endregion
 

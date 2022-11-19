@@ -16,16 +16,21 @@ namespace OriginFramework
   public class Misc : BaseScript
   {
     #region island loader
-    public bool islandLoaded = false;
+    public static bool IslandLoaded = false;
+    private static Vector3 islandPos = new Vector3(4840.571f, -5174.425f, 2.0f);
+
+    public static bool IsInCaioPericoRange(Vector3 playerPos)
+    {
+      return Vector3.Distance(playerPos, islandPos) < 2000f;
+    }
 
     private async Task IslandLoader()
     {
       var playerpos = GetEntityCoords(Game.PlayerPed.Handle, true);
-      var islandpos = new Vector3(4840.571f, -5174.425f, 2.0f);
 
-      var dist = Vector3.Distance(playerpos, islandpos);
+      var dist = Vector3.Distance(playerpos, islandPos);
 
-      if (dist < 2000f && !islandLoaded)
+      if (dist < 2000f && !IslandLoaded)
       {
         CitizenFX.Core.Native.Function.Call(CitizenFX.Core.Native.Hash._SET_ISLAND_HOPPER_ENABLED, "HeistIsland", true);
         CitizenFX.Core.Native.Function.Call(CitizenFX.Core.Native.Hash._SET_TOGGLE_MINIMAP_HEIST_ISLAND, true);
@@ -35,9 +40,9 @@ namespace OriginFramework
         SetAmbientZoneListStatePersistent("AZL_DLC_Hei4_Island_Zones", true, true);
         SetAmbientZoneListStatePersistent("AZL_DLC_Hei4_Island_Disabled_Zones", false, true);
 
-        islandLoaded = true;
+        IslandLoaded = true;
       }
-      else if (dist > 2000f && islandLoaded)
+      else if (dist > 2000f && IslandLoaded)
       {
         CitizenFX.Core.Native.Function.Call(CitizenFX.Core.Native.Hash._SET_ISLAND_HOPPER_ENABLED, "HeistIsland", false);
         CitizenFX.Core.Native.Function.Call(CitizenFX.Core.Native.Hash._SET_TOGGLE_MINIMAP_HEIST_ISLAND, false);
@@ -47,7 +52,7 @@ namespace OriginFramework
         SetAmbientZoneListStatePersistent("AZL_DLC_Hei4_Island_Zones", false, true);
         SetAmbientZoneListStatePersistent("AZL_DLC_Hei4_Island_Disabled_Zones", true, true);
 
-        islandLoaded = false;
+        IslandLoaded = false;
       }
 
       await Delay(1000);

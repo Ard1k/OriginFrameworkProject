@@ -19,6 +19,13 @@ namespace OriginFramework
     private const string charCreatorMenuName = "characterCreatorMenu";
     private static CharacterBag NewCharacter = null;
 
+    private int selectedModelIndex = 0;
+    private static List<Tuple<string, string>> availablePedModels = new List<Tuple<string, string>>
+    {
+      new Tuple<string, string>("mp_m_freemode_01", "Muž"),
+      new Tuple<string, string>("mp_f_freemode_01", "Žena"),
+    };
+
     public CharacterCreator()
     {
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
@@ -72,7 +79,10 @@ namespace OriginFramework
     private NativeMenu getCreatorMenu()
     {
       if (NewCharacter == null)
-        NewCharacter = new CharacterBag(); //Radsi budu resit jiny chyby nez null ref :D
+      {
+        selectedModelIndex = 0;
+        NewCharacter = new CharacterBag(GetHashKey(availablePedModels[selectedModelIndex].Item1));
+      }
 
       var menu = new NativeMenu
       {
@@ -82,15 +92,40 @@ namespace OriginFramework
             new NativeMenuItem
             {
               Name = "Jméno",
-              NameRight = NewCharacter.Name,
+              ExtraLeft = NewCharacter.Name ?? "---",
               IsTextInput = true,
               TextInputMaxLength = 50,
               TextInputRequest = "Zadejte jméno postavy",
               OnTextInput = (item, input) =>
                 {
                   NewCharacter.Name = input;
-                  item.NameRight = NewCharacter.Name;
+                  item.ExtraLeft = NewCharacter.Name;
                 }
+            },
+            new NativeMenuItem
+            {
+              Name = "Pohlaví",
+              NameRight = "<>",
+              ExtraLeft = availablePedModels[selectedModelIndex].Item2 ?? "---",
+              OnLeft = (item) => 
+              {
+                if (selectedModelIndex <= 0)
+                  return;
+
+                selectedModelIndex--;
+              },
+              OnRight = (item) =>
+              {
+                if (selectedModelIndex >= availablePedModels.Count - 1)
+                  return;
+
+                selectedModelIndex++;
+              },
+              OnRefresh = (item) =>
+              {
+                item.ExtraLeft = availablePedModels[selectedModelIndex].Item2 ?? "---";
+                NewCharacter.Model = GetHashKey(availablePedModels[selectedModelIndex].Item1);
+              }
             },
             new NativeMenuItem { IsUnselectable = true },
             new NativeMenuItem

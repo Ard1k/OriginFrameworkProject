@@ -17,7 +17,7 @@ namespace OriginFramework
 	public class CharacterCaretaker : BaseScript
 	{
     private static bool spawnLock = false;
-    private static CharacterBag LoggedCharacter = null;
+    public static CharacterBag LoggedCharacter { get; private set; } = null;
     private static float[] LoginPedPos = { -241f, -855f, 750f };
 
     public CharacterCaretaker()
@@ -201,30 +201,32 @@ namespace OriginFramework
       spawnLock = false;
     }
 
-    private static async void RespawnCharacter()
+    private static async void SpawnLoggedCharacter()
     {
       if (spawnLock == true)
         return;
 
       spawnLock = true;
-
-      if (LoggedCharacter?.Model != null && LoggedCharacter.Model > 0 && Game.PlayerPed.Model.Hash != LoggedCharacter.Model)
+      TheBugger.DebugLog(LoggedCharacter?.Model.ToString() ?? "null char");
+      if (LoggedCharacter?.Model != null && LoggedCharacter.Model != 0 && Game.PlayerPed.Model.Hash != LoggedCharacter.Model)
       {
-        uint defaultModel = (uint)GetHashKey("player_two");
+        uint model = (uint)LoggedCharacter.Model;
+        
+        RequestModel(model);
 
-        RequestModel(defaultModel);
-
-        while (!HasModelLoaded(defaultModel))
+        while (!HasModelLoaded(model))
         {
-          RequestModel(defaultModel);
+          RequestModel(model);
 
           await Delay(0);
         }
 
-        SetPlayerModel(Game.Player.Handle, defaultModel);
-        SetModelAsNoLongerNeeded(defaultModel);
+        SetPlayerModel(Game.Player.Handle, model);
+        SetPedDefaultComponentVariation(Game.PlayerPed.Handle);
+        SetModelAsNoLongerNeeded(model);
       }
 
+      SkinManager.SetDefaultSkin(SkinManager.ClothesAll);
       DoScreenFadeOut(500);
       while (!IsScreenFadedOut())
         await Delay(0);
@@ -241,9 +243,18 @@ namespace OriginFramework
         h = LoggedCharacter.LastKnownPos.H;
       }
 
+      SetEntityCoordsNoOffset(Game.PlayerPed.Handle, x, y, z, false, false, false);
+      await Delay(0);
+
+      if (Misc.IsInCaioPericoRange(Game.PlayerPed.Position) && !Misc.IslandLoaded)
+      {
+        while (!Misc.IslandLoaded)
+          await Delay(0);
+      }
+
       RequestCollisionAtCoord(x, y, z);
 
-      SetEntityCoordsNoOffset(Game.PlayerPed.Handle, x, y, z, false, false, false);
+      //SetEntityCoordsNoOffset(Game.PlayerPed.Handle, x, y, z, false, false, false);
       NetworkResurrectLocalPlayer(x, y, z, h, true, true);
 
       ClearPedTasksImmediately(Game.PlayerPed.Handle);
@@ -267,7 +278,7 @@ namespace OriginFramework
     public static void LoggedIn(CharacterBag character)
     {
       LoggedCharacter = character;
-      RespawnCharacter();
+      SpawnLoggedCharacter();
     }
   }
 }

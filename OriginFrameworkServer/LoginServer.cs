@@ -111,7 +111,8 @@ namespace OriginFrameworkServer
       var param = new Dictionary<string, object>();
       param.Add("@user_identifier", oid.PrimaryIdentifier);
       param.Add("@name", charData.Name);
-      await VSql.ExecuteAsync("insert into `character` (`user_identifier`, `name`) VALUES (@user_identifier, @name)", param);
+      param.Add("@model", charData.Model);
+      await VSql.ExecuteAsync("insert into `character` (`user_identifier`, `name`, `model`) VALUES (@user_identifier, @name, @model)", param);
 
       _ = callback(true, "ok");
     }
