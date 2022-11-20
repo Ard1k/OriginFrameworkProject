@@ -22,6 +22,7 @@ namespace OriginFramework
     public bool IsWaiting { get; private set; } = false;
     public bool IsWaitingInput { get; set; } = false;
     public bool IsInventoryOpen { get; private set; } = false;
+    public bool IsDrawingTooltip { get { return dragData?.SrcItem == null && cursorData?.HoverItem != null; } }
     private double invSizeOverHeight = 0.5d;
     private double invBorderOverHeight = 0.00d;
     private float itemCountScale = 0.4f;
@@ -40,6 +41,7 @@ namespace OriginFramework
     RectBounds backgroundBounds = null;
     CursorData cursorData = new CursorData();
     DragAndDropData dragData = new DragAndDropData();
+    InventoryTooltip tooltipData = new InventoryTooltip();
 
     #region Mockup
     InventoryBag LeftInv = null;
@@ -134,10 +136,14 @@ namespace OriginFramework
 
       ShowCursorThisFrame();
       RenderInstructionalButtons();
+
+      if (IsDrawingTooltip)
+        tooltipData.SetAndComputeData((float)(cursorData.xRelative + cellWidth/3), (float)cursorData.yRelative, cursorData.HoverItem);
+
       Render();
 
-      if (dragData.SrcItem == null)
-        Tooltip.DrawTooltip((float)cursorData.xRelative + 0.05f, (float)cursorData.yRelative, $"INV:{cursorData.InvType} X:{cursorData.XGrid} Y:{cursorData.YGrid}", null);
+      if (IsDrawingTooltip)
+        tooltipData.Render();
     }
 
     #region event handlers
@@ -490,14 +496,23 @@ namespace OriginFramework
 
     private void RenderItemCount(int x, int y, InventoryItemBag it, RectBounds bounds)
     {
+      double x1, y1, x2, y2;
+      x1 = bounds.X1 + x * cellWidth + cellWidth / 10;
+      y1 = bounds.Y1 + (y + 1) * cellHeight - itemCountYOffset - cellHeight / 10;
+      x2 = bounds.X1 + (x + 1) * cellWidth - cellWidth / 10;
+      y2 = bounds.Y1 + (y + 1) * cellHeight - cellHeight / 10;
+
+      if (IsDrawingTooltip && tooltipData.Bounds.IntersectsWith(x1, y1, x2, y2))
+        return;
+
       SetTextFont(4);
       SetTextScale(itemCountScale, itemCountScale);
       SetTextColour(255, 255, 255, 255);
       SetTextEntry("STRING");
       AddTextComponentString(FontsManager.FiraSansString + it.Count);
-      SetTextWrap((float)(bounds.X1 + x * cellWidth + cellWidth/10), (float)(bounds.X1 + (x + 1) * cellWidth - cellWidth/10));
+      SetTextWrap((float)x1, (float)x2);
       SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
-      DrawText((float)(bounds.X1 + x * cellWidth), (float)(bounds.Y1 + (y + 1) * cellHeight - itemCountYOffset - cellHeight / 10));
+      DrawText((float)x1, (float)y1);
     }
 
     private void RenderDraggedItemCount(InventoryItemBag it)
@@ -553,6 +568,51 @@ namespace OriginFramework
         SrcInv = null;
         SrcItem = null;
         TargetInv = null;
+      }
+    }
+
+    private class InventoryTooltip
+    {
+      private static float textScale = 0.3f;
+      private static float tooltipWidth = 0.3f / Screen.AspectRatio;
+      private static float vertical_offset = (tooltipWidth / 30) * Screen.AspectRatio;
+      public RectBounds Bounds { get; private set; } = new RectBounds();
+      private string _text = null;
+      private string _text2 = null;
+
+      public void SetAndComputeData(float x, float y, InventoryItemBag item)
+      {
+        if (item == null)
+          return;
+
+        var itDef = ItemsDefinitions.Items[item.ItemId];
+        _text2 = String.Empty;
+        int linesCount = 1;
+
+        _text = $"~h~{itDef.Name ?? "Nepojmenovaný předmět"}~h~";
+
+        if (itDef.Color != null)
+        {
+          _text2 += $"Barva: {itDef.Color.Label}~n~";
+          linesCount++;
+        }
+        _text2 += "Test1: parametr a~n~";
+        _text2 += "Test2 dlouhy: tvoje mama";
+        linesCount++;
+        linesCount++;
+
+        Bounds.X1 = x;
+        Bounds.Y1 = y - vertical_offset;
+        Bounds.X2 = x + tooltipWidth;
+        Bounds.Y2 = y + linesCount * (textScale / TextUtils.TxtHConst) + vertical_offset;
+      }
+
+      public async void Render()
+      {
+        DrawUtils.DrawRect2(Bounds, 50, 50, 50, 255);
+        TextUtils.DrawTextOnScreen(_text, (float)Bounds.X1 + tooltipWidth/2, (float)Bounds.Y1 + vertical_offset, textScale, Alignment.Center);
+        if (!string.IsNullOrEmpty(_text2))
+          TextUtils.DrawTextOnScreen(_text2, (float)Bounds.X1 + tooltipWidth/30, (float)Bounds.Y1 + vertical_offset + textScale / TextUtils.TxtHConst, textScale);
       }
     }
     #endregion

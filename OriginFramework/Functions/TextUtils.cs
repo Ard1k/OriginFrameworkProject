@@ -1,4 +1,5 @@
 ﻿using CitizenFX.Core;
+using CitizenFX.Core.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,6 +82,18 @@ namespace OriginFramework
       DrawText(_x, _y);
     }
 
+    public static float GetScaledStringFiraSansWidth(string text, float scale)
+    {
+      return (Text.GetScaledStringWidth(FontsManager.FiraSansString + text, 0, scale) / Screen.ScaledWidth) * 1.1f;
+    }
+
+    public static int GetTextLinesCount(float x, float y, string text, float scale)
+    {
+      BeginTextCommandLineCount("STRING");
+      AddTextComponentSubstringPlayerName(text);
+      SetTextScale(1.0f, scale);
+      return EndTextCommandLineCount(x, y);
+    }
     #endregion
 
     public static async Task<string> GetUserInput(string windowTitle, string defaultText, int maxInputLength)

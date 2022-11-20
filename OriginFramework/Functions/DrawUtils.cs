@@ -79,6 +79,16 @@ namespace OriginFramework
       public double Y1 { get; set; }
       public double X2 { get; set; }
       public double Y2 { get; set; }
+
+      public bool IntersectsWith(RectBounds bounds)
+      {
+        return X2 > bounds.X1 && X1 < bounds.X2 && Y2 > bounds.Y1 && Y1 < bounds.Y2;
+      }
+
+      public bool IntersectsWith(double x1, double y1, double x2, double y2)
+      {
+        return X2 > x1 && X1 < x2 && Y2 > y1 && Y1 < y2;
+      }
     }
   }
 }
