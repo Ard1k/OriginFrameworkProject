@@ -154,6 +154,7 @@ namespace OriginFramework
 
       var leftInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
       LeftInv = leftInv;
+      SkinManager.UpdateSkinFromInv(leftInv.Items);
 
       if (!string.IsNullOrEmpty(rightInventory))
       {
@@ -469,7 +470,7 @@ namespace OriginFramework
 
       if (!it.IsDragged && !it.IsWaitingActionResult)
       {
-        DrawUtils.DrawSprite2("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, 255, 255, 255, 255);
+        DrawUtils.DrawSprite2("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, ItemsDefinitions.Items[it.ItemId]?.Color?.R ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.G ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.B ?? 255, 255);
         if (it.Count > 1)
           RenderItemCount(x, y, it, bounds);
       }
@@ -482,7 +483,7 @@ namespace OriginFramework
 
       var it = dragData.SrcItem;
 
-      DrawSprite("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, (float)cursorData.xRelative, (float)cursorData.yRelative, (float)cellWidth, (float)cellHeight, 0f, 255, 255, 255, 255);
+      DrawSprite("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, (float)cursorData.xRelative, (float)cursorData.yRelative, (float)cellWidth, (float)cellHeight, 0f, ItemsDefinitions.Items[it.ItemId]?.Color?.R ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.G ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.B ?? 255, 255);
       if (it.Count > 1)
         RenderDraggedItemCount(it);
     }
@@ -526,6 +527,12 @@ namespace OriginFramework
       public bool IsHoverOnValidSlot { get {
           if (InvData != null)
           {
+            if (XGrid < 0 && YGrid >= 0 && YGrid < 10)
+              return true;
+
+            if (InvData.RowCount < 0 && YGrid >= 0)
+              return true;
+
             return YGrid < InvData.RowCount;
           }
 

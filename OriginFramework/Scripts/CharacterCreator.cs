@@ -24,6 +24,7 @@ namespace OriginFramework
     {
       new Tuple<string, string>("mp_m_freemode_01", "Muž"),
       new Tuple<string, string>("mp_f_freemode_01", "Žena"),
+      new Tuple<string, string>("a_c_retriever", "Peso more"),
     };
 
     public CharacterCreator()
@@ -105,7 +106,7 @@ namespace OriginFramework
             new NativeMenuItem
             {
               Name = "Pohlaví",
-              NameRight = "<>",
+              NameRight = "←→",
               ExtraLeft = availablePedModels[selectedModelIndex].Item2 ?? "---",
               OnLeft = (item) => 
               {

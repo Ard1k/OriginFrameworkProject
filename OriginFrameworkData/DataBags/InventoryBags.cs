@@ -134,12 +134,31 @@ namespace OriginFrameworkData.DataBags
   public class ItemDefinition
   {
     public string Name { get; set; }
-    public string Code { get; set; }
+    //public string Code { get; set; }
     public string Texture { get; set; }
-    public int StackSize { get; set; }
+    public InventoryColor Color { get; set; }
+    public int StackSize { get; set; } = 1;
     [JsonIgnore]
     public bool Stackable { get { return StackSize > 0; } }
     public eSpecialSlotType? SpecialSlotType { get; set; }
+    public Dictionary<string, int> MaleSkin { get; set; }
+    public Dictionary<string, int> FemaleSkin { get; set; }
+  }
+
+  public class InventoryColor
+  {
+    public string Label { get; set; }
+    public int R { get; set; }
+    public int G { get; set; }
+    public int B { get; set; }
+
+    public InventoryColor(string label, int r, int g, int b)
+    {
+      Label = label;
+      R = r;
+      G = g;
+      B = b;
+    }
   }
 
   public enum eItemCarryType : int
@@ -175,23 +194,77 @@ namespace OriginFrameworkData.DataBags
       get
       {
         if (_items == null)
-          Initialize();
+          InitializeItems();
 
         return _items;
       }
     }
 
-    private static void Initialize()
+    private static Dictionary<string, InventoryColor> _knownColors = null;
+    public static Dictionary<string, InventoryColor> KnownColors
     {
-      _items = new ItemDefinition[1000];
+      get
+      {
+        if (_knownColors == null)
+          InitializeColors();
+        return _knownColors;
+      }
+    }
 
+    private static void InitializeColors()
+    {
+      _knownColors = new Dictionary<string, InventoryColor>();
+      _knownColors.Add("red", new InventoryColor("Červená", 255, 0, 0));
+      _knownColors.Add("green", new InventoryColor("Zelená", 0, 255, 0));
+      _knownColors.Add("blue", new InventoryColor("Modrá", 0, 0, 255));
+      _knownColors.Add("white", new InventoryColor("Bílá", 255, 255, 255));
+      _knownColors.Add("black", new InventoryColor("Černá", 0, 0, 0));
+    }
+
+    private static void InitializeItems()
+    {
+      _items = new ItemDefinition[2000];
+
+      #region itemy
       _items[1] = new ItemDefinition
       {
         Name = "Autodíly",
-        Code = "ITEM_COMPONENT",
+        //Code = "ITEM_COMPONENT",
         Texture = "item_component",
         StackSize = 500,
       };
+      #endregion
+
+      #region hadry
+      _items[1000] = new ItemDefinition
+      {
+        Name = "Kšiltovka",
+        //Code = "CLOTHING_CAP1",
+        Texture = "cap1",
+        SpecialSlotType = eSpecialSlotType.Head,
+        Color = KnownColors["green"],
+        MaleSkin = new Dictionary<string, int> 
+        { 
+          { "helmet_1", 10 },
+          { "helmet_2", 5 }
+        }
+      };
+      _items[1001] = new ItemDefinition
+      {
+        Name = "Mikča",
+        //Code = "CLOTHING_CAP1",
+        Texture = "hoodie1",
+        SpecialSlotType = eSpecialSlotType.Torso,
+        Color = KnownColors["red"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "torso_1", 113 },
+          { "torso_2", 0 },
+          { "arms_1", 6 },
+          { "arms_2", 0 }
+        }
+      };
+      #endregion
     }
   }
 }

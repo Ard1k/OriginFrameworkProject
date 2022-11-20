@@ -117,7 +117,14 @@ namespace OriginFramework
 
       RegisterCommand("skin", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
-        NativeMenuManager.OpenNewMenu("skin_menu", () => { return SkinMenu.GenerateMenu(SkinManager.ComponentsAll, null); });
+        if (args == null || args.Count <= 0)
+          NativeMenuManager.OpenNewMenu("skin_menu", () => { return SkinMenu.GenerateMenu(SkinManager.ComponentsAll, null); });
+        else if (args.Count == 1)
+        {
+          int slot;
+          if (Int32.TryParse((string)args[0], out slot))
+            NativeMenuManager.OpenNewMenu("skin_menu", () => { return SkinMenu.GenerateMenu(SkinManager.GetClothesForSlot((eSpecialSlotType)slot), null); });
+        }
       }), false);
 
       #endregion

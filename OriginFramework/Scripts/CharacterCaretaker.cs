@@ -227,6 +227,7 @@ namespace OriginFramework
       }
 
       SkinManager.SetDefaultSkin(SkinManager.ClothesAll);
+      TriggerServerEvent("ofw_inventory:ReloadInventory", null);
       DoScreenFadeOut(500);
       while (!IsScreenFadedOut())
         await Delay(0);

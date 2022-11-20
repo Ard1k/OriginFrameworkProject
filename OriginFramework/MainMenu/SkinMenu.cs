@@ -1,8 +1,10 @@
-﻿using System;
+﻿using CitizenFX.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CitizenFX.Core.Native.API;
 
 namespace OriginFramework.Menus
 {
@@ -26,11 +28,12 @@ namespace OriginFramework.Menus
         values = new Dictionary<string, int>();
 
       Dictionary<string, MinMaxBag> minMax = new Dictionary<string, MinMaxBag>();
+      bool isFemale = Game.PlayerPed.Model.Hash == GetHashKey("mp_f_freemode_01");
 
       foreach (var c in components)
       {
         if (!values.ContainsKey(c))
-          values.Add(c, SkinManager.Components[c].DefaultValue);
+          values.Add(c, (isFemale && SkinManager.Components[c].DefaultFemale != null) ? SkinManager.Components[c].DefaultFemale.Value : SkinManager.Components[c].DefaultValue);
       }
 
       foreach (var c in components)
@@ -49,7 +52,7 @@ namespace OriginFramework.Menus
       {
         menu.Items.Add(new NativeMenuItem {
           Name = SkinManager.Components[c].Label,
-          NameRight = $"←{values[c]}←",
+          NameRight = $"←{values[c]}→",
           OnLeft = (item) =>
           {
             if (values[c] <= minMax[c].Min)
@@ -67,7 +70,7 @@ namespace OriginFramework.Menus
                 values[txFrom] = minMax[txFrom].Max;
               }
             }
-            item.NameRight = $"←{values[c]}←";
+            item.NameRight = $"←{values[c]}→";
             SkinManager.ApplySkin(values);
           },
           OnRight = (item) =>
@@ -87,13 +90,13 @@ namespace OriginFramework.Menus
                 values[txFrom] = minMax[txFrom].Max;
               }
             }
-            item.NameRight = $"←{values[c]}←";
+            item.NameRight = $"←{values[c]}→";
             SkinManager.ApplySkin(values);
           },
           OnRefresh = (item) =>
           {
             if (SkinManager.Components[c].TextureOf != null)
-              item.NameRight = $"←{values[c]}←";
+              item.NameRight = $"←{values[c]}→";
           }
         });
       }

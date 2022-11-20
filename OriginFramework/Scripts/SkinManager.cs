@@ -1,5 +1,6 @@
 ﻿using CitizenFX.Core;
 using OriginFrameworkData;
+using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +43,59 @@ namespace OriginFramework
       "bags_1", "bags_2", //batohy
       "ears_1", "ears_2", //nausnice
     };
+
+    public static string[] GetClothesForSlot(eSpecialSlotType slotType)
+    {
+      switch (slotType)
+      {
+        case eSpecialSlotType.Head: return new string[] { "helmet_1", "helmet_2", };
+        case eSpecialSlotType.Mask: return new string[] { "mask_1", "mask_2", };
+        case eSpecialSlotType.Glasses: return new string[] { "glasses_1", "glasses_2", };
+        case eSpecialSlotType.Necklace: return new string[] { "chain_1", "chain_2", };
+        case eSpecialSlotType.Earring: return new string[] { "ears_1", "ears_2", };
+        case eSpecialSlotType.Wrist: return new string[] { "watches_1", "watches_2", "bracelets_1", "bracelets_2", };
+        case eSpecialSlotType.Torso: return new string[] { "tshirt_1", "tshirt_2", "torso_1", "torso_2", "arms_1", "arms_2", "decals_1", "decals_2", "bproof_1", "bproof_2", };
+        case eSpecialSlotType.Legs: return new string[] { "pants_1", "pants_2", };
+        case eSpecialSlotType.Boots: return new string[] { "shoes_1", "shoes_2", };
+        default: return new string[0];
+      }
+    }
+
+    private static int[] equippedItemsCache = new int[9];
+    public static void UpdateSkinFromInv(List<InventoryItemBag> items)
+    {
+      bool isFemale = Game.PlayerPed.Model.Hash == GetHashKey("mp_f_freemode_01");
+
+      for (int i = 0; i < equippedItemsCache.Length; i++)
+      {
+        var it = items.Where(invIt => invIt.X == -1 && invIt.Y == i).FirstOrDefault();
+
+        if (it == null)
+        {
+          if (equippedItemsCache[i] <= 0)
+            continue;
+          else
+          {
+            SetDefaultSkin(GetClothesForSlot((eSpecialSlotType)i));
+            equippedItemsCache[i] = 0;
+          }
+        }
+        else
+        {
+          if (it.ItemId == equippedItemsCache[i])
+            continue;
+          else
+          {
+            SetDefaultSkin(GetClothesForSlot((eSpecialSlotType)i));
+            if (isFemale && ItemsDefinitions.Items[it.ItemId].FemaleSkin != null)
+              ApplySkin(ItemsDefinitions.Items[it.ItemId].FemaleSkin);
+            else
+              ApplySkin(ItemsDefinitions.Items[it.ItemId].MaleSkin);
+            equippedItemsCache[i] = it.ItemId;
+          }
+        }
+      }
+    }
 
     private static void _loadComponents()
     {
