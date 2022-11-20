@@ -32,11 +32,15 @@ namespace OriginFrameworkServer
         if (sourcePlayer == null)
           return;
 
-        if (!CharacterCaretakerServer.HasPlayerAdminLevel(sourcePlayer, 10));
+        if (!CharacterCaretakerServer.HasPlayerAdminLevel(sourcePlayer, 10))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nedostatecne opravneni");
+          return;
+        }
 
         if (args == null || args.Count != 3)
         {
-          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Natplatne parametry");
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Natplatne pocet parametru");
           return;
         }
 
@@ -61,6 +65,92 @@ namespace OriginFrameworkServer
           string result = await GiveItem($"char_{charId}", item_id, count);
           if (result == null)
             sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Má to tam");
+          else
+            sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", result);
+        }
+      }), false);
+
+      RegisterCommand("removeitem", new Action<int, List<object>, string>(async (source, args, raw) =>
+      {
+        var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+        if (sourcePlayer == null)
+          return;
+
+        if (!CharacterCaretakerServer.HasPlayerAdminLevel(sourcePlayer, 10))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nedostatecne opravneni");
+          return;
+        }
+
+        if (args == null || args.Count != 3)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Natplatne pocet parametru");
+          return;
+        }
+
+        var player = Players.Where(p => p.Handle == args[0].ToString()).FirstOrDefault();
+        if (player == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nepodarilo se najit hrace");
+          return;
+        }
+
+        int charId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(player);
+        if (charId <= 0)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Hrac neni lognuty");
+          return;
+        }
+        var item_id = Convert.ToInt32(args[1]);
+        var count = Convert.ToInt32(args[2]);
+
+        using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+        {
+          string result = await RemoveItem($"char_{charId}", item_id, count);
+          if (result == null)
+            sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Item vymazany");
+          else
+            sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", result);
+        }
+      }), false);
+
+      RegisterCommand("resetinventory", new Action<int, List<object>, string>(async (source, args, raw) =>
+      {
+        var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+        if (sourcePlayer == null)
+          return;
+
+        if (!CharacterCaretakerServer.HasPlayerAdminLevel(sourcePlayer, 10))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nedostatecne opravneni");
+          return;
+        }
+
+        if (args == null || args.Count != 1)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Natplatne pocet parametru");
+          return;
+        }
+
+        var player = Players.Where(p => p.Handle == args[0].ToString()).FirstOrDefault();
+        if (player == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nepodarilo se najit hrace");
+          return;
+        }
+
+        int charId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(player);
+        if (charId <= 0)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Hrac neni lognuty");
+          return;
+        }
+
+        using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+        {
+          string result = await ResetInventory($"char_{charId}");
+          if (result == null)
+            sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Inventar resetovany");
           else
             sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", result);
         }
@@ -136,6 +226,23 @@ namespace OriginFrameworkServer
     #endregion
 
     #region inventory operations
+    private async Task<string> ResetInventory(string place)
+    {
+      if (string.IsNullOrEmpty(place))
+        return "Neznámý předmět nebo inventář";
+
+      var inv = await FetchInventory(place);
+
+      if (inv == null)
+        return "Nezdařilo se načtení dat inventáře";
+
+      var param = new Dictionary<string, object>();
+      param.Add("@place", place);
+      await VSql.ExecuteAsync("delete from `inventory_item` where `place` = @place", param);
+      BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      return null;
+    }
+
     private async Task<string> GiveItem(string place, int item_id, int count)
     {
       if (item_id <= 0 || string.IsNullOrEmpty(place))
@@ -187,6 +294,56 @@ namespace OriginFrameworkServer
       }
 
       //Debug.WriteLine("INVENTORY - GiveItem sql: " + sql.ToString());
+      await VSql.ExecuteAsync(sql.ToString(), null);
+      BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      return null;
+    }
+
+    private async Task<string> RemoveItem(string place, int item_id, int count)
+    {
+      if (item_id <= 0 || string.IsNullOrEmpty(place))
+        return "Neznámý předmět nebo inventář";
+
+      if (count <= 0)
+        return $"Neplatné množství: {count}";
+
+      var itemDef = ItemsDefinitions.Items[item_id];
+      if (itemDef == null)
+        return $"Neplatné id předmětu: {item_id}";
+
+      var inv = await FetchInventory(place);
+
+      if (inv == null)
+        return "Nezdařilo se načtení dat inventáře";
+
+      if (!inv.HasEnoughItems(item_id, count))
+        return "Nedostatečný počet předmětu k odstranění";
+
+      var sql = new StringBuilder();
+
+      while (count > 0)
+      {
+        InventoryItemBag foundItem = inv.GetNextItemOfType(item_id);
+
+        if (foundItem == null)
+          return "Nedostatečný počet předmětu k odstranění";
+
+        if (foundItem.Count > count)
+        {
+          foundItem.Count = foundItem.Count - count;
+          count = 0;
+
+          sql.AppendLine($" update `inventory_item` set `count` = '{foundItem.Count}' where `id` = '{foundItem.Id}'; ");
+        }
+        else
+        {
+          sql.AppendLine($" delete from `inventory_item` where `id` = '{foundItem.Id}'; ");
+
+          count -= foundItem.Count;
+          inv.Items.Remove(foundItem);
+        }
+      }
+
       await VSql.ExecuteAsync(sql.ToString(), null);
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
       return null;
@@ -253,6 +410,9 @@ namespace OriginFrameworkServer
 
       if (srcItem.Place == targetPlace && srcItem.X == target_x && srcItem.Y == target_y)
         return "Nelze přesunout sám na sebe";
+
+      if (target_x == -1 && target_y != (int)ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType)
+        return "Sem to nepatří";
 
       if (targetItem == null) //move
       {

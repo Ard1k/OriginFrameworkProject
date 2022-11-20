@@ -89,8 +89,10 @@ namespace OriginFramework
             SetDefaultSkin(GetClothesForSlot((eSpecialSlotType)i));
             if (isFemale && ItemsDefinitions.Items[it.ItemId].FemaleSkin != null)
               ApplySkin(ItemsDefinitions.Items[it.ItemId].FemaleSkin);
-            else
+            else if (!isFemale && ItemsDefinitions.Items[it.ItemId].MaleSkin != null)
               ApplySkin(ItemsDefinitions.Items[it.ItemId].MaleSkin);
+            else
+              Notify.Info("Tyhle hadry ti nepadnou");
             equippedItemsCache[i] = it.ItemId;
           }
         }

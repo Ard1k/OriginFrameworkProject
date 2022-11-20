@@ -96,6 +96,23 @@ namespace OriginFrameworkData.DataBags
 
       return false;
     }
+
+    public bool HasEnoughItems(int item_id, int count)
+    {
+      var correctItems = Items?.Where(it => it.ItemId == item_id)?.ToList();
+
+      if (correctItems == null || correctItems.Count <= 0)
+        return false;
+
+      int inventoryCount = correctItems.Sum(it => it.Count);
+
+      return count <= inventoryCount;
+    }
+
+    public InventoryItemBag GetNextItemOfType(int item_id)
+    {
+      return Items.Where(it => it.ItemId == item_id).FirstOrDefault();
+    }
   }
 
   public class InventoryItemBag
@@ -218,7 +235,7 @@ namespace OriginFrameworkData.DataBags
       _knownColors.Add("green", new InventoryColor("Zelená", 0, 255, 0));
       _knownColors.Add("blue", new InventoryColor("Modrá", 0, 0, 255));
       _knownColors.Add("white", new InventoryColor("Bílá", 255, 255, 255));
-      _knownColors.Add("black", new InventoryColor("Černá", 0, 0, 0));
+      _knownColors.Add("black", new InventoryColor("Černá", 55, 55, 55));
     }
 
     private static void InitializeItems()
@@ -238,31 +255,268 @@ namespace OriginFrameworkData.DataBags
       #region hadry
       _items[1000] = new ItemDefinition
       {
-        Name = "Kšiltovka",
-        //Code = "CLOTHING_CAP1",
+        Name = "Kužel hlupák",
         Texture = "cap1",
         SpecialSlotType = eSpecialSlotType.Head,
-        Color = KnownColors["green"],
-        MaleSkin = new Dictionary<string, int> 
-        { 
-          { "helmet_1", 10 },
-          { "helmet_2", 5 }
-        }
+        Color = KnownColors["white"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "helmet_1", 1 },
+          { "helmet_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "helmet_1", 1 },
+          { "helmet_2", 0 },
+        },
       };
       _items[1001] = new ItemDefinition
       {
-        Name = "Mikča",
-        //Code = "CLOTHING_CAP1",
-        Texture = "hoodie1",
+        Name = "Kulich",
+        Texture = "cap1",
+        SpecialSlotType = eSpecialSlotType.Head,
+        Color = KnownColors["red"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "helmet_1", 2 },
+          { "helmet_2", 7 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "helmet_1", 29 },
+          { "helmet_2", 2 },
+        },
+      };
+      _items[1002] = new ItemDefinition
+      {
+        Name = "Maska vraha",
+        Texture = "mask1",
+        SpecialSlotType = eSpecialSlotType.Mask,
+        Color = KnownColors["blue"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "mask_1", 14 },
+          { "mask_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "mask_1", 14 },
+          { "mask_2", 0 },
+        },
+      };
+      _items[1003] = new ItemDefinition
+      {
+        Name = "Maska býka",
+        Texture = "mask1",
+        SpecialSlotType = eSpecialSlotType.Mask,
+        Color = KnownColors["black"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "mask_1", 23 },
+          { "mask_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "mask_1", 23 },
+          { "mask_2", 0 },
+        },
+      };
+      _items[1004] = new ItemDefinition
+      {
+        Name = "Zelený brejle",
+        Texture = "glasses1",
+        SpecialSlotType = eSpecialSlotType.Glasses,
+        Color = KnownColors["green"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "glasses_1", 19 },
+          { "glasses_2", 3 },
+        },
+      };
+      _items[1005] = new ItemDefinition
+      {
+        Name = "Lyžařský brejle",
+        Texture = "glasses1",
+        SpecialSlotType = eSpecialSlotType.Glasses,
+        Color = KnownColors["blue"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "glasses_1", 25 },
+          { "glasses_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "glasses_1", 27 },
+          { "glasses_2", 0 },
+        },
+      };
+      _items[1006] = new ItemDefinition
+      {
+        Name = "Stříbrný řetízek",
+        Texture = "necklace1",
+        SpecialSlotType = eSpecialSlotType.Necklace,
+        Color = KnownColors["white"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "chain_1", 17 },
+          { "chain_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "chain_1", 56 },
+          { "chain_2", 1 },
+        },
+      };
+      _items[1007] = new ItemDefinition
+      {
+        Name = "Náhrdelník",
+        Texture = "necklace1",
+        SpecialSlotType = eSpecialSlotType.Necklace,
+        Color = KnownColors["white"],
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "chain_1", 7 },
+          { "chain_2", 1 },
+        },
+      };
+      _items[1008] = new ItemDefinition
+      {
+        Name = "Handsfree",
+        Texture = "earrings1",
+        SpecialSlotType = eSpecialSlotType.Earring,
+        Color = KnownColors["black"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "ears_1", 0 },
+          { "ears_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "ears_1", 0 },
+          { "ears_2", 0 },
+        },
+      };
+      _items[1009] = new ItemDefinition
+      {
+        Name = "Hodinky a náramek",
+        Texture = "watch1",
+        SpecialSlotType = eSpecialSlotType.Wrist,
+        Color = KnownColors["black"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "watches_1", 13 },
+          { "watches_2", 2 },
+          { "bracelets_1", 1 },
+          { "bracelets_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "watches_1", 10 },
+          { "watches_2", 1 },
+          { "bracelets_1", 8 },
+          { "bracelets_2", 0 },
+        },
+
+      };
+      _items[1010] = new ItemDefinition
+      {
+        Name = "Obyč triko",
+        Texture = "shirt1",
         SpecialSlotType = eSpecialSlotType.Torso,
         Color = KnownColors["red"],
         MaleSkin = new Dictionary<string, int>
         {
+          { "tshirt_1", 15 },
+          { "tshirt_2", 0 },
+          { "torso_1", 16 },
+          { "torso_2", 2 },
+          { "arms_1", 0 },
+          { "arms_2", 0 },
+          { "decals_1", 0 },
+          { "decals_2", 0 },
+          { "bproof_1", 0 },
+          { "bproof_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "tshirt_1", 14 },
+          { "tshirt_2", 0 },
+          { "torso_1", 30 },
+          { "torso_2", 2 },
+          { "arms_1", 2 },
+          { "arms_2", 0 },
+          { "decals_1", 0 },
+          { "decals_2", 0 },
+          { "bproof_1", 0 },
+          { "bproof_2", 0 },
+        },
+      };
+      _items[1011] = new ItemDefinition
+      {
+        Name = "Mikina",
+        Texture = "hoodie1",
+        SpecialSlotType = eSpecialSlotType.Torso,
+        Color = KnownColors["blue"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "tshirt_1", 15 },
+          { "tshirt_2", 0 },
           { "torso_1", 113 },
-          { "torso_2", 0 },
+          { "torso_2", 2 },
           { "arms_1", 6 },
-          { "arms_2", 0 }
-        }
+          { "arms_2", 0 },
+          { "decals_1", 0 },
+          { "decals_2", 0 },
+          { "bproof_1", 0 },
+          { "bproof_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "tshirt_1", 14 },
+          { "tshirt_2", 0 },
+          { "torso_1", 106 },
+          { "torso_2", 2 },
+          { "arms_1", 6 },
+          { "arms_2", 0 },
+          { "decals_1", 0 },
+          { "decals_2", 0 },
+          { "bproof_1", 0 },
+          { "bproof_2", 0 },
+        },
+      };
+      _items[1012] = new ItemDefinition
+      {
+        Name = "Tepláky",
+        Texture = "trousers1",
+        SpecialSlotType = eSpecialSlotType.Legs,
+        Color = KnownColors["black"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "pants_1", 55 },
+          { "pants_2", 0 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "pants_1", 58 },
+          { "pants_2", 0 },
+        },
+      };
+      _items[1013] = new ItemDefinition
+      {
+        Name = "Sneakersky",
+        Texture = "sneakers1",
+        SpecialSlotType = eSpecialSlotType.Boots,
+        Color = KnownColors["red"],
+        MaleSkin = new Dictionary<string, int>
+        {
+          { "shoes_1", 77 },
+          { "shoes_2", 20 },
+        },
+        FemaleSkin = new Dictionary<string, int>
+        {
+          { "shoes_1", 81 },
+          { "shoes_2", 20 },
+        },
       };
       #endregion
     }

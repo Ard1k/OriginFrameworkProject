@@ -69,6 +69,10 @@ namespace OriginFramework.Menus
               {
                 values[txFrom] = minMax[txFrom].Max;
               }
+              if (values[txFrom] < minMax[txFrom].Min)
+              {
+                values[txFrom] = minMax[txFrom].Min;
+              }
             }
             item.NameRight = $"←{values[c]}→";
             SkinManager.ApplySkin(values);
@@ -88,6 +92,10 @@ namespace OriginFramework.Menus
               if (values[txFrom] > minMax[txFrom].Max)
               {
                 values[txFrom] = minMax[txFrom].Max;
+              }
+              if (values[txFrom] < minMax[txFrom].Min)
+              {
+                values[txFrom] = minMax[txFrom].Min;
               }
             }
             item.NameRight = $"←{values[c]}→";

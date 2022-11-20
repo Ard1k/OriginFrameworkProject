@@ -596,10 +596,18 @@ namespace OriginFramework
           _text2 += $"Barva: {itDef.Color.Label}~n~";
           linesCount++;
         }
-        _text2 += "Test1: parametr a~n~";
-        _text2 += "Test2 dlouhy: tvoje mama";
-        linesCount++;
-        linesCount++;
+
+        if (itDef.MaleSkin != null || itDef.FemaleSkin != null)
+        {
+          if (itDef.MaleSkin != null && itDef.FemaleSkin != null)
+            _text2 += "Střih: Univerzální~n~";
+          else if (itDef.MaleSkin != null)
+            _text2 += "Střih: Pánský~n~";
+          else if (itDef.FemaleSkin != null)
+            _text2 += "Střih: Dámský~n~";
+
+          linesCount++;
+        }
 
         Bounds.X1 = x;
         Bounds.Y1 = y - vertical_offset;

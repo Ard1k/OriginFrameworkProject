@@ -338,7 +338,7 @@ namespace OriginFramework
       InternalDependencyManager.Started(eScriptArea.Misc);
     }
 
-    private async void CopyStringToClipboard(string toCopy)
+    public static async void CopyStringToClipboard(string toCopy)
     {
       var message = new
       {
