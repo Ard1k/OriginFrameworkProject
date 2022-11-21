@@ -415,7 +415,7 @@ namespace OriginFramework
         SetEntityVelocity(playerEntity, 0f, 0f, 0f);
         SetEntityRotation(playerEntity, 0f, 0f, EntityYaw, 0, false);
         //SetEntityHeading(playerEntity, EntityYaw);
-        SetGameplayCamRelativeHeading(0);
+        //SetGameplayCamRelativeHeading(0);
         SetEntityCollision(playerEntity, false, false);
         SetEntityCoordsNoOffset(playerEntity, playerOffsetVector.X, playerOffsetVector.Y, playerOffsetVector.Z, true, true, true);
 

@@ -38,6 +38,7 @@ namespace OriginFramework.Menus
     public string Icon { get; set; }
 
     public bool IsBack { get; set; }
+    public bool IsClose { get; set; }
     public bool IsNavBack { get; set; }
     public bool IsUnselectable { get; set; }
     public bool IsHide { get; set; }

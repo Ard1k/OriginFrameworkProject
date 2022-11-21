@@ -186,6 +186,7 @@ namespace OriginFramework
       {
         PlaySound(-1, "SELECT", "HUD_MINI_GAME_SOUNDSET", false, 0, true);
         bool isBack = CurrentMenu.Items[CurrentMenu.SelectedIndex].IsBack == true;
+        bool isClose = CurrentMenu.Items[CurrentMenu.SelectedIndex].IsClose == true;
         bool isHide = CurrentMenu.Items[CurrentMenu.SelectedIndex].IsHide == true;
         Action<NativeMenuItem> funcOnSelected = null;
         var currentItem = CurrentMenu.Items[CurrentMenu.SelectedIndex];
@@ -246,6 +247,12 @@ namespace OriginFramework
 
         if (isHide)
           IsHidden = true;
+
+        if (isClose)
+        {
+          Close();
+          return;
+        }
 
         if (isBack)
         {

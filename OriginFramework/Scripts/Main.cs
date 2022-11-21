@@ -127,17 +127,17 @@ namespace OriginFramework
         }
       }), false);
 
-      RegisterCommand("skineditor", new Action<int, List<object>, string>(async (source, args, raw) =>
-      {
-        if (args == null || args.Count <= 0)
-          NativeMenuManager.OpenNewMenu("skin_editor", () => { return SkinEditorMenu.GenerateMenu(SkinManager.ComponentsAll, null, null); });
-        else if (args.Count == 1)
-        {
-          int slot;
-          if (Int32.TryParse((string)args[0], out slot))
-            NativeMenuManager.OpenNewMenu("skin_editor", () => { return SkinEditorMenu.GenerateMenu(SkinManager.GetClothesForSlot((eSpecialSlotType)slot), null, null); });
-        }
-      }), false);
+      //RegisterCommand("skineditor", new Action<int, List<object>, string>(async (source, args, raw) =>
+      //{
+      //  if (args == null || args.Count <= 0)
+      //    NativeMenuManager.OpenNewMenu("skin_editor", () => { return SkinEditorMenu.GenerateMenu(SkinManager.ComponentsAll, null, null); });
+      //  else if (args.Count == 1)
+      //  {
+      //    int slot;
+      //    if (Int32.TryParse((string)args[0], out slot))
+      //      NativeMenuManager.OpenNewMenu("skin_editor", () => { return SkinEditorMenu.GenerateMenu(SkinManager.GetClothesForSlot((eSpecialSlotType)slot), null, null); });
+      //  }
+      //}), false);
 
       #endregion
 

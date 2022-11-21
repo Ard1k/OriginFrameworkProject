@@ -591,7 +591,7 @@ namespace OriginFramework
 
         _text = $"~h~{itDef.Name ?? "Nepojmenovaný předmět"}~h~";
 
-        if (itDef.Color != null)
+        if (itDef?.Color?.Label != null)
         {
           _text2 += $"Barva: {itDef.Color.Label}~n~";
           linesCount++;

@@ -64,6 +64,7 @@
     <Compile Include="MainMenu\MainMenu_Default.cs" />
     <Compile Include="Menus\NativeMenu.cs" />
     <Compile Include="Scripts\CharacterCaretaker.cs" />
+    <Compile Include="Scripts\SkinEditor.cs" />
     <Compile Include="Scripts\CharacterCreator.cs" />
     <Compile Include="Scripts\SkinManager.cs" />
     <Compile Include="Scripts\ZKeyHud.cs" />

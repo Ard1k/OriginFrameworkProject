@@ -19,6 +19,7 @@ namespace OriginFramework.Menus
         Items = new List<NativeMenuItem>
           {
             new NativeMenuItem { Name = "Checkpoint positioner", NameRight = ">>>", GetSubMenu = GenerateSubMenu_Checkpoint },
+            new NativeMenuItem { Name = "Clothes editor", NameRight = ">>>", IsClose = true, OnSelected = (item) => { SkinEditor.EnterEditor(); } },
             new NativeMenuItem { Name = "Entity positioner", NameRight = ">>>", GetSubMenu = GenerateSubMenu_Entitier },
             new NativeMenuItem { Name = "Entity info", NameRight = Misc.IsEntityInfoEnabled ? "ZAP" : "VYP",
               OnSelected = (item) => {

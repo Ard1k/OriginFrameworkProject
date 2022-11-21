@@ -1,5 +1,7 @@
 ﻿using CitizenFX.Core;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,55 +25,34 @@ namespace OriginFramework.Menus
       }
     }
 
-    public static async void EnsurePedModel(string modelRequest, Dictionary<string, int> values)
+    public static NativeMenu GenerateMenu(string[] components)
     {
-      int requestedHash = GetHashKey(modelRequest);
-      if (Game.PlayerPed.Model.Hash == requestedHash)
-        return;
+      if (SkinEditor.ItemDefinition.MaleSkin == null)
+        SkinEditor.ItemDefinition.MaleSkin = new Dictionary<string, int>();
 
-      uint model = (uint)requestedHash;
+      if (SkinEditor.ItemDefinition.FemaleSkin == null)
+        SkinEditor.ItemDefinition.FemaleSkin = new Dictionary<string, int>();
 
-      RequestModel(model);
-      while (!HasModelLoaded(model))
-      {
-        RequestModel(model);
-
-        await BaseScript.Delay(0);
-      }
-
-      SetPlayerModel(Game.Player.Handle, model);
-      SetPedDefaultComponentVariation(Game.PlayerPed.Handle);
-
-      SkinManager.SetDefaultSkin(SkinManager.ClothesAll);
-      SkinManager.ApplySkin(values);
-      SetModelAsNoLongerNeeded(model);
-    }
-
-    public static NativeMenu GenerateMenu(string[] components, Dictionary<string, int> valuesMale, Dictionary<string, int> valuesFemale)
-    {
-      if (valuesMale == null)
-        valuesMale = new Dictionary<string, int>();
-
-      if (valuesFemale == null)
-        valuesFemale = new Dictionary<string, int>();
+      if (SkinEditor.ItemDefinition.Color == null)
+        SkinEditor.ItemDefinition.Color = new InventoryColor(0, 255, 255, 255);
 
       Dictionary<string, MinMaxBag> minMaxMale = new Dictionary<string, MinMaxBag>();
       Dictionary<string, MinMaxBag> minMaxFemale = new Dictionary<string, MinMaxBag>();
 
       foreach (var c in components)
       {
-        if (!valuesMale.ContainsKey(c))
-          valuesMale.Add(c, SkinManager.Components[c].DefaultValue);
+        if (!SkinEditor.ItemDefinition.MaleSkin.ContainsKey(c))
+          SkinEditor.ItemDefinition.MaleSkin.Add(c, SkinManager.Components[c].DefaultValue);
 
-        if (!valuesFemale.ContainsKey(c))
-          valuesFemale.Add(c, (SkinManager.Components[c].DefaultFemale != null) ? SkinManager.Components[c].DefaultFemale.Value : SkinManager.Components[c].DefaultValue);
+        if (!SkinEditor.ItemDefinition.FemaleSkin.ContainsKey(c))
+          SkinEditor.ItemDefinition.FemaleSkin.Add(c, (SkinManager.Components[c].DefaultFemale != null) ? SkinManager.Components[c].DefaultFemale.Value : SkinManager.Components[c].DefaultValue);
       }
 
       foreach (var c in components)
       {
         //musim si sice mimo pohlidat, ze tam hodnota parenta bude, ale kvuli poradi to projdu az kdyz mam vsechny hodnoty
-        minMaxMale.Add(c, new MinMaxBag(SkinManager.Components[c].MinValue, SkinManager.GetComponentMaxValue(c, SkinManager.Components[c].TextureOf != null ? valuesMale[SkinManager.Components[c].TextureOf] : 0)));
-        minMaxFemale.Add(c, new MinMaxBag(SkinManager.Components[c].MinValue, SkinManager.GetComponentMaxValue(c, SkinManager.Components[c].TextureOf != null ? valuesFemale[SkinManager.Components[c].TextureOf] : 0)));
+        minMaxMale.Add(c, new MinMaxBag(SkinManager.Components[c].MinValue, SkinManager.GetComponentMaxValue(c, SkinManager.Components[c].TextureOf != null ? SkinEditor.ItemDefinition.MaleSkin[SkinManager.Components[c].TextureOf] : 0)));
+        minMaxFemale.Add(c, new MinMaxBag(SkinManager.Components[c].MinValue, SkinManager.GetComponentMaxValue(c, SkinManager.Components[c].TextureOf != null ? SkinEditor.ItemDefinition.MaleSkin[SkinManager.Components[c].TextureOf] : 0)));
       }
 
       NativeMenu menu = new NativeMenu
@@ -80,65 +61,230 @@ namespace OriginFramework.Menus
         Items = new List<NativeMenuItem>()
       };
 
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Jméno itemu",
+        NameRight = SkinEditor.ItemDefinition.Name,
+        IsTextInput = true,
+        TextInputMaxLength = 40,
+        TextInputPrefill = SkinEditor.ItemDefinition.Name,
+        TextInputRequest = "Zadejte jméno itemu",
+        OnTextInput = (item, input) => { item.NameRight = input; SkinEditor.ItemDefinition.Name = input; }
+      });
+
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Textura",
+        NameRight = SkinEditor.ItemDefinition.Texture ?? ItemsDefinitions.KnownClothesIcons.First(),
+        OnLeft = (item) =>
+        {
+          int index = ItemsDefinitions.KnownClothesIcons.IndexOf(item.NameRight);
+          if (index > 0)
+          {
+            item.NameRight = ItemsDefinitions.KnownClothesIcons[index - 1];
+            SkinEditor.ItemDefinition.Texture = ItemsDefinitions.KnownClothesIcons[index - 1];
+          }
+        },
+        OnRight = (item) =>
+        {
+          int index = ItemsDefinitions.KnownClothesIcons.IndexOf(item.NameRight);
+          if (index < ItemsDefinitions.KnownClothesIcons.Count - 1)
+          {
+            item.NameRight = ItemsDefinitions.KnownClothesIcons[index + 1];
+            SkinEditor.ItemDefinition.Texture = ItemsDefinitions.KnownClothesIcons[index + 1];
+          }
+        }
+      });
+
+      menu.Items.Add(new NativeMenuItem {
+        Name = "Barva (kategorie)",
+        NameRight = SkinEditor.ItemDefinition.Color.Label,
+        OnLeft = (item) =>
+        {
+          int index = (int)SkinEditor.ItemDefinition.Color.ColorEnum;
+          if (index > 0)
+          {
+            SkinEditor.ItemDefinition.Color.ColorEnum = (eInventoryColor)(index - 1);
+            item.NameRight = SkinEditor.ItemDefinition.Color.Label;
+          }
+        },
+        OnRight = (item) =>
+        {
+          int index = (int)SkinEditor.ItemDefinition.Color.ColorEnum;
+          if (Enum.IsDefined(typeof(eInventoryColor), index + 1))
+          {
+            SkinEditor.ItemDefinition.Color.ColorEnum = (eInventoryColor)(index + 1);
+            item.NameRight = SkinEditor.ItemDefinition.Color.Label;
+          }
+        }
+      });
+
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "   Red",
+        NameRight = SkinEditor.ItemDefinition.Color.R.ToString(),
+        IsTextInput = true,
+        TextInputMaxLength = 3,
+        TextInputRequest = "Red",
+        OnTextInput = (item, input) => 
+        { 
+          int val;
+          if (Int32.TryParse(input, out val) && val >= 0 && val <= 255)
+            SkinEditor.ItemDefinition.Color.R = val;
+          else
+            SkinEditor.ItemDefinition.Color.R = 255;
+
+          item.NameRight = SkinEditor.ItemDefinition?.Color?.R.ToString();
+        },
+        OnLeft = (item) => 
+        {
+          if (SkinEditor.ItemDefinition.Color.R > 0)
+          {
+            SkinEditor.ItemDefinition.Color.R--;
+            item.NameRight = SkinEditor.ItemDefinition.Color.R.ToString();
+          }
+        },
+        OnRight = (item) =>
+        {
+          if (SkinEditor.ItemDefinition.Color.R < 255)
+          {
+            SkinEditor.ItemDefinition.Color.R++;
+            item.NameRight = SkinEditor.ItemDefinition.Color.R.ToString();
+          }
+        }
+      });
+
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "   Green",
+        NameRight = SkinEditor.ItemDefinition.Color.G.ToString(),
+        IsTextInput = true,
+        TextInputMaxLength = 3,
+        TextInputRequest = "Green",
+        OnTextInput = (item, input) =>
+        {
+          int val;
+          if (Int32.TryParse(input, out val) && val >= 0 && val <= 255)
+            SkinEditor.ItemDefinition.Color.G = val;
+          else
+            SkinEditor.ItemDefinition.Color.G = 255;
+
+          item.NameRight = SkinEditor.ItemDefinition?.Color?.G.ToString();
+        },
+        OnLeft = (item) =>
+        {
+          if (SkinEditor.ItemDefinition.Color.G > 0)
+          {
+            SkinEditor.ItemDefinition.Color.G--;
+            item.NameRight = SkinEditor.ItemDefinition.Color.G.ToString();
+          }
+        },
+        OnRight = (item) =>
+        {
+          if (SkinEditor.ItemDefinition.Color.G < 255)
+          {
+            SkinEditor.ItemDefinition.Color.G++;
+            item.NameRight = SkinEditor.ItemDefinition.Color.G.ToString();
+          }
+        }
+      });
+
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "   Blue",
+        NameRight = SkinEditor.ItemDefinition.Color.B.ToString(),
+        IsTextInput = true,
+        TextInputMaxLength = 3,
+        TextInputRequest = "Blue",
+        OnTextInput = (item, input) =>
+        {
+          int val;
+          if (Int32.TryParse(input, out val) && val >= 0 && val <= 255)
+            SkinEditor.ItemDefinition.Color.B = val;
+          else
+            SkinEditor.ItemDefinition.Color.B = 255;
+
+          item.NameRight = SkinEditor.ItemDefinition?.Color?.B.ToString();
+        },
+        OnLeft = (item) =>
+        {
+          if (SkinEditor.ItemDefinition.Color.B > 0)
+          {
+            SkinEditor.ItemDefinition.Color.B--;
+            item.NameRight = SkinEditor.ItemDefinition.Color.B.ToString();
+          }
+        },
+        OnRight = (item) =>
+        {
+          if (SkinEditor.ItemDefinition.Color.B < 255)
+          {
+            SkinEditor.ItemDefinition.Color.B++;
+            item.NameRight = SkinEditor.ItemDefinition.Color.B.ToString();
+          }
+        }
+      });
+
+      menu.Items.Add(new NativeMenuItem { IsUnselectable = true });
+
       foreach (var c in components)
       {
         menu.Items.Add(new NativeMenuItem {
           Name = SkinManager.Components[c].Label,
-          NameRight = $"←{valuesMale[c]}→",
+          NameRight = $"←{SkinEditor.ItemDefinition.MaleSkin[c]}→",
           OnLeft = (item) =>
           {
-            if (valuesMale[c] <= minMaxMale[c].Min)
+            if (SkinEditor.ItemDefinition.MaleSkin[c] <= minMaxMale[c].Min)
               return;
 
-            valuesMale[c]--;
+            SkinEditor.ItemDefinition.MaleSkin[c]--;
 
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMaxMale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, valuesMale[c]);
+              minMaxMale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, SkinEditor.ItemDefinition.MaleSkin[c]);
 
-              if (valuesMale[txFrom] > minMaxMale[txFrom].Max)
+              if (SkinEditor.ItemDefinition.MaleSkin[txFrom] > minMaxMale[txFrom].Max)
               {
-                valuesMale[txFrom] = minMaxMale[txFrom].Max;
+                SkinEditor.ItemDefinition.MaleSkin[txFrom] = minMaxMale[txFrom].Max;
               }
-              if (valuesMale[txFrom] < minMaxMale[txFrom].Min)
+              if (SkinEditor.ItemDefinition.MaleSkin[txFrom] < minMaxMale[txFrom].Min)
               {
-                valuesMale[txFrom] = minMaxMale[txFrom].Min;
+                SkinEditor.ItemDefinition.MaleSkin[txFrom] = minMaxMale[txFrom].Min;
               }
             }
-            item.NameRight = $"←{valuesMale[c]}→";
-            SkinManager.ApplySkin(valuesMale);
+            item.NameRight = $"←{SkinEditor.ItemDefinition.MaleSkin[c]}→";
+            SkinManager.ApplySkin(SkinEditor.ItemDefinition.MaleSkin);
           },
           OnRight = (item) =>
           {
-            if (valuesMale[c] >= minMaxMale[c].Max)
+            if (SkinEditor.ItemDefinition.MaleSkin[c] >= minMaxMale[c].Max)
               return;
 
-            valuesMale[c]++;
+            SkinEditor.ItemDefinition.MaleSkin[c]++;
 
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMaxMale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, valuesMale[c]);
+              minMaxMale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, SkinEditor.ItemDefinition.MaleSkin[c]);
 
-              if (valuesMale[txFrom] > minMaxMale[txFrom].Max)
+              if (SkinEditor.ItemDefinition.MaleSkin[txFrom] > minMaxMale[txFrom].Max)
               {
-                valuesMale[txFrom] = minMaxMale[txFrom].Max;
+                SkinEditor.ItemDefinition.MaleSkin[txFrom] = minMaxMale[txFrom].Max;
               }
-              if (valuesMale[txFrom] < minMaxMale[txFrom].Min)
+              if (SkinEditor.ItemDefinition.MaleSkin[txFrom] < minMaxMale[txFrom].Min)
               {
-                valuesMale[txFrom] = minMaxMale[txFrom].Min;
+                SkinEditor.ItemDefinition.MaleSkin[txFrom] = minMaxMale[txFrom].Min;
               }
             }
-            item.NameRight = $"←{valuesMale[c]}→";
-            SkinManager.ApplySkin(valuesMale);
+            item.NameRight = $"←{SkinEditor.ItemDefinition.MaleSkin[c]}→";
+            SkinManager.ApplySkin(SkinEditor.ItemDefinition.MaleSkin);
           },
           OnRefresh = (item) =>
           {
             if (SkinManager.Components[c].TextureOf != null)
-              item.NameRight = $"←{valuesMale[c]}→";
+              item.NameRight = $"←{SkinEditor.ItemDefinition.MaleSkin[c]}→";
           },
-          OnHover = () => { EnsurePedModel("mp_m_freemode_01", valuesMale); },
+          OnHover = () => { SkinEditor.CurrentPedModel = "mp_m_freemode_01"; },
         });
       }
 
@@ -149,61 +295,61 @@ namespace OriginFramework.Menus
         menu.Items.Add(new NativeMenuItem
         {
           Name = SkinManager.Components[c].Label,
-          NameRight = $"←{valuesFemale[c]}→",
+          NameRight = $"←{SkinEditor.ItemDefinition.FemaleSkin[c]}→",
           OnLeft = (item) =>
           {
-            if (valuesFemale[c] <= minMaxFemale[c].Min)
+            if (SkinEditor.ItemDefinition.FemaleSkin[c] <= minMaxFemale[c].Min)
               return;
 
-            valuesFemale[c]--;
+            SkinEditor.ItemDefinition.FemaleSkin[c]--;
 
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMaxFemale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, valuesFemale[c]);
+              minMaxFemale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, SkinEditor.ItemDefinition.FemaleSkin[c]);
 
-              if (valuesFemale[txFrom] > minMaxFemale[txFrom].Max)
+              if (SkinEditor.ItemDefinition.FemaleSkin[txFrom] > minMaxFemale[txFrom].Max)
               {
-                valuesFemale[txFrom] = minMaxFemale[txFrom].Max;
+                SkinEditor.ItemDefinition.FemaleSkin[txFrom] = minMaxFemale[txFrom].Max;
               }
-              if (valuesFemale[txFrom] < minMaxFemale[txFrom].Min)
+              if (SkinEditor.ItemDefinition.FemaleSkin[txFrom] < minMaxFemale[txFrom].Min)
               {
-                valuesFemale[txFrom] = minMaxFemale[txFrom].Min;
+                SkinEditor.ItemDefinition.FemaleSkin[txFrom] = minMaxFemale[txFrom].Min;
               }
             }
-            item.NameRight = $"←{valuesFemale[c]}→";
-            SkinManager.ApplySkin(valuesFemale);
+            item.NameRight = $"←{SkinEditor.ItemDefinition.FemaleSkin[c]}→";
+            SkinManager.ApplySkin(SkinEditor.ItemDefinition.FemaleSkin);
           },
           OnRight = (item) =>
           {
-            if (valuesFemale[c] >= minMaxFemale[c].Max)
+            if (SkinEditor.ItemDefinition.FemaleSkin[c] >= minMaxFemale[c].Max)
               return;
 
-            valuesFemale[c]++;
+            SkinEditor.ItemDefinition.FemaleSkin[c]++;
 
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMaxFemale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, valuesFemale[c]);
+              minMaxFemale[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, SkinEditor.ItemDefinition.FemaleSkin[c]);
 
-              if (valuesFemale[txFrom] > minMaxFemale[txFrom].Max)
+              if (SkinEditor.ItemDefinition.FemaleSkin[txFrom] > minMaxFemale[txFrom].Max)
               {
-                valuesFemale[txFrom] = minMaxFemale[txFrom].Max;
+                SkinEditor.ItemDefinition.FemaleSkin[txFrom] = minMaxFemale[txFrom].Max;
               }
-              if (valuesFemale[txFrom] < minMaxFemale[txFrom].Min)
+              if (SkinEditor.ItemDefinition.FemaleSkin[txFrom] < minMaxFemale[txFrom].Min)
               {
-                valuesFemale[txFrom] = minMaxFemale[txFrom].Min;
+                SkinEditor.ItemDefinition.FemaleSkin[txFrom] = minMaxFemale[txFrom].Min;
               }
             }
-            item.NameRight = $"←{valuesFemale[c]}→";
-            SkinManager.ApplySkin(valuesFemale);
+            item.NameRight = $"←{SkinEditor.ItemDefinition.FemaleSkin[c]}→";
+            SkinManager.ApplySkin(SkinEditor.ItemDefinition.FemaleSkin);
           },
           OnRefresh = (item) =>
           {
             if (SkinManager.Components[c].TextureOf != null)
-              item.NameRight = $"←{valuesFemale[c]}→";
+              item.NameRight = $"←{SkinEditor.ItemDefinition.FemaleSkin[c]}→";
           },
-          OnHover = () => { EnsurePedModel("mp_f_freemode_01", valuesFemale); },
+          OnHover = () => { SkinEditor.CurrentPedModel = "mp_f_freemode_01"; },
         });
       }
 
@@ -213,19 +359,17 @@ namespace OriginFramework.Menus
         Name = "Kopírovat do schránky",
         OnSelected = (item) =>
         {
-          var sb = new StringBuilder();
-          sb.AppendLine("MaleSkin = new Dictionary<string, int>\r\n        {");
-          foreach (var v in valuesMale)
-            sb.AppendLine($"          {{ \"{v.Key}\", {v.Value} }},");
-          sb.AppendLine("        },");
-
-          sb.AppendLine("FemaleSkin = new Dictionary<string, int>\r\n        {");
-          foreach (var v in valuesFemale)
-            sb.AppendLine($"          {{ \"{v.Key}\", {v.Value} }},");
-          sb.AppendLine("        },");
-
-          Misc.CopyStringToClipboard(sb.ToString());
+          Misc.CopyStringToClipboard(JsonConvert.SerializeObject(SkinEditor.ItemDefinition));
         }
+      });
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Zpět",
+        OnSelected = (item) =>
+        {
+          SkinEditor.EnterEditor();
+        },
+        IsClose = true,
       });
 
       return menu;

@@ -150,6 +150,7 @@ namespace OriginFrameworkData.DataBags
 
   public class ItemDefinition
   {
+    public int ItemId { get; set; }
     public string Name { get; set; }
     //public string Code { get; set; }
     public string Texture { get; set; }
@@ -160,18 +161,57 @@ namespace OriginFrameworkData.DataBags
     public eSpecialSlotType? SpecialSlotType { get; set; }
     public Dictionary<string, int> MaleSkin { get; set; }
     public Dictionary<string, int> FemaleSkin { get; set; }
+
+    public ItemDefinition GetInstanceCopy()
+    {
+      return new ItemDefinition
+      {
+        ItemId = this.ItemId,
+        Name = this.Name,
+        Texture = this.Texture,
+        Color = this.Color,
+        StackSize = this.StackSize,
+        SpecialSlotType = this.SpecialSlotType,
+        MaleSkin = this.MaleSkin,
+        FemaleSkin = this.FemaleSkin,
+      };
+    }
+  }
+
+  public enum eInventoryColor : int
+  {
+    None = 0,
+    Bílá = 1,
+    Červená = 2,
+    Zelená = 3,
+    Modrá = 4,
+    Oranžová = 5,
+    Žlutá = 6,
+    Fialová = 7,
+    Černá = 8,
+    Růžová = 9,
   }
 
   public class InventoryColor
   {
-    public string Label { get; set; }
+    [JsonIgnore]
+    public string Label 
+    { 
+      get 
+      {
+        if (ColorEnum == 0)
+          return null;
+        return ColorEnum.ToString();
+      } 
+    }
+    public eInventoryColor ColorEnum { get; set; }
     public int R { get; set; }
     public int G { get; set; }
     public int B { get; set; }
 
-    public InventoryColor(string label, int r, int g, int b)
+    public InventoryColor(eInventoryColor color, int r, int g, int b)
     {
-      Label = label;
+      ColorEnum = color;
       R = r;
       G = g;
       B = b;
@@ -228,14 +268,47 @@ namespace OriginFrameworkData.DataBags
       }
     }
 
+    public static List<string> KnownClothesIcons { get; set; } = new List<string> 
+    {
+      //headky
+      "cap1",
+
+      //masky
+      "mask1",
+
+      //bryle
+      "glasses1",
+
+      //necklace
+      "necklace1",
+
+      //earring
+      "earrings1",
+
+      //wrist
+      "watch1",
+
+      //torso
+      "hoodie1",
+      "shirt1",
+
+      //legs
+      "shorts1",
+      "trousers1",
+
+      //Boots
+      "sneakers1",
+      "boots1"
+    };
+
     private static void InitializeColors()
     {
       _knownColors = new Dictionary<string, InventoryColor>();
-      _knownColors.Add("red", new InventoryColor("Červená", 255, 0, 0));
-      _knownColors.Add("green", new InventoryColor("Zelená", 0, 255, 0));
-      _knownColors.Add("blue", new InventoryColor("Modrá", 0, 0, 255));
-      _knownColors.Add("white", new InventoryColor("Bílá", 255, 255, 255));
-      _knownColors.Add("black", new InventoryColor("Černá", 55, 55, 55));
+      _knownColors.Add("red", new InventoryColor(eInventoryColor.Červená, 255, 0, 0));
+      _knownColors.Add("green", new InventoryColor(eInventoryColor.Zelená, 0, 255, 0));
+      _knownColors.Add("blue", new InventoryColor(eInventoryColor.Modrá, 0, 0, 255));
+      _knownColors.Add("white", new InventoryColor(eInventoryColor.Bílá, 255, 255, 255));
+      _knownColors.Add("black", new InventoryColor(eInventoryColor.Černá, 55, 55, 55));
     }
 
     private static void InitializeItems()
@@ -245,6 +318,7 @@ namespace OriginFrameworkData.DataBags
       #region itemy
       _items[1] = new ItemDefinition
       {
+        ItemId = 1,
         Name = "Autodíly",
         //Code = "ITEM_COMPONENT",
         Texture = "item_component",
@@ -255,6 +329,7 @@ namespace OriginFrameworkData.DataBags
       #region hadry
       _items[1000] = new ItemDefinition
       {
+        ItemId = 1000,
         Name = "Kužel hlupák",
         Texture = "cap1",
         SpecialSlotType = eSpecialSlotType.Head,
@@ -272,6 +347,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1001] = new ItemDefinition
       {
+        ItemId = 1001,
         Name = "Kulich",
         Texture = "cap1",
         SpecialSlotType = eSpecialSlotType.Head,
@@ -289,6 +365,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1002] = new ItemDefinition
       {
+        ItemId = 1002,
         Name = "Maska vraha",
         Texture = "mask1",
         SpecialSlotType = eSpecialSlotType.Mask,
@@ -306,6 +383,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1003] = new ItemDefinition
       {
+        ItemId = 1003,
         Name = "Maska býka",
         Texture = "mask1",
         SpecialSlotType = eSpecialSlotType.Mask,
@@ -323,6 +401,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1004] = new ItemDefinition
       {
+        ItemId = 1004,
         Name = "Zelený brejle",
         Texture = "glasses1",
         SpecialSlotType = eSpecialSlotType.Glasses,
@@ -335,6 +414,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1005] = new ItemDefinition
       {
+        ItemId = 1005,
         Name = "Lyžařský brejle",
         Texture = "glasses1",
         SpecialSlotType = eSpecialSlotType.Glasses,
@@ -352,6 +432,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1006] = new ItemDefinition
       {
+        ItemId = 1006,
         Name = "Stříbrný řetízek",
         Texture = "necklace1",
         SpecialSlotType = eSpecialSlotType.Necklace,
@@ -369,6 +450,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1007] = new ItemDefinition
       {
+        ItemId = 1007,
         Name = "Náhrdelník",
         Texture = "necklace1",
         SpecialSlotType = eSpecialSlotType.Necklace,
@@ -381,6 +463,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1008] = new ItemDefinition
       {
+        ItemId = 1008,
         Name = "Handsfree",
         Texture = "earrings1",
         SpecialSlotType = eSpecialSlotType.Earring,
@@ -398,6 +481,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1009] = new ItemDefinition
       {
+        ItemId = 1009,
         Name = "Hodinky a náramek",
         Texture = "watch1",
         SpecialSlotType = eSpecialSlotType.Wrist,
@@ -420,6 +504,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1010] = new ItemDefinition
       {
+        ItemId = 1010,
         Name = "Obyč triko",
         Texture = "shirt1",
         SpecialSlotType = eSpecialSlotType.Torso,
@@ -453,6 +538,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1011] = new ItemDefinition
       {
+        ItemId = 1011,
         Name = "Mikina",
         Texture = "hoodie1",
         SpecialSlotType = eSpecialSlotType.Torso,
@@ -486,6 +572,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1012] = new ItemDefinition
       {
+        ItemId = 1012,
         Name = "Tepláky",
         Texture = "trousers1",
         SpecialSlotType = eSpecialSlotType.Legs,
@@ -503,6 +590,7 @@ namespace OriginFrameworkData.DataBags
       };
       _items[1013] = new ItemDefinition
       {
+        ItemId = 1013,
         Name = "Sneakersky",
         Texture = "sneakers1",
         SpecialSlotType = eSpecialSlotType.Boots,
