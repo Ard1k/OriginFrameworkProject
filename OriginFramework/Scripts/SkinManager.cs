@@ -99,6 +99,11 @@ namespace OriginFramework
       }
     }
 
+    public static void ClearCache()
+    {
+      equippedItemsCache = new int[9];
+    }
+
     private static void _loadComponents()
     {
       _components = new Dictionary<string, SkinComponent>();

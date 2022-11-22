@@ -60,7 +60,7 @@ namespace OriginFrameworkServer
       var steam = p.Identifiers.ToArray().Where(l => l.StartsWith("steam:")).FirstOrDefault();
       var discord = p.Identifiers.ToArray().Where(l => l.StartsWith("discord:")).FirstOrDefault();
       var ip = p.Identifiers.ToArray().Where(l => l.StartsWith("ip:")).FirstOrDefault();
-      string primary_identifier = steam;
+      string primary_identifier = p.Name; //steam
 
       if (primary_identifier == null)
       {

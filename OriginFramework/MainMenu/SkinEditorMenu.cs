@@ -364,6 +364,30 @@ namespace OriginFramework.Menus
       });
       menu.Items.Add(new NativeMenuItem
       {
+        Name = "Uložit pouze pro ženy",
+        OnSelected = (item) =>
+        {
+          SkinEditor.SendItemToServer(false, true);
+        }
+      });
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Uložit pouze pro muže",
+        OnSelected = (item) =>
+        {
+          SkinEditor.SendItemToServer(true, false);
+        }
+      });
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Uložit pro obě pohlaví",
+        OnSelected = (item) =>
+        {
+          SkinEditor.SendItemToServer(true, true);
+        }
+      });
+      menu.Items.Add(new NativeMenuItem
+      {
         Name = "Zpět",
         OnSelected = (item) =>
         {

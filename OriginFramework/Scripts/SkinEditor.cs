@@ -189,10 +189,33 @@ namespace OriginFramework
       EnsurePedModel(0, true);
     }
 
-    public static async void SendItemToServer()
+    public static async void SendItemToServer(bool isMale, bool isFemale)
     {
-      //todo
-      var result = await Callbacks.ServerAsyncCallbackToSyncWithErrorMessage("ofw_login:CreateCharacter", JsonConvert.SerializeObject(ItemDefinition));
+      if (ItemDefinition.Texture == null)
+      {
+        Notify.Error("Item nemá texturu");
+        return;
+      }
+      if (string.IsNullOrEmpty(ItemDefinition.Name))
+      {
+        Notify.Error("Item nemá jméno");
+        return;
+      }
+      if (ItemDefinition.StackSize <= 0)
+        ItemDefinition.StackSize = 1;
+      if (ItemDefinition.SpecialSlotType == null)
+      {
+        Notify.Error("Item nemá typ slotu!");
+        return;
+      }
+
+      var defCopy = ItemDefinition.GetInstanceCopy();
+      if (!isMale)
+        defCopy.MaleSkin = null;
+      if (!isFemale)
+        defCopy.FemaleSkin = null;
+
+      TriggerServerEvent("ofw_core:UpdateDynamicItemDefinitions", JsonConvert.SerializeObject(defCopy));
     }
 
     public static async void ExitEditor()
@@ -203,6 +226,9 @@ namespace OriginFramework
       IsInSkinEditor = false;
       if (CharacterCaretaker.LoggedCharacter?.Model != 0)
         EnsurePedModel(CharacterCaretaker.LoggedCharacter.Model, true);
+
+      SkinManager.ClearCache();
+      TriggerServerEvent("ofw_inventory:ReloadInventory", null);
     }
   }
 }

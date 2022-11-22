@@ -204,6 +204,7 @@ namespace OriginFramework
         var xoff = 0.0f;
         var zoff = 0.0f;
         var rotoff = 0.0f;
+        var camYaw = 0.0f;
 
         if (Game.CurrentInputMode == InputMode.MouseAndKeyboard && UpdateOnscreenKeyboard() != 0 && !Game.IsPaused && !NativeMenuManager.IsMenuOpen(null))
         {
@@ -344,10 +345,12 @@ namespace OriginFramework
           if (Game.IsDisabledControlJustPressed(0, Control.VehicleFlyRollLeftOnly)) //NUM4
           {
             EntityYaw += 15f;
+            camYaw = 15f;
           }
           if (Game.IsDisabledControlJustPressed(0, Control.VehicleFlyRollRightOnly)) //NUM6
           {
             EntityYaw -= 15f;
+            camYaw = -15f;
           }
           if (Game.IsDisabledControlJustPressed(0, Control.VehicleFlyPitchUpOnly)) //NUM8
           {
@@ -415,7 +418,9 @@ namespace OriginFramework
         SetEntityVelocity(playerEntity, 0f, 0f, 0f);
         SetEntityRotation(playerEntity, 0f, 0f, EntityYaw, 0, false);
         //SetEntityHeading(playerEntity, EntityYaw);
-        //SetGameplayCamRelativeHeading(0);
+        
+        if (camYaw != 0.0f)
+          SetGameplayCamRelativeHeading(GetGameplayCamRelativeHeading() + camYaw);
         SetEntityCollision(playerEntity, false, false);
         SetEntityCoordsNoOffset(playerEntity, playerOffsetVector.X, playerOffsetVector.Y, playerOffsetVector.Z, true, true, true);
 

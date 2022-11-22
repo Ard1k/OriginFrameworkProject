@@ -9,6 +9,7 @@ using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;
 using System.Text.RegularExpressions;
 using OriginFramework.Scripts;
+using Newtonsoft.Json;
 
 namespace OriginFramework
 {
@@ -141,6 +142,19 @@ namespace OriginFramework
 
       #endregion
 
+      var dynamicItemsDefString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_core:GetDynamicItemDefinitions");
+      if (dynamicItemsDefString != null)
+      {
+        var dynItDefs = JsonConvert.DeserializeObject<Dictionary<int, ItemDefinition>>(dynamicItemsDefString);
+        if (dynItDefs != null)
+        {
+          foreach (var row in dynItDefs)
+          {
+            ItemsDefinitions.Items[row.Key] = row.Value;
+          }
+        }
+      }
+
       Tick += OnTick;
 
       InternalDependencyManager.Started(eScriptArea.Main);
@@ -158,6 +172,20 @@ namespace OriginFramework
     private async void ValidationErrorNotification(string message)
     {
       Notify.Error(message);
+    }
+
+    [EventHandler("ofw_core:DynamicItemDefinitionUpdated")]
+    private async void GetDynamicItemDefinitions(string data)
+    {
+      if (data == null)
+        return;
+
+      var it = JsonConvert.DeserializeObject<ItemDefinition>(data);
+
+      if (it != null)
+      {
+        ItemsDefinitions.Items[it.ItemId] = it;
+      }
     }
 
     private async void SuccessNotification(string message)

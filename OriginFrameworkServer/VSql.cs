@@ -75,6 +75,7 @@ namespace OriginFrameworkServer
                                 " PRIMARY KEY (`id`), " +
                                 " INDEX (`place`) " +
                                 " );", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `item_definition` (`id` int NOT NULL, `data` LONGTEXT NOT NULL, PRIMARY KEY (`id`));", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }
