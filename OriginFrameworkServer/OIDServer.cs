@@ -43,9 +43,8 @@ namespace OriginFrameworkServer
       }
 
       var playerOID = GetOriginServerID(source);
-      var isAdmin = IsPlayerAceAllowed(source.Handle, "command");
 
-      _ = callback(playerOID.OID, isAdmin);
+      _ = callback(playerOID.OID);
     }
 
     public static OIDBag GetOriginServerID(Player p)

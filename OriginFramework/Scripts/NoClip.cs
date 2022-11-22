@@ -21,7 +21,8 @@ namespace OriginFramework.Scripts
         {
             "Šnek",
             "Normální",
-            "Turbo",
+            "Rychlý",
+            "Turbo"
         };
 
     public NoClip()
@@ -35,14 +36,6 @@ namespace OriginFramework.Scripts
 
       if (!await InternalDependencyManager.CanStart(eScriptArea.NoClip))
         return;
-
-      #region register commands
-      RegisterCommand("noclip", new Action<int, List<object>, string>((source, args, raw) =>
-      {
-        if (Main.IsAdmin)
-          NoclipActive = !NoclipActive;
-      }), false);
-      #endregion
 
       Tick += NoClipHandler;
 

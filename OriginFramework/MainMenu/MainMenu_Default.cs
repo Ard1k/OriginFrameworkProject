@@ -20,7 +20,7 @@ namespace OriginFramework.Menus
           }
       };
 
-      if (Main.IsAdmin)
+      if (CharacterCaretaker.LoggedCharacter?.AdminLevel > 0)
       {
         menu.Items.Insert(0, new NativeMenuItem
         {

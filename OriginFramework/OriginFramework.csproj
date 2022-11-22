@@ -112,6 +112,9 @@
     <None Include="stream\fs.gfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="stream\inventory_textures.ytd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="stream\menu_textures.ytd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

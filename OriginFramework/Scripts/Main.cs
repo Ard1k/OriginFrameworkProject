@@ -28,7 +28,7 @@ namespace OriginFramework
       }
     }
 
-    public static PlayerList LocalPlayers { get; protected set; }
+    public static PlayerList LocalPlayers { get; protected set; } //tohle funguje ale je to celkem sketchy. Jakmile se zmeni reference tak papa :D
     public static int MyOriginId { get; set; } = -1;
     public static bool IsAdmin { get; set; } = false;
 
@@ -37,8 +37,6 @@ namespace OriginFramework
       LocalPlayers = Players;
 
       EventHandlers["onClientResourceStart"] += new Action<string>(OnClientResourceStart);
-      EventHandlers["ofw:ValidationErrorNotification"] += new Action<string>(ValidationErrorNotification);
-      EventHandlers["ofw:SuccessNotification"] += new Action<string>(SuccessNotification);
     }
 
     private async void OnClientResourceStart(string resourceName)
@@ -49,75 +47,14 @@ namespace OriginFramework
         return;
 
       Debug.WriteLine($"Waiting for oid...");
-      int oid = -1;
-      bool isAdmin = false;
-      bool oid_returned = false;
-
-      Func<int, bool, bool> OIDCallback = (soid, sisadmin) =>
-      {
-        oid = soid;
-        isAdmin = sisadmin;
-        oid_returned = true;
-        return true;
-      };
-
-      TriggerServerEvent("ofw_oid:GetMyOriginID", OIDCallback);
-
-      while (!oid_returned)
-      {
-        await Delay(0);
-      }
-
-      MyOriginId = oid;
-      IsAdmin = isAdmin;
-      Debug.WriteLine($"OID retrieved: {oid}");
+      MyOriginId = await Callbacks.ServerAsyncCallbackToSync<int>("ofw_oid:GetMyOriginID");
+      Debug.WriteLine($"OID retrieved: {MyOriginId}");
 
       #region register commands
-      //RegisterCommand("testik", new Action<int, List<object>, string>((source, args, raw) =>
-      //{
-      //  BaseScript.TriggerEvent("chat:addMessage", new
-      //  {
-      //    color = new[] { 255, 0, 0 },
-      //    args = new[] { "[CarSpawner]", $"I wish I could spawn this {(args.Count > 0 ? $"{args[0]} or" : "")} adder but my owner was too lazy. :(" + CitizenFX.Core.Native.API.GetCurrentResourceName() }
-      //  });
-
-      //}), false);
-
-      //RegisterCommand("mcar", new Action<int, List<object>, string>((source, args, raw) =>
-      //{
-      //  var ped = Game.PlayerPed;
-      //  Debug.WriteLine("S: " + source + "P: " + ped?.Heading);
-      //  RequestModel((uint)GetHashKey(args[0].ToString()));
-      //  CreateVehicle((uint)GetHashKey(args[0].ToString()), ped.Position.X, ped.Position.Y, ped.Position.Z, ped.Heading, true, true);
-
-      //  BaseScript.TriggerEvent("chat:addMessage", new
-      //  {
-      //    color = new[] { 255, 0, 0 },
-      //    args = new[] { "[CarSpawner]", $"wtf" }
-      //  });
-      //}), false);
-
-      //RegisterCommand("testdynmenu", new Action<int, List<object>, string>((source, args, raw) =>
-      //{
-      //  var mDefSub = new DynamicMenuDefinition
-      //  {
-      //    Name = "TestSub",
-      //    Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "TestSub1" }, new DynamicMenuItem { TextLeft = "TestSub2" }, new DynamicMenuItem { TextLeft = "TestSub3" } }
-      //  };
-
-      //  var mDef = new DynamicMenuDefinition
-      //  {
-      //    Name = "Testmain",
-      //    Items = new List<DynamicMenuItem> { new DynamicMenuItem { TextLeft = "Test1" }, new DynamicMenuItem { TextLeft = "Test2" }, new DynamicMenuItem { TextLeft = "TestSub", Submenu = mDefSub }, new DynamicMenuItem { TextLeft = "Test3" } }
-      //  };
-
-      //  var menu = new DynamicMenu(mDef);
-      //  menu.Menu.OpenMenu();
-
-      //}), false);
 
       RegisterCommand("skin", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
+        //TODO - opravneni, chcem to vubec?
         if (args == null || args.Count <= 0)
           NativeMenuManager.OpenNewMenu("skin_menu", () => { return SkinMenu.GenerateMenu(SkinManager.ComponentsAll, null); });
         else if (args.Count == 1)
@@ -127,18 +64,6 @@ namespace OriginFramework
             NativeMenuManager.OpenNewMenu("skin_menu", () => { return SkinMenu.GenerateMenu(SkinManager.GetClothesForSlot((eSpecialSlotType)slot), null); });
         }
       }), false);
-
-      //RegisterCommand("skineditor", new Action<int, List<object>, string>(async (source, args, raw) =>
-      //{
-      //  if (args == null || args.Count <= 0)
-      //    NativeMenuManager.OpenNewMenu("skin_editor", () => { return SkinEditorMenu.GenerateMenu(SkinManager.ComponentsAll, null, null); });
-      //  else if (args.Count == 1)
-      //  {
-      //    int slot;
-      //    if (Int32.TryParse((string)args[0], out slot))
-      //      NativeMenuManager.OpenNewMenu("skin_editor", () => { return SkinEditorMenu.GenerateMenu(SkinManager.GetClothesForSlot((eSpecialSlotType)slot), null, null); });
-      //  }
-      //}), false);
 
       #endregion
 
@@ -166,12 +91,10 @@ namespace OriginFramework
         NativeMenuManager.ToggleMenu("MainMenu", MainMenu_Default.GenerateMenu);
 
       if (IsControlJustPressed(0, 57)) //F10
-        NoClip.SetNoclipSwitch();
-    }
-
-    private async void ValidationErrorNotification(string message)
-    {
-      Notify.Error(message);
+      {
+        if (CharacterCaretaker.LoggedCharacter.AdminLevel > 0)
+          NoClip.SetNoclipSwitch();
+      }
     }
 
     [EventHandler("ofw_core:DynamicItemDefinitionUpdated")]
@@ -188,6 +111,13 @@ namespace OriginFramework
       }
     }
 
+    [EventHandler("ofw:ValidationErrorNotification")]
+    private async void ValidationErrorNotification(string message)
+    {
+      Notify.Error(message);
+    }
+
+    [EventHandler("ofw:SuccessNotification")]
     private async void SuccessNotification(string message)
     {
       Notify.Success(message);
