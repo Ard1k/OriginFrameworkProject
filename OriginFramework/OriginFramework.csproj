@@ -56,6 +56,7 @@
     <Compile Include="Helpers\InternalDependencyManager.cs" />
     <Compile Include="Helpers\JobHelpers.cs" />
     <Compile Include="MainMenu\MainMenu_Admin.cs" />
+    <Compile Include="MainMenu\Vehicle_HandlingInspector.cs" />
     <Compile Include="MainMenu\SkinEditorMenu.cs" />
     <Compile Include="MainMenu\SkinMenu.cs" />
     <Compile Include="MainMenu\MainMenu_FunTools.cs" />

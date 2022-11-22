@@ -18,6 +18,7 @@ namespace OriginFramework
     public static NativeMenu CurrentMenu { get; set; }
     public static string CurrentMenuName { get; set; }
     public static string LockedInMenuName { get; set; }
+    private static bool IsInputtingText { get; set; }
 
     private static float xOffset = 0.65f;
     private static float xLenght = 0.20f;
@@ -74,6 +75,9 @@ namespace OriginFramework
     #region private metody
     private async void UpdateSelection()
     {
+      if (IsInputtingText)
+        return;
+
       if (IsHidden)
       {
         if (block_back_timer > 0)
@@ -209,6 +213,8 @@ namespace OriginFramework
           AddTextEntry("FMMC_KEY_TIP1", string.Format("{0}{1}[max length:{2}]", FontsManager.FiraSansString, currentItem.TextInputRequest, currentItem.TextInputMaxLength));
           DisplayOnscreenKeyboard(1, "FMMC_KEY_TIP1", "", prefill, "", "", "", currentItem.TextInputMaxLength);
 
+          IsInputtingText = true;
+
           while (UpdateOnscreenKeyboard() != 1 && UpdateOnscreenKeyboard() != 2)
             await Delay(0);
 
@@ -222,6 +228,8 @@ namespace OriginFramework
           }
           else
             await Delay(0);
+
+          IsInputtingText = false;
         }
 
         if (currentItem.SubMenu != null)
@@ -243,6 +251,12 @@ namespace OriginFramework
         if (funcOnSelected != null)
         {
           funcOnSelected(currentItem);
+        }
+
+        if (currentItem.IsRefresh)
+        {
+          //je dulezity aby se to volalo az po onSelected - muzu udelat update statickych promennych a pak se na ne odkazovat
+          Refresh();
         }
 
         if (isHide)
