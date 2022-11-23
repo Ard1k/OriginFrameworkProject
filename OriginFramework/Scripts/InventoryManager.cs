@@ -23,9 +23,10 @@ namespace OriginFramework
     public bool IsWaitingInput { get; set; } = false;
     public bool IsInventoryOpen { get; private set; } = false;
     public bool IsDrawingTooltip { get { return dragData?.SrcItem == null && cursorData?.HoverItem != null; } }
-    private double invSizeOverHeight = 0.5d;
+    private double invSizeOverHeight = 0.45d;
     private double invBorderOverHeight = 0.00d;
-    private float itemCountScale = 0.4f;
+    private float itemCountScale = 0.3f;
+    private float iconDrawScale = 0.8f;
     private float itemCountYOffset { get { return itemCountScale / 28f; } }
     private int gridXCount = 5;
     private int gridYCount = 5;
@@ -80,7 +81,38 @@ namespace OriginFramework
         if (IsInventoryOpen)
         {
           IsWaiting = true;
-          TriggerServerEvent("ofw_inventory:ReloadInventory", null);
+
+          int vehFront = Vehicles.GetVehicleInFront();
+          int pedVehicle = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
+          bool isCarLocked = GetVehicleDoorsLockedForPlayer(vehFront, Game.PlayerPed.Handle);
+          bool isNearTrunk = Vehicles.IsPedCloseToTrunk(vehFront);
+
+          if (vehFront > 0 && !isCarLocked)
+          {
+            if (isNearTrunk)
+            {
+              //otevrit kufr
+              var lp = GetVehicleNumberPlateText(vehFront);
+              var vehClass = GetVehicleClass(vehFront);
+
+              TriggerServerEvent("ofw_inventory:ReloadInventory", $"trunk_{lp}_{vehClass}");
+            }
+            else
+            {
+              TriggerServerEvent("ofw_inventory:ReloadInventory", null);
+            }
+          }
+          else if (pedVehicle > 0)
+          {
+            //otevrit kaslik
+            var lp = GetVehicleNumberPlateText(vehFront);
+            TriggerServerEvent("ofw_inventory:ReloadInventory", $"glovebox_{lp}");
+          }
+          else
+          {
+            //otevrit svet
+            TriggerServerEvent("ofw_inventory:ReloadInventory", $"world_{(int)Math.Floor(Game.PlayerPed.Position.X)}_{(int)Math.Floor(Game.PlayerPed.Position.Y)}");
+          }
         }
       }
 
@@ -164,8 +196,8 @@ namespace OriginFramework
 
       if (!string.IsNullOrEmpty(rightInventory))
       {
-        var rightInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
-        LeftInv = rightInv;
+        var rightInv = JsonConvert.DeserializeObject<InventoryBag>(rightInventory);
+        RightInv = rightInv;
       }
 
       IsWaiting = false;
@@ -201,7 +233,13 @@ namespace OriginFramework
             (place2 != null && (LeftInv?.Place == place2 || RightInv?.Place == place2)))
         {
           IsWaiting = true;
-          TriggerServerEvent("ofw_inventory:ReloadInventory", null);
+          string reloadRightInv = null;
+          if (RightInv != null && place1 != null && RightInv.Place == place1)
+            reloadRightInv = RightInv.Place;
+          else if (RightInv != null && place2 != null && RightInv.Place == place2)
+            reloadRightInv = RightInv.Place;
+
+          TriggerServerEvent("ofw_inventory:ReloadInventory", reloadRightInv);
         }
       }
     }
@@ -357,7 +395,7 @@ namespace OriginFramework
           dragData.targetX = cursorData.XGrid;
           dragData.targetY = cursorData.YGrid;
 
-          if (IsShiftKeyPressed())
+          if (IsShiftKeyPressed() && cursorData?.HoverItem?.Count > 1)
           {
             dragData.SrcItem.IsWaitingActionResult = true;
             dragData.SrcItem.IsDragged = false;
@@ -424,9 +462,9 @@ namespace OriginFramework
         RequestStreamedTextureDict("inventory_textures", true);
 
       DrawRect2(backgroundBounds, IsWaiting ? 255 : 0, 0, 0, 60);
-      DrawRect2(leftInvBounds, 0, 0, 0, 120);
-      DrawRect2(rightInvBounds, 0, 0, 0, 120);
-      DrawRect2(leftInv2Bounds, 0, 0, 0, 180);
+      DrawRect2(leftInvBounds, 100, 100, 100, 180);
+      DrawRect2(rightInvBounds, 100, 100, 100, 180);
+      DrawRect2(leftInv2Bounds, 100, 100, 100, 180);
 
       TextUtils.DrawTextOnScreen("Tvůj inventář", (float)leftInvBounds.X1, (float)leftInvBounds.Y1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Left);
       TextUtils.DrawTextOnScreen(InventoryBag.GetPlaceName(RightInv?.Place), (float)rightInvBounds.X2, (float)rightInvBounds.Y1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Right);
@@ -476,7 +514,13 @@ namespace OriginFramework
 
       if (!it.IsDragged && !it.IsWaitingActionResult)
       {
-        DrawUtils.DrawSprite2("inventory_textures", ItemsDefinitions.Items[it.ItemId].Texture, bounds.X1 + x * cellWidth, bounds.Y1 + y * cellHeight, bounds.X1 + (x + 1) * cellWidth, bounds.Y1 + (y + 1) * cellHeight, 0f, ItemsDefinitions.Items[it.ItemId]?.Color?.R ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.G ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.B ?? 255, 255);
+        DrawUtils.DrawSprite2("inventory_textures", 
+          ItemsDefinitions.Items[it.ItemId].Texture, 
+          bounds.X1 + x * cellWidth + (cellWidth * ((1f - iconDrawScale) / 2)), 
+          bounds.Y1 + y * cellHeight + (cellHeight * ((1f - iconDrawScale) / 2)), 
+          bounds.X1 + (x + 1) * cellWidth - (cellWidth * ((1f - iconDrawScale) / 2)), 
+          bounds.Y1 + (y + 1) * cellHeight - (cellHeight * ((1f - iconDrawScale) / 2)), 
+          0f, ItemsDefinitions.Items[it.ItemId]?.Color?.R ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.G ?? 255, ItemsDefinitions.Items[it.ItemId]?.Color?.B ?? 255, 255);
         if (it.Count > 1)
           RenderItemCount(x, y, it, bounds);
       }

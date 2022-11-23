@@ -28,17 +28,26 @@ namespace OriginFrameworkData.DataBags
     public static int PlaceToRowCount(string place)
     {
       if (string.IsNullOrEmpty(place))
-        return -1;
+        return 0;
       if (place.StartsWith("char_"))
         return 5;
       if (place.StartsWith("world_"))
-        return 5;
+        return 4;
       if (place.StartsWith("trunk_"))
-        return 5;
+      {
+        var splits = place.Split('_');
+        int category = 0;
+        if (splits.Length < 3 || !Int32.TryParse(splits[2], out category))
+          return 0;
+        switch (category)
+        {
+          default: return 3;
+        }
+      }
       if (place.StartsWith("glovebox_"))
-        return 5;
+        return 1;
 
-      return 5;
+      return 0;
     }
 
     public static string GetPlaceName(string place)
@@ -50,7 +59,10 @@ namespace OriginFrameworkData.DataBags
       if (place.StartsWith("world_"))
         return $"Svět {place.Substring(6)}";
       if (place.StartsWith("trunk_"))
-        return $"Kufr {place.Substring(6)}";
+      {
+        var splits = place.Split('_');
+        return $"Kufr {splits[1]}";
+      }
       if (place.StartsWith("glovebox_"))
         return $"Přihrádka {place.Substring(9)}";
 

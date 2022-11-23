@@ -1,4 +1,5 @@
 ﻿using CitizenFX.Core;
+using CitizenFX.Core.Native;
 using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,32 @@ namespace OriginFramework
 {
   internal class Vehicles
   {
+    public static int GetVehicleInFront()
+    {
+      Vector3 entityWorld = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0f, 4.0f, 0.0f);
+      int rayHandle = CastRayPointToPoint(Game.PlayerPed.Position.X, Game.PlayerPed.Position.Y, Game.PlayerPed.Position.Z, entityWorld.X, entityWorld.Y, entityWorld.Z, 2, Game.PlayerPed.Handle, 0);
+      int entityHitResult = 0;
+      bool wasHit = false;
+      Vector3 endCoordsResult = new Vector3(), surfaceResult = new Vector3();
+      int result = GetRaycastResult(rayHandle, ref wasHit, ref endCoordsResult, ref surfaceResult, ref entityHitResult);
+      return entityHitResult;
+    }
+
+    public static bool IsPedCloseToTrunk(int veh)
+    {
+      var coords = GetEntityCoords(veh, false);
+      Vector3 min = new Vector3(), max = new Vector3();
+      GetModelDimensions((uint)GetEntityModel(veh), ref min, ref max);
+      float heading = GetEntityHeading(veh) - 90.0f;
+
+      var trunkPos = coords + new Vector3((float)Math.Cos((Math.PI / 180) * heading), (float)Math.Sin((Math.PI / 180) * heading), 0.0f) * Math.Abs(min.Y);
+
+      if (Vector3.Distance(Game.PlayerPed.Position, trunkPos) <= 1.2f)
+        return true;
+      else
+        return false;
+    }
+
     public static async Task<bool> IsVehicleWithPlateOutOfGarageSpawned(string plate, dynamic esx)
     {
       bool ret = false;

@@ -68,6 +68,7 @@
     <Compile Include="Scripts\SkinEditor.cs" />
     <Compile Include="Scripts\CharacterCreator.cs" />
     <Compile Include="Scripts\SkinManager.cs" />
+    <Compile Include="Scripts\VehicleHud.cs" />
     <Compile Include="Scripts\ZKeyHud.cs" />
     <Compile Include="Scripts\InventoryManager.cs" />
     <Compile Include="Scripts\Login.cs" />

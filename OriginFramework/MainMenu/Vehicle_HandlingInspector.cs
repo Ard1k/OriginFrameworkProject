@@ -68,10 +68,89 @@ namespace OriginFramework.Menus
         Items = new List<NativeMenuItem>
           {
             new NativeMenuItem { Name = "Zpět", IsBack = true },
-            new NativeMenuItem { Name = "Obnovit", IsRefresh = true, OnSelected = (item) => { Veh = GetVehiclePedIsIn(Game.PlayerPed.Handle, false); } },
+            new NativeMenuItem { Name = "Obnovit", IsRefresh = true, OnSelected = (item) => 
+            { 
+              Veh = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
+              SetVehicleWheelType(Veh, 4);
+              SetVehicleModKit(Veh, 0);
+
+              int i = 1;
+              while (GetVehicleMod(Veh, 23) == -1 && i < 50)
+              {
+                SetVehicleMod(Veh, 23, i, false);
+                //SetVehicleMod(Veh, 24, i, true);
+                i++;
+              }
+
+              TheBugger.DebugLog($"VEH: [{Veh}] {GetVehicleWheelType(Veh)} / {GetVehicleMod(Veh, 23)} / {GetVehicleMod(Veh, 24)}");
+            } },
             new NativeMenuItem { IsUnselectable = true }
           }
       };
+
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Wheel_width",
+        NameRight = Veh > 0 ? GetVehicleWheelWidth(Veh).ToString("0.0000") : "---",
+        IsTextInput = true,
+        OnTextInput = (item, input) =>
+        {
+          if (Veh < 0)
+          {
+            item.NameRight = "---";
+            return;
+          }
+          float inputFloat;
+          if (float.TryParse(input, out inputFloat))
+          {
+            SetVehicleWheelWidth(Veh, inputFloat);
+            item.NameRight = GetVehicleWheelWidth(Veh).ToString("0.0000");
+          }
+          else
+            Notify.Error("Neplatny float");
+        },
+        OnRefresh = (item) =>
+        {
+          if (Veh < 0)
+          {
+            item.NameRight = "---";
+            return;
+          }
+          item.NameRight = GetVehicleWheelWidth(Veh).ToString("0.0000");
+        }
+      });
+
+      menu.Items.Add(new NativeMenuItem
+      {
+        Name = "Wheel_size",
+        NameRight = Veh > 0 ? GetVehicleWheelSize(Veh).ToString("0.0000") : "---",
+        IsTextInput = true,
+        OnTextInput = (item, input) =>
+        {
+          if (Veh < 0)
+          {
+            item.NameRight = "---";
+            return;
+          }
+          float inputFloat;
+          if (float.TryParse(input, out inputFloat))
+          {
+            SetVehicleWheelSize(Veh, inputFloat);
+            item.NameRight = GetVehicleWheelSize(Veh).ToString("0.0000");
+          }
+          else
+            Notify.Error("Neplatny float");
+        },
+        OnRefresh = (item) =>
+        {
+          if (Veh < 0)
+          {
+            item.NameRight = "---";
+            return;
+          }
+          item.NameRight = GetVehicleWheelSize(Veh).ToString("0.0000");
+        }
+      });
 
       foreach (var h in handlingFloats)
       {
