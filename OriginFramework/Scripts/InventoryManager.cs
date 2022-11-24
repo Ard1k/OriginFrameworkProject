@@ -405,7 +405,7 @@ namespace OriginFramework
             int splitCount;
             if (Int32.TryParse(input, out splitCount))
             {
-              TriggerServerEvent("ofw_inventory:Operation_Split", dragData.SrcItem.Id, dragData.TargetInv.Place, dragData.targetX, dragData.targetY, splitCount);
+              TriggerServerEvent("ofw_inventory:Operation_Split", dragData.SrcItem.Id, dragData.SrcItem.Place , dragData.TargetInv.Place, dragData.targetX, dragData.targetY, splitCount);
             }
             else
             {
@@ -419,7 +419,7 @@ namespace OriginFramework
           }
           else
           {
-            TriggerServerEvent("ofw_inventory:Operation_MoveOrMerge", dragData.SrcItem.Id, dragData.TargetInv.Place, dragData.targetX, dragData.targetY);
+            TriggerServerEvent("ofw_inventory:Operation_MoveOrMerge", dragData.SrcItem.Id, dragData.SrcItem.Place, dragData.TargetInv.Place, dragData.targetX, dragData.targetY);
 
             dragData.SrcItem.IsWaitingActionResult = true;
             dragData.SrcItem.IsDragged = false;

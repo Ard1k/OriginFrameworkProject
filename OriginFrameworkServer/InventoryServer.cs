@@ -192,14 +192,15 @@ namespace OriginFrameworkServer
       return inv;
     }
 
-    private async Task<InventoryItemBag> FetchItem(int id)
+    private async Task<InventoryItemBag> FetchItem(int id, string place)
     {
-      if (id <= 0)
+      if (id <= 0 || place == null)
         return null;
 
       var param = new Dictionary<string, object>();
       param.Add("@id", id);
-      var result = await VSql.FetchAllAsync("select * from `inventory_item` where `id` = @id", param);
+      param.Add("@place", place);
+      var result = await VSql.FetchAllAsync("select * from `inventory_item` where `id` = @id and `place` = @place", param);
 
       if (result == null || result.Count <= 0)
         return null;
@@ -349,12 +350,12 @@ namespace OriginFrameworkServer
       return null;
     }
 
-    private async Task<string> SplitItem(int id, string targetPlace, int target_x, int target_y, int count)
+    private async Task<string> SplitItem(int id, string sourcePlace, string targetPlace, int target_x, int target_y, int count)
     {
-      if (id <= 0 || string.IsNullOrEmpty(targetPlace))
+      if (id <= 0 || string.IsNullOrEmpty(sourcePlace) || string.IsNullOrEmpty(targetPlace))
         return "Neznámý předmět nebo inventář";
 
-      var srcItem = await FetchItem(id);
+      var srcItem = await FetchItem(id, sourcePlace);
       var targetItem = await FetchItem(targetPlace, target_x, target_y);
 
       if (srcItem == null)
@@ -397,12 +398,12 @@ namespace OriginFrameworkServer
       }
     }
       
-    private async Task<string> MoveOrMergeItem(int id, string targetPlace, int target_x, int target_y)
+    private async Task<string> MoveOrMergeItem(int id, string sourcePlace, string targetPlace, int target_x, int target_y)
     {
-      if (id <= 0 || string.IsNullOrEmpty(targetPlace))
+      if (id <= 0 || string.IsNullOrEmpty(sourcePlace) || string.IsNullOrEmpty(targetPlace))
         return "Neznámý předmět nebo inventář";
 
-      var srcItem = await FetchItem(id);
+      var srcItem = await FetchItem(id, sourcePlace);
       var targetItem = await FetchItem(targetPlace, target_x, target_y);
 
       if (srcItem == null)
@@ -481,7 +482,7 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_inventory:Operation_MoveOrMerge")]
-    private async void Operation_MoveOrMerge([FromSource] Player source, int id, string target_place, int target_x, int target_y)
+    private async void Operation_MoveOrMerge([FromSource] Player source, int id, string source_place, string target_place, int target_x, int target_y)
     {
       if (source == null)
         return;
@@ -495,14 +496,14 @@ namespace OriginFrameworkServer
 
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
-        string result = await MoveOrMergeItem(id, target_place, target_x, target_y);
+        string result = await MoveOrMergeItem(id, source_place, target_place, target_x, target_y);
         if (result != null)
           source.TriggerEvent("ofw_inventory:InventoryNotUpdated", result);
       }
     }
 
     [EventHandler("ofw_inventory:Operation_Split")]
-    private async void Operation_Split([FromSource] Player source, int id, string target_place, int target_x, int target_y, int count)
+    private async void Operation_Split([FromSource] Player source, int id, string source_place, string target_place, int target_x, int target_y, int count)
     {
       if (source == null)
         return;
@@ -516,7 +517,7 @@ namespace OriginFrameworkServer
 
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
-        string result = await SplitItem(id, target_place, target_x, target_y, count);
+        string result = await SplitItem(id, source_place, target_place, target_x, target_y, count);
         if (result != null)
           source.TriggerEvent("ofw_inventory:InventoryNotUpdated", result);
       }
