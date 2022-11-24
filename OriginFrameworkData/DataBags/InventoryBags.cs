@@ -32,7 +32,7 @@ namespace OriginFrameworkData.DataBags
       if (place.StartsWith("char_"))
         return 5;
       if (place.StartsWith("world_"))
-        return 4;
+        return 10;
       if (place.StartsWith("trunk_"))
       {
         var splits = place.Split('_');

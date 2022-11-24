@@ -11,12 +11,14 @@ using OriginFrameworkData.DataBags;
 using CitizenFX.Core.Native;
 using System.Xml.Linq;
 using System.Diagnostics;
+using Debug = CitizenFX.Core.Debug;
 
 namespace OriginFrameworkServer
 {
   public class InventoryServer : BaseScript
   {
     private LockObj syncLock = new LockObj("InventoryServer");
+    private List<Vector3> groundMarkersCache = new List<Vector3>();
     public InventoryServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
@@ -25,6 +27,9 @@ namespace OriginFrameworkServer
     private async void OnResourceStart(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+
+      if (!await InternalDependencyManager.CanStart(eScriptArea.InventoryServer))
+        return;
 
       RegisterCommand("giveitem", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
@@ -155,6 +160,10 @@ namespace OriginFrameworkServer
             sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", result);
         }
       }), false);
+
+      ReloadGroundMarkers();
+
+      InternalDependencyManager.Started(eScriptArea.InventoryServer);
     }
 
     #region private
@@ -166,6 +175,31 @@ namespace OriginFrameworkServer
         return null;
 
       return $"char_{charid}";
+    }
+
+    private async void ReloadGroundMarkers()
+    {
+      var result = await VSql.FetchAllAsync("select distinct(`place`) from `inventory_item` where `place` like 'world_%'", null);
+      groundMarkersCache.Clear();
+      if (result == null || result.Count <= 0)
+        return;
+
+      foreach (var row in result)
+      {
+        var splits = ((string)row["place"]).Split('_');
+        int x, y;
+        if (splits.Length != 3 || !Int32.TryParse(splits[1], out x) || !Int32.TryParse(splits[2], out y))
+        {
+          Debug.WriteLine($" !!! Inventory ground markers cant parse {row["place"]}");
+          continue;
+        }
+        else
+        {
+          groundMarkersCache.Add(new Vector3((float)(x * 2) + 1, (float)(y * 2) + 1, 0f));
+        }
+      }
+
+      TriggerClientEvent("ofw_inventory:GroundMarkersUpdated", JsonConvert.SerializeObject(groundMarkersCache));
     }
     #endregion
 
@@ -241,6 +275,8 @@ namespace OriginFrameworkServer
       param.Add("@place", place);
       await VSql.ExecuteAsync("delete from `inventory_item` where `place` = @place", param);
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      if (place.StartsWith("world_"))
+        ReloadGroundMarkers();
       return null;
     }
 
@@ -297,6 +333,8 @@ namespace OriginFrameworkServer
       //Debug.WriteLine("INVENTORY - GiveItem sql: " + sql.ToString());
       await VSql.ExecuteAsync(sql.ToString(), null);
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      if (place.StartsWith("world_"))
+        ReloadGroundMarkers();
       return null;
     }
 
@@ -347,6 +385,8 @@ namespace OriginFrameworkServer
 
       await VSql.ExecuteAsync(sql.ToString(), null);
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      if (place.StartsWith("world_"))
+        ReloadGroundMarkers();
       return null;
     }
 
@@ -394,6 +434,9 @@ namespace OriginFrameworkServer
         await VSql.ExecuteAsync($" update `inventory_item` set `count` = '{srcItem.Count - count}' where `id` = @id_source; " +
                                 $" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`) VALUES (@place, '{srcItem.ItemId}', @target_x, @target_y, '{count}');", param);
         BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
+
+        if (sourcePlace.StartsWith("world_") || targetPlace.StartsWith("world_"))
+          ReloadGroundMarkers();
         return null;
       }
     }
@@ -424,6 +467,8 @@ namespace OriginFrameworkServer
         param.Add("@target_y", target_y);
         await VSql.ExecuteAsync($" update `inventory_item` set `x` = @target_x, `y` = @target_y, `place` = @place where `id` = @id_source; ", param);
         BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
+        if (sourcePlace.StartsWith("world_") || targetPlace.StartsWith("world_"))
+          ReloadGroundMarkers();
         return null;
       }
       else //merge
@@ -453,6 +498,8 @@ namespace OriginFrameworkServer
 
         await VSql.ExecuteAsync(sql.ToString(), null);
         BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetItem.Place);
+        if (sourcePlace.StartsWith("world_") || targetPlace.StartsWith("world_"))
+          ReloadGroundMarkers();
         return null;
       }
     }
@@ -521,6 +568,12 @@ namespace OriginFrameworkServer
         if (result != null)
           source.TriggerEvent("ofw_inventory:InventoryNotUpdated", result);
       }
+    }
+
+    [EventHandler("ofw_inventory:GroundMarkersReqUpdate")]
+    private async void GroundMarkersReqUpdate([FromSource] Player source)
+    {
+      source.TriggerEvent("ofw_inventory:GroundMarkersUpdated", JsonConvert.SerializeObject(groundMarkersCache));
     }
   }
 }

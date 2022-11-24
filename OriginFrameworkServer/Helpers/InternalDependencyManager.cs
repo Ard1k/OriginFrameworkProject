@@ -10,7 +10,7 @@ namespace OriginFrameworkServer
   internal static class InternalDependencyManager
   {
     private static List<eScriptArea> loadedScriptAreas = new List<eScriptArea>();
-    private static List<eScriptArea> essentialScripts = new List<eScriptArea>();
+    private static List<eScriptArea> essentialScripts = new List<eScriptArea>() { eScriptArea.VSql, };
     private static bool essentialsLoaded = false;
 
     public static async Task<bool> CanStart(eScriptArea script, params eScriptArea[] dependsOn)
@@ -63,5 +63,6 @@ namespace OriginFrameworkServer
     OIDServer = 6,
     PersistentVehiclesServer = 7,
     MapServer = 8,
+    InventoryServer = 9,
   }
 }

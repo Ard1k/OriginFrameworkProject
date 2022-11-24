@@ -43,11 +43,11 @@ namespace OriginFramework
     CursorData cursorData = new CursorData();
     DragAndDropData dragData = new DragAndDropData();
     InventoryTooltip tooltipData = new InventoryTooltip();
-
-    #region Mockup
     InventoryBag LeftInv = null;
     InventoryBag RightInv = null;
-    #endregion
+    List<Vector3> groundMarkers = null;
+    bool groundMarkersLocked = false;
+    float groundMarkersDistanceDraw = 10f;
 
     public InventoryManager()
     {
@@ -62,8 +62,31 @@ namespace OriginFramework
         return;
 
       Tick += OnTick;
+      Tick += DrawGroundMarkers;
+
+      TriggerServerEvent("ofw_inventory:GroundMarkersReqUpdate");
 
       InternalDependencyManager.Started(eScriptArea.InventoryManager);
+    }
+
+    private async Task DrawGroundMarkers()
+    {
+      if (groundMarkers == null || groundMarkers.Count <= 0)
+      {
+        await Delay(500);
+        return;
+      }
+
+      foreach (var m in groundMarkers)
+      {
+        if (Math.Abs(Game.PlayerPed.Position.X - m.X) < groundMarkersDistanceDraw && Math.Abs(Game.PlayerPed.Position.Y - m.Y) < groundMarkersDistanceDraw)
+        {
+          Vector3 vecNormal = new Vector3();
+          float gndZ = 0f;
+          GetGroundZCoordWithOffsets(m.X, m.Y, Game.PlayerPed.Position.Z, ref gndZ, ref vecNormal);
+          DrawMarker(43, m.X, m.Y, gndZ + 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 180.0f, 0.0f, 1.5f, 1.5f, 1.9f, 0, 140, 255, 60, false, false, 2, false, null, null, false);
+        }
+      }
     }
 
     private async Task OnTick()
@@ -111,7 +134,7 @@ namespace OriginFramework
           else
           {
             //otevrit svet
-            TriggerServerEvent("ofw_inventory:ReloadInventory", $"world_{(int)Math.Floor(Game.PlayerPed.Position.X)}_{(int)Math.Floor(Game.PlayerPed.Position.Y)}");
+            TriggerServerEvent("ofw_inventory:ReloadInventory", $"world_{(int)Math.Floor(Game.PlayerPed.Position.X/2)}_{(int)Math.Floor(Game.PlayerPed.Position.Y/2)}");
           }
         }
       }
@@ -233,15 +256,23 @@ namespace OriginFramework
             (place2 != null && (LeftInv?.Place == place2 || RightInv?.Place == place2)))
         {
           IsWaiting = true;
-          string reloadRightInv = null;
-          if (RightInv != null && place1 != null && RightInv.Place == place1)
-            reloadRightInv = RightInv.Place;
-          else if (RightInv != null && place2 != null && RightInv.Place == place2)
-            reloadRightInv = RightInv.Place;
-
-          TriggerServerEvent("ofw_inventory:ReloadInventory", reloadRightInv);
+          TriggerServerEvent("ofw_inventory:ReloadInventory", RightInv.Place ?? null);
         }
       }
+    }
+
+    [EventHandler("ofw_inventory:GroundMarkersUpdated")]
+    private void GroundMarkersUpdated(string data)
+    {
+      if (data == null)
+      {
+        groundMarkers = null;
+        return;
+      }
+
+      groundMarkersLocked = true;
+      groundMarkers = JsonConvert.DeserializeObject<List<Vector3>>(data);
+      groundMarkersLocked = false;
     }
     #endregion
 
