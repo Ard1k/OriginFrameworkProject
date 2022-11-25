@@ -19,6 +19,9 @@ namespace OriginFrameworkData.DataBags
     }
     public List<InventoryItemBag> Items { get; set; }
 
+    [JsonIgnore]
+    public int ScrollOffset { get; set; } = 0;
+
     public InventoryBag(string place)
     {
       Place = place;

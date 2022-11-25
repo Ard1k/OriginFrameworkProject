@@ -25,8 +25,9 @@ namespace OriginFramework
     public bool IsDrawingTooltip { get { return dragData?.SrcItem == null && cursorData?.HoverItem != null; } }
     private double invSizeOverHeight = 0.45d;
     private double invBorderOverHeight = 0.00d;
-    private float itemCountScale = 0.3f;
-    private float iconDrawScale = 0.8f;
+    private float itemCountScale = 0.25f;
+    private float iconDrawScale = 0.75f;
+    private float scrollbarWidthToCellWidth = 0.2f;
     private float itemCountYOffset { get { return itemCountScale / 28f; } }
     private int gridXCount = 5;
     private int gridYCount = 5;
@@ -48,6 +49,16 @@ namespace OriginFramework
     List<Vector3> groundMarkers = null;
     bool groundMarkersLocked = false;
     float groundMarkersDistanceDraw = 10f;
+
+    int rInvScrollOffset = 0;
+    int rInvScrollMaxOffset = 0;
+    float rScrollBarHeight = 1.0f;
+
+    int lInvScrollOffset = 0;
+    int lInvScrollMaxOffset = 0;
+    float lScrollBarHeight = 1.0f;
+
+    int lastScrollAction = 0;
 
     public InventoryManager()
     {
@@ -128,7 +139,7 @@ namespace OriginFramework
           else if (pedVehicle > 0)
           {
             //otevrit kaslik
-            var lp = GetVehicleNumberPlateText(vehFront);
+            var lp = GetVehicleNumberPlateText(pedVehicle);
             TriggerServerEvent("ofw_inventory:ReloadInventory", $"glovebox_{lp}");
           }
           else
@@ -157,6 +168,12 @@ namespace OriginFramework
       Game.DisableControlThisFrame(0, Control.Aim);
       Game.DisableControlThisFrame(0, Control.VehicleMouseControlOverride);
 
+      Game.DisableControlThisFrame(0, Control.WeaponWheelUpDown);
+      Game.DisableControlThisFrame(0, Control.WeaponWheelNext);
+      Game.DisableControlThisFrame(0, Control.WeaponWheelPrev);
+      Game.DisableControlThisFrame(0, Control.SelectNextWeapon);
+      Game.DisableControlThisFrame(0, Control.SelectPrevWeapon);
+
       Game.DisableControlThisFrame(0, Control.FrontendRright);
       Game.DisableControlThisFrame(0, Control.FrontendPauseAlternate);
 
@@ -180,8 +197,8 @@ namespace OriginFramework
       int cursor_x = 1, cursor_y = 1;
       GetNuiCursorPosition(ref cursor_x, ref cursor_y);
 
+      ComputeScrollOffsets();
       ComputeCursorData(cursor_x, cursor_y);
-
       HandleDragAndDrop();
 
       if (IsWaitingInput) //Cekam na input, nechci nic dal kreslit
@@ -205,7 +222,10 @@ namespace OriginFramework
     [EventHandler("ofw_inventory:InventoryLoaded")]
     private void InventoryLoaded(string leftInventory, string rightInventory)
     {
-      if (string.IsNullOrEmpty(leftInventory))
+      LeftInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
+      RightInv = JsonConvert.DeserializeObject<InventoryBag>(rightInventory);
+
+      if (LeftInv == null)
       {
         TheBugger.DebugLog("INVENTORY - InventoryUpdated: invalid inventory data");
         IsInventoryOpen = false;
@@ -213,16 +233,9 @@ namespace OriginFramework
         return;
       }
 
-      var leftInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
-      LeftInv = leftInv;
-      SkinManager.UpdateSkinFromInv(leftInv.Items);
-
-      if (!string.IsNullOrEmpty(rightInventory))
-      {
-        var rightInv = JsonConvert.DeserializeObject<InventoryBag>(rightInventory);
-        RightInv = rightInv;
-      }
-
+      SkinManager.UpdateSkinFromInv(LeftInv.Items);
+      
+      RecomputeMaxScrollOffsets();
       IsWaiting = false;
     }
 
@@ -336,7 +349,7 @@ namespace OriginFramework
       if (DrawUtils.IsInBounds(leftInvBounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(leftInvBounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
       {
         cursorData.InvData = LeftInv;
-        cursorData.HoverItem = LeftInv?.Items?.Where(it => it.X == xGrid && it.Y == yGrid).FirstOrDefault();
+        cursorData.HoverItem = LeftInv?.Items?.Where(it => it.X == xGrid && it.Y == yGrid + LeftInv.ScrollOffset).FirstOrDefault();
         cursorData.InvType = "left";
         cursorData.XGrid = xGrid;
         cursorData.YGrid = yGrid;
@@ -354,7 +367,7 @@ namespace OriginFramework
       else if (DrawUtils.IsInBounds(rightInvBounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(rightInvBounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
       {
         cursorData.InvData = RightInv;
-        cursorData.HoverItem = RightInv?.Items?.Where(it => it.X == xGrid && it.Y == yGrid).FirstOrDefault();
+        cursorData.HoverItem = RightInv?.Items?.Where(it => it.X == xGrid && it.Y == yGrid + RightInv.ScrollOffset).FirstOrDefault();
         cursorData.InvType = "right";
         cursorData.XGrid = xGrid;
         cursorData.YGrid = yGrid;
@@ -366,6 +379,84 @@ namespace OriginFramework
       cursorData.InvType = "NONE";
       cursorData.XGrid = -1;
       cursorData.YGrid = -1;
+    }
+
+    private void ComputeScrollOffsets()
+    {
+      var time = GetGameTimer();
+
+      if (lInvScrollOffset > lInvScrollMaxOffset)
+        lInvScrollOffset = lInvScrollMaxOffset;
+
+      if (rInvScrollOffset > rInvScrollMaxOffset)
+        rInvScrollOffset = rInvScrollMaxOffset;
+
+      if (lastScrollAction - GetGameTimer() <= -100)
+      {
+        if (Game.IsDisabledControlJustPressed(0, Control.SelectNextWeapon))
+        {
+          if (cursorData.InvType == "left" && lInvScrollOffset < lInvScrollMaxOffset)
+          {
+            lInvScrollOffset++;
+            lastScrollAction = time;
+          }
+          else if (cursorData.InvType == "right" && rInvScrollOffset < rInvScrollMaxOffset)
+          {
+            rInvScrollOffset++;
+            lastScrollAction = time;
+          }
+        }
+        else if (Game.IsDisabledControlJustPressed(0, Control.SelectPrevWeapon))
+        {
+          if (cursorData.InvType == "left" && lInvScrollOffset > 0)
+          {
+            lInvScrollOffset--;
+            lastScrollAction = time;
+          }
+          else if (cursorData.InvType == "right" && rInvScrollOffset > 0)
+          {
+            rInvScrollOffset--;
+            lastScrollAction = time;
+          }
+        }
+      }
+
+      if (LeftInv != null)
+        LeftInv.ScrollOffset = lInvScrollOffset;
+      if (RightInv != null)
+        RightInv.ScrollOffset = rInvScrollOffset;
+    }
+
+    private void RecomputeMaxScrollOffsets()
+    {
+      lScrollBarHeight = 1f;
+      rScrollBarHeight = 1f;
+
+      if (LeftInv != null)
+      {
+        lInvScrollMaxOffset = LeftInv.RowCount - 5;
+        int maxY_LItem = LeftInv.Items?.Where(it => it.X >= 0).OrderByDescending(it => it.Y).FirstOrDefault()?.Y ?? -1;
+        if (lInvScrollMaxOffset < maxY_LItem - 5)
+          lInvScrollMaxOffset = maxY_LItem;
+        if (lInvScrollMaxOffset < 0)
+          lInvScrollMaxOffset = 0;
+
+        if (lInvScrollMaxOffset > 0)
+          lScrollBarHeight = 5f / (float)(5f + lInvScrollMaxOffset);
+      }
+
+      if (RightInv != null)
+      {
+        rInvScrollMaxOffset = RightInv.RowCount - 5;
+        int maxY_RItem = RightInv.Items?.Where(it => it.X >= 0).OrderByDescending(it => it.Y).FirstOrDefault()?.Y ?? -1;
+        if (rInvScrollMaxOffset < maxY_RItem - 5)
+          rInvScrollMaxOffset = maxY_RItem;
+        if (rInvScrollMaxOffset < 0)
+          rInvScrollMaxOffset = 0;
+
+        if (rInvScrollMaxOffset > 0)
+          rScrollBarHeight = 5f / (float)(5f + rInvScrollMaxOffset);
+      }
     }
 
     private bool IsShiftKeyPressed()
@@ -424,9 +515,9 @@ namespace OriginFramework
         {
           dragData.TargetInv = cursorData.InvData;
           dragData.targetX = cursorData.XGrid;
-          dragData.targetY = cursorData.YGrid;
+          dragData.targetY = cursorData.YGrid + (cursorData.XGrid >= 0 ? cursorData.InvData.ScrollOffset : 0);
 
-          if (IsShiftKeyPressed() && cursorData?.HoverItem?.Count > 1)
+          if (IsShiftKeyPressed() && dragData.SrcItem.Count > 1)
           {
             dragData.SrcItem.IsWaitingActionResult = true;
             dragData.SrcItem.IsDragged = false;
@@ -497,16 +588,30 @@ namespace OriginFramework
       DrawRect2(rightInvBounds, 100, 100, 100, 180);
       DrawRect2(leftInv2Bounds, 100, 100, 100, 180);
 
+      //left scrollbar
+      DrawRect2(leftInvBounds.X1 - cellWidth * scrollbarWidthToCellWidth,
+                leftInvBounds.Y1 + (leftInvBounds.Y2 - leftInvBounds.Y1) * (lInvScrollMaxOffset > 0 ? lInvScrollOffset * ((1f - lScrollBarHeight) / lInvScrollMaxOffset) : 0),
+                leftInvBounds.X1,
+                leftInvBounds.Y2 - (leftInvBounds.Y2 - leftInvBounds.Y1) * (lInvScrollMaxOffset > 0 ? (lInvScrollMaxOffset - lInvScrollOffset) * ((1f - lScrollBarHeight) / lInvScrollMaxOffset) : 0),
+                255, 255, 255, 200);
+
+      //right scrollbar
+      DrawRect2(rightInvBounds.X2,
+                rightInvBounds.Y1 + (rightInvBounds.Y2 - rightInvBounds.Y1) * (rInvScrollMaxOffset > 0 ? rInvScrollOffset * ((1f - rScrollBarHeight) / rInvScrollMaxOffset) : 0),
+                rightInvBounds.X2 + cellWidth * scrollbarWidthToCellWidth,
+                rightInvBounds.Y2 - (rightInvBounds.Y2 - rightInvBounds.Y1) * (rInvScrollMaxOffset > 0 ? (rInvScrollMaxOffset - rInvScrollOffset) * ((1f - rScrollBarHeight) / rInvScrollMaxOffset) : 0),
+                255, 255, 255, 200);
+
       TextUtils.DrawTextOnScreen("Tvůj inventář", (float)leftInvBounds.X1, (float)leftInvBounds.Y1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Left);
       TextUtils.DrawTextOnScreen(InventoryBag.GetPlaceName(RightInv?.Place), (float)rightInvBounds.X2, (float)rightInvBounds.Y1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Right);
 
       if (LeftInv != null)
       {
-        for (int y = 0; y < LeftInv.RowCount; y++)
+        for (int y = 0; y + LeftInv.ScrollOffset < LeftInv.RowCount && y < 5; y++)
         {
           for (int x = 0; x < 5; x++)
           {
-            var it = LeftInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
+            var it = LeftInv.Items.Where(a => a.Y == y + LeftInv.ScrollOffset && a.X == x).FirstOrDefault();
             RenderItem(x, y, leftInvBounds, it, false);
           }
         }
@@ -520,11 +625,11 @@ namespace OriginFramework
 
       if (RightInv != null)
       {
-        for (int y = 0; y < RightInv.RowCount; y++)
+        for (int y = 0; y + RightInv.ScrollOffset < RightInv.RowCount && y < 5; y++)
         {
           for (int x = 0; x < 5; x++)
           {
-            var it = RightInv.Items.Where(a => a.Y == y && a.X == x).FirstOrDefault();
+            var it = RightInv.Items.Where(a => a.Y == y + RightInv.ScrollOffset && a.X == x).FirstOrDefault();
             RenderItem(x, y, rightInvBounds, it, false);
           }
         }
@@ -623,7 +728,7 @@ namespace OriginFramework
             if (InvData.RowCount < 0 && YGrid >= 0)
               return true;
 
-            return YGrid < InvData.RowCount;
+            return YGrid + InvData.ScrollOffset < InvData.RowCount;
           }
 
           return false;
