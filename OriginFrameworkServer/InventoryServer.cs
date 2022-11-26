@@ -12,6 +12,7 @@ using CitizenFX.Core.Native;
 using System.Xml.Linq;
 using System.Diagnostics;
 using Debug = CitizenFX.Core.Debug;
+using System.Security.Cryptography;
 
 namespace OriginFrameworkServer
 {
@@ -257,6 +258,22 @@ namespace OriginFrameworkServer
         return null;
 
       return InventoryItemBag.ParseFromSql(result[0]);
+    }
+
+    private async Task<int> FetchItemTypeCountInInventory(int itemId, string place)
+    {
+      if (string.IsNullOrEmpty(place))
+        return 0;
+
+      var param = new Dictionary<string, object>();
+      param.Add("@place", place);
+      param.Add("@itemid", itemId);
+      var result = await VSql.FetchScalarAsync("select sum(`count`) count from `inventory_item` where `place` = @place and `item_id` = @itemid", param);
+
+      if (result == null || result is DBNull)
+        return 0;
+
+      return Convert.ToInt32(result);
     }
     #endregion
 
@@ -574,6 +591,79 @@ namespace OriginFrameworkServer
     private async void GroundMarkersReqUpdate([FromSource] Player source)
     {
       source.TriggerEvent("ofw_inventory:GroundMarkersUpdated", JsonConvert.SerializeObject(groundMarkersCache));
+    }
+
+    [EventHandler("ofw_inventory:SyncAmmo")]
+    private async void SyncAmmo([FromSource] Player source, int itemId, int diff)
+    {
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      if (ItemsDefinitions.Items.Length < itemId - 1 || ItemsDefinitions.Items[itemId] == null)
+      {
+        Debug.WriteLine($"INV - UseItem - unknown item id {itemId}");
+        return;
+      }
+
+      var definition = ItemsDefinitions.Items[itemId];
+      var playerInv = PlayerOIDToPlace(oid);
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        int ammoCount = await FetchItemTypeCountInInventory(definition.AmmoItemId, playerInv);
+        if (ammoCount < diff)
+        {
+          Debug.WriteLine($"Ammo sync - player {oid.PrimaryIdentifier} tried to sync more ammo used than he had {diff}/{ammoCount}");
+          diff = ammoCount;
+        }
+
+        await RemoveItem(playerInv, definition.AmmoItemId, diff);
+      }
+    }
+
+    [EventHandler("ofw_inventory:UseItem")]
+    private async void UseItem([FromSource] Player source, int id, string place, int itemId)
+    {
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      if (ItemsDefinitions.Items.Length < itemId - 1 || ItemsDefinitions.Items[itemId] == null)
+      {
+        Debug.WriteLine($"INV - UseItem - unknown item id {itemId}");
+        return;
+      }
+
+      var definition = ItemsDefinitions.Items[itemId];
+
+      if (definition.UsableType == eUsableType.None)
+      {
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Předmět neumíš použít");
+        return;
+      }
+
+      switch (definition.UsableType)
+      {
+        case eUsableType.Weapon:
+          if (place != PlayerOIDToPlace(oid))
+            source.TriggerEvent("ofw:ValidationErrorNotification", "Zbraň musíš mít u sebe");
+          var serverItem = await FetchItem(id, place);
+          if (serverItem == null || serverItem.ItemId != itemId)
+            return;
+
+          int ammoCount = await FetchItemTypeCountInInventory(definition.AmmoItemId, place);
+          source.TriggerEvent("ofw_inventory:WeaponUsed", itemId, ammoCount);
+          break;
+      }
+      
+
     }
   }
 }

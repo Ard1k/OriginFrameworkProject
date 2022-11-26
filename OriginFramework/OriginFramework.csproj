@@ -70,6 +70,7 @@
     <Compile Include="Scripts\SkinManager.cs" />
     <Compile Include="Scripts\ProgressBar.cs" />
     <Compile Include="Scripts\VehicleHud.cs" />
+    <Compile Include="Scripts\WeaponManager.cs" />
     <Compile Include="Scripts\ZKeyHud.cs" />
     <Compile Include="Scripts\InventoryManager.cs" />
     <Compile Include="Scripts\Login.cs" />
@@ -93,7 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CitizenFX.Core.Client">
-      <Version>1.0.3860</Version>
+      <Version>1.0.6075</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

@@ -59,6 +59,7 @@ namespace OriginFramework
     float lScrollBarHeight = 1.0f;
 
     int lastScrollAction = 0;
+    int lastLastLeftClick = 0;
 
     public InventoryManager()
     {
@@ -116,6 +117,8 @@ namespace OriginFramework
         {
           IsWaiting = true;
 
+          WeaponManager.UnequipWeapon();
+
           int vehFront = Vehicles.GetVehicleInFront();
           int pedVehicle = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
           bool isCarLocked = GetVehicleDoorsLockedForPlayer(vehFront, Game.PlayerPed.Handle);
@@ -167,12 +170,6 @@ namespace OriginFramework
       Game.DisableControlThisFrame(0, Control.MeleeAttack2);
       Game.DisableControlThisFrame(0, Control.Aim);
       Game.DisableControlThisFrame(0, Control.VehicleMouseControlOverride);
-
-      Game.DisableControlThisFrame(0, Control.WeaponWheelUpDown);
-      Game.DisableControlThisFrame(0, Control.WeaponWheelNext);
-      Game.DisableControlThisFrame(0, Control.WeaponWheelPrev);
-      Game.DisableControlThisFrame(0, Control.SelectNextWeapon);
-      Game.DisableControlThisFrame(0, Control.SelectPrevWeapon);
 
       Game.DisableControlThisFrame(0, Control.FrontendRright);
       Game.DisableControlThisFrame(0, Control.FrontendPauseAlternate);
@@ -286,6 +283,12 @@ namespace OriginFramework
       groundMarkersLocked = true;
       groundMarkers = JsonConvert.DeserializeObject<List<Vector3>>(data);
       groundMarkersLocked = false;
+    }
+
+    [EventHandler("ofw_inventory:WeaponUsed")]
+    private void WeaponUsed(int itemId, int ammoCount)
+    {
+      WeaponManager.EquipWeapon(itemId, ammoCount);
     }
     #endregion
 
@@ -504,6 +507,21 @@ namespace OriginFramework
         dragData.SrcItem = cursorData.HoverItem;
         dragData.SrcInv = cursorData.InvData;
         dragData.SrcItem.IsDragged = true;
+        
+        int clickedNow = GetGameTimer();
+        if (clickedNow - lastLastLeftClick < 500)
+        {
+          lastLastLeftClick = 0;
+          UseItem(cursorData.HoverItem, cursorData.InvData);
+          dragData.SrcItem.IsDragged = false;
+          dragData.Clear();
+          return;
+        }
+        else
+        {
+          lastLastLeftClick = clickedNow;
+        }
+
       }
 
       if (Game.IsDisabledControlJustReleased(0, Control.Attack) && dragData.SrcItem != null)
@@ -705,6 +723,31 @@ namespace OriginFramework
       SetTextWrap((float)(cursorData.xRelative - cellWidth / 2f + cellWidth / 10), (float)(cursorData.xRelative + cellWidth / 2f - cellWidth / 10));
       SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
       DrawText((float)(cursorData.xRelative - cellWidth / 2f), (float)(cursorData.yRelative + cellHeight / 2f - itemCountYOffset - cellHeight / 10));
+    }
+
+    private void UseItem(InventoryItemBag it, InventoryBag inv)
+    {
+      if (it == null || inv == null)
+        return;
+
+      var definition = ItemsDefinitions.Items[it.ItemId];
+      if (definition == null || definition.UsableType == eUsableType.None)
+      {
+        Notify.Alert("Použít jak?");
+        return;
+      }
+
+      if (definition.TimeToUse > 0)
+      {
+        int sId = it.Id, sItemId = it.ItemId;
+        string sPlace = it.Place; //kopirovani protoze reference z anonymni funkce
+        ProgressBar.Start(definition.TimeToUse, definition.Name, () => { TriggerServerEvent("ofw_inventory:UseItem", sId, sPlace, sItemId); });
+      }
+      else
+        TriggerServerEvent("ofw_inventory:UseItem", it.Id, it.Place, it.ItemId);
+
+      if (definition.UsableType == eUsableType.Weapon)
+        IsInventoryOpen = false;
     }
     #endregion
 

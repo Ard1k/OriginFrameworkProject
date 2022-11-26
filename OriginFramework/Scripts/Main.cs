@@ -87,6 +87,17 @@ namespace OriginFramework
 
     private async Task OnTick()
     {
+      Game.DisableControlThisFrame(0, Control.WeaponWheelUpDown);
+      Game.DisableControlThisFrame(0, Control.WeaponWheelNext);
+      Game.DisableControlThisFrame(0, Control.WeaponWheelPrev);
+      Game.DisableControlThisFrame(0, Control.SelectNextWeapon);
+      Game.DisableControlThisFrame(0, Control.SelectPrevWeapon);
+      Game.DisableControlThisFrame(0, Control.SelectWeapon); //TAB
+      Game.DisableControlThisFrame(0, Control.WeaponSpecial);
+      Game.DisableControlThisFrame(0, Control.WeaponSpecial2);
+      Game.DisableControlThisFrame(0, Control.VehicleSelectNextWeapon);
+      Game.DisableControlThisFrame(0, Control.VehicleSelectPrevWeapon);
+
       if (IsControlJustPressed(0, 344)) //F11
         NativeMenuManager.ToggleMenu("MainMenu", MainMenu_Default.GenerateMenu);
 

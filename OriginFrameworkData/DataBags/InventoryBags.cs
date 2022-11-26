@@ -176,6 +176,10 @@ namespace OriginFrameworkData.DataBags
     public eSpecialSlotType? SpecialSlotType { get; set; }
     public Dictionary<string, int> MaleSkin { get; set; }
     public Dictionary<string, int> FemaleSkin { get; set; }
+    public eUsableType UsableType { get; set; }
+    public int WeaponHash { get; set; }
+    public int AmmoItemId { get; set; }
+    public int TimeToUse { get; set; }
 
     public ItemDefinition GetInstanceCopy()
     {
@@ -189,6 +193,10 @@ namespace OriginFrameworkData.DataBags
         SpecialSlotType = this.SpecialSlotType,
         MaleSkin = this.MaleSkin,
         FemaleSkin = this.FemaleSkin,
+        UsableType = this.UsableType,
+        WeaponHash = this.WeaponHash,
+        AmmoItemId = this.AmmoItemId,
+        TimeToUse = this.TimeToUse
       };
     }
   }
@@ -256,6 +264,12 @@ namespace OriginFrameworkData.DataBags
 
     Boots = 8,
     Gloves = 9,
+  }
+
+  public enum eUsableType : int
+  {
+    None = 0,
+    Weapon = 1,
   }
 
   public static class ItemsDefinitions
@@ -335,13 +349,46 @@ namespace OriginFrameworkData.DataBags
       {
         ItemId = 1,
         Name = "Autodíly",
-        //Code = "ITEM_COMPONENT",
         Texture = "item_component",
         StackSize = 500,
       };
+
+      _items[2] = new ItemDefinition
+      {
+        ItemId = 2,
+        Name = "Náboje do pistole",
+        Texture = "ammo_pistol",
+        StackSize = 30,
+      };
+      _items[3] = new ItemDefinition
+      {
+        ItemId = 3,
+        Name = "Náboje do dlouhých zbraní",
+        Texture = "ammo_rifle",
+        StackSize = 50,
+      };
+      _items[4] = new ItemDefinition
+      {
+        ItemId = 4,
+        Name = "Náboje do brokovnic",
+        Texture = "ammo_shotgun",
+        StackSize = 20,
+      };
+
+      _items[10] = new ItemDefinition
+      {
+        ItemId = 10,
+        Name = "Pistole 9mm",
+        Texture = "gun",
+        StackSize = 1,
+        AmmoItemId = 2,
+        TimeToUse = 500,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = 1593441988
+      };
       #endregion
 
-      #region hadry
+      #region hadry default
       _items[1000] = new ItemDefinition
       {
         ItemId = 1000,
