@@ -174,6 +174,20 @@ namespace OriginFramework
       Game.DisableControlThisFrame(0, Control.FrontendRright);
       Game.DisableControlThisFrame(0, Control.FrontendPauseAlternate);
 
+      if (RightInv != null && RightInv.IsDisableMoveControls())
+      {
+        Game.DisableControlThisFrame(0, Control.MoveLeft);
+        Game.DisableControlThisFrame(0, Control.MoveLeftOnly);
+        Game.DisableControlThisFrame(0, Control.MoveRight);
+        Game.DisableControlThisFrame(0, Control.MoveRightOnly);
+        Game.DisableControlThisFrame(0, Control.MoveUp);
+        Game.DisableControlThisFrame(0, Control.MoveUpOnly);
+        Game.DisableControlThisFrame(0, Control.MoveDown);
+        Game.DisableControlThisFrame(0, Control.MoveDownOnly);
+        Game.DisableControlThisFrame(0, Control.MoveUpDown);
+        Game.DisableControlThisFrame(0, Control.MoveLeftRight);
+      }
+
       if (Game.IsDisabledControlJustPressed(0, Control.FrontendRright) || Game.IsDisabledControlJustPressed(0, Control.FrontendPauseAlternate))
       {
         IsInventoryOpen = false;
@@ -286,9 +300,12 @@ namespace OriginFramework
     }
 
     [EventHandler("ofw_inventory:WeaponUsed")]
-    private void WeaponUsed(int itemId, int ammoCount)
+    private async void WeaponUsed(int itemId, int ammoCount)
     {
+      var definition = ItemsDefinitions.Items[itemId];
       WeaponManager.EquipWeapon(itemId, ammoCount);
+      
+      IsInventoryOpen = false;
     }
     #endregion
 
@@ -737,17 +754,8 @@ namespace OriginFramework
         return;
       }
 
-      if (definition.TimeToUse > 0)
-      {
-        int sId = it.Id, sItemId = it.ItemId;
-        string sPlace = it.Place; //kopirovani protoze reference z anonymni funkce
-        ProgressBar.Start(definition.TimeToUse, definition.Name, () => { TriggerServerEvent("ofw_inventory:UseItem", sId, sPlace, sItemId); });
-      }
-      else
-        TriggerServerEvent("ofw_inventory:UseItem", it.Id, it.Place, it.ItemId);
-
       if (definition.UsableType == eUsableType.Weapon)
-        IsInventoryOpen = false;
+        TriggerServerEvent("ofw_inventory:UseItem", it.Id, it.Place, it.ItemId);
     }
     #endregion
 

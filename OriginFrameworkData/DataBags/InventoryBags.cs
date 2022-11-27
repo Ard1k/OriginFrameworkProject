@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +27,14 @@ namespace OriginFrameworkData.DataBags
     {
       Place = place;
       Items = new List<InventoryItemBag>();
+    }
+
+    public bool IsDisableMoveControls()
+    {
+      if (string.IsNullOrEmpty(Place) || Place.StartsWith("glovebox"))
+        return false;
+
+      return true;
     }
 
     public static int PlaceToRowCount(string place)
@@ -179,7 +188,8 @@ namespace OriginFrameworkData.DataBags
     public eUsableType UsableType { get; set; }
     public int WeaponHash { get; set; }
     public int AmmoItemId { get; set; }
-    public int TimeToUse { get; set; }
+    public AnimationBag UseAnim { get; set; }
+    public AnimationBag PutAwayAnim { get; set; }
 
     public ItemDefinition GetInstanceCopy()
     {
@@ -196,7 +206,8 @@ namespace OriginFrameworkData.DataBags
         UsableType = this.UsableType,
         WeaponHash = this.WeaponHash,
         AmmoItemId = this.AmmoItemId,
-        TimeToUse = this.TimeToUse
+        UseAnim = this.UseAnim.GetInstanceCopy(),
+        PutAwayAnim = this.PutAwayAnim.GetInstanceCopy()
       };
     }
   }
@@ -356,14 +367,14 @@ namespace OriginFrameworkData.DataBags
       _items[2] = new ItemDefinition
       {
         ItemId = 2,
-        Name = "Náboje do pistole",
+        Name = "Náboje malé ráže",
         Texture = "ammo_pistol",
         StackSize = 30,
       };
       _items[3] = new ItemDefinition
       {
         ItemId = 3,
-        Name = "Náboje do dlouhých zbraní",
+        Name = "Náboje velké ráže",
         Texture = "ammo_rifle",
         StackSize = 50,
       };
@@ -378,13 +389,198 @@ namespace OriginFrameworkData.DataBags
       _items[10] = new ItemDefinition
       {
         ItemId = 10,
-        Name = "Pistole 9mm",
+        Name = "Combat pistol",
         Texture = "gun",
         StackSize = 1,
         AmmoItemId = 2,
-        TimeToUse = 500,
         UsableType = eUsableType.Weapon,
-        WeaponHash = 1593441988
+        WeaponHash = 1593441988,
+        UseAnim = new AnimationBag 
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "intro",
+          Speed = 4f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 2000
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "outro",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
+      };
+      _items[11] = new ItemDefinition
+      {
+        ItemId = 11,
+        Name = "Heavy pistol",
+        Texture = "gun",
+        StackSize = 1,
+        AmmoItemId = 2,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = -771403250,
+        UseAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "intro",
+          Speed = 4f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 2000
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "outro",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
+      };
+      _items[12] = new ItemDefinition
+      {
+        ItemId = 12,
+        Name = "UZI",
+        Texture = "micro_smg",
+        StackSize = 1,
+        AmmoItemId = 2,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = 324215364,
+        UseAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "intro",
+          Speed = 4f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 2000
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "outro",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
+      };
+      _items[13] = new ItemDefinition
+      {
+        ItemId = 13,
+        Name = "SMG",
+        Texture = "submachine",
+        StackSize = 1,
+        AmmoItemId = 2,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = 736523883,
+        UseAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "intro",
+          Speed = 4f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 2000
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "reaction@intimidation@1h",
+          AnimName = "outro",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
+      };
+      _items[14] = new ItemDefinition
+      {
+        ItemId = 14,
+        Name = "Special Carbine",
+        Texture = "assault_rifle",
+        StackSize = 1,
+        AmmoItemId = 3,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = -1063057011,
+        UseAnim = new AnimationBag
+        {
+          AnimDict = "combat@combat_reactions@rifle_react_messy",
+          AnimName = "0",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "combat@combat_reactions@rifle_react_messy",
+          AnimName = "0",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
+      };
+      _items[15] = new ItemDefinition
+      {
+        ItemId = 15,
+        Name = "Brokovnice",
+        Texture = "shotgun",
+        StackSize = 1,
+        AmmoItemId = 4,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = 2017895192,
+        UseAnim = new AnimationBag
+        {
+          AnimDict = "combat@combat_reactions@rifle_react_messy",
+          AnimName = "0",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "combat@combat_reactions@rifle_react_messy",
+          AnimName = "0",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
+      };
+      _items[16] = new ItemDefinition
+      {
+        ItemId = 16,
+        Name = "AK-47",
+        Texture = "rifle",
+        StackSize = 1,
+        AmmoItemId = 3,
+        UsableType = eUsableType.Weapon,
+        WeaponHash = -1074790547,
+        UseAnim = new AnimationBag
+        {
+          AnimDict = "combat@combat_reactions@rifle_react_messy",
+          AnimName = "0",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        },
+        PutAwayAnim = new AnimationBag
+        {
+          AnimDict = "combat@combat_reactions@rifle_react_messy",
+          AnimName = "0",
+          Speed = 8f,
+          IsAllowRotation = true,
+          IsUpperBodyOnly = true,
+          Time = 1400
+        }
       };
       #endregion
 

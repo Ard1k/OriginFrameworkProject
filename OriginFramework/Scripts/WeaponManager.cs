@@ -18,6 +18,7 @@ namespace OriginFramework
     private static bool wasShooting;
     private static bool shotPrevFrame;
     private static int lastShootTime;
+    private static bool _putAwayLock = false;
 
     public WeaponManager()
     {
@@ -69,17 +70,23 @@ namespace OriginFramework
       {
         //TODO - report red flag
         TheBugger.DebugLog("Tuhle zbran nemas mit v ruce");
-        if (equippedDefinition != null)
-          SyncAmmo(); //pro jistotu kdyby to bylo false positive, tak at nedostanou sync na 0
-        RemoveAllPedWeapons(Game.PlayerPed.Handle, true);
+        UnequipWeapon();
       }
 
       await Delay(1000);
     }
 
-    public static void EquipWeapon(int itemId, int ammo)
+    public static async void EquipWeapon(int itemId, int ammo)
     {
       equippedDefinition = ItemsDefinitions.Items[itemId];
+
+      int maxWepAmmo = ammo;
+      if (GetMaxAmmo(Game.PlayerPed.Handle, (uint)equippedDefinition.WeaponHash, ref maxWepAmmo))
+      {
+        if (ammo > maxWepAmmo)
+          ammo = maxWepAmmo;
+      }
+
       ammoCount = ammo;
 
       SetPedCanSwitchWeapon(Game.PlayerPed.Handle, true);
@@ -87,19 +94,46 @@ namespace OriginFramework
       SetWeaponsNoAutoreload(true);
 
       RemoveAllPedWeapons(Game.PlayerPed.Handle, true);
+      if (equippedDefinition.UseAnim != null)
+      {
+        while (!ProgressBar.Start(equippedDefinition.UseAnim.Time, equippedDefinition.Name, false, null, equippedDefinition.UseAnim))
+          await Delay(0);
+
+        await Delay(equippedDefinition.UseAnim.Time / 2);
+      }
       GiveWeaponToPed(Game.PlayerPed.Handle, (uint)equippedDefinition.WeaponHash, ammoCount, true, true);
     }
 
-    public static void UnequipWeapon()
+    public static async void UnequipWeapon()
     {
-      if (equippedDefinition != null)
-      {
-        SyncAmmo();
-        equippedDefinition = null;
-        ammoCount = 0;
-      }
+      if (_putAwayLock)
+        return;
 
-      RemoveAllPedWeapons(Game.PlayerPed.Handle, true);
+      try
+      {
+        _putAwayLock = true;
+
+        if (equippedDefinition?.PutAwayAnim != null)
+        {
+          while (!ProgressBar.Start(equippedDefinition.PutAwayAnim.Time, equippedDefinition.Name, false, null, equippedDefinition.PutAwayAnim))
+            await Delay(0);
+
+          await Delay(equippedDefinition.PutAwayAnim.Time / 2);
+        }
+
+        if (equippedDefinition != null)
+        {
+          SyncAmmo();
+          equippedDefinition = null;
+          ammoCount = 0;
+        }
+
+        RemoveAllPedWeapons(Game.PlayerPed.Handle, true);
+      }
+      finally
+      {
+        _putAwayLock = false;
+      }
     }
 
     private static void SyncAmmo()
