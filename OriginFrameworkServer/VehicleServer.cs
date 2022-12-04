@@ -13,7 +13,7 @@ using System.Dynamic;
 
 namespace OriginFrameworkServer
 {
-  public class PersistentVehiclesServer : BaseScript
+  public class VehicleServer : BaseScript
   {
     public static event EventHandler<PersistentVehicleRemovedArgs> PersistentVehRemoved;
     private static PersistentVehicleDatabaseBag data = null;
@@ -28,7 +28,7 @@ namespace OriginFrameworkServer
       }
     };
 
-    public PersistentVehiclesServer()
+    public VehicleServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
     }

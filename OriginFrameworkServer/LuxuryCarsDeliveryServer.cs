@@ -72,7 +72,7 @@ namespace OriginFrameworkServer
         if (oidSource == -1)
           Debug.WriteLine("ofw_lcd:SpawnJobCar: unresolved player oid");
 
-        if (blockingNetID > 0 && !PersistentVehiclesServer.IsVehicleKnown(blockingNetID))
+        if (blockingNetID > 0 && !VehicleServer.IsVehicleKnown(blockingNetID))
         {
           //Fuj no... ale chova se to jinak kdyz mazu server entitu udelanou serverem a kdyz mazu random entitu
           try { DeleteEntity(NetworkGetEntityFromNetworkId(blockingNetID)); } catch { }

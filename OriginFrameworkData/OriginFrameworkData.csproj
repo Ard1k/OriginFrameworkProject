@@ -56,7 +56,7 @@
     <Compile Include="DataBags\OIDBag.cs" />
     <Compile Include="DataBags\PersistentVehiclesBags.cs" />
     <Compile Include="DataBags\SettingsBag.cs" />
-    <Compile Include="DataBags\VehiclePropertiesBag.cs" />
+    <Compile Include="DataBags\VehicleBags.cs" />
     <Compile Include="KvpEnum.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

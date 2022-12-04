@@ -35,6 +35,13 @@ namespace OriginFramework.Menus
           NameRight = ">>>",
           GetSubMenu = MainMenu_DevTools.GenerateMenu
         });
+
+        menu.Items.Insert(2, new NativeMenuItem
+        {
+          Name = "Tuning catalog",
+          NameRight = ">>>",
+          OnSelected = (item) => { TuningClient.OpenCatalog(); }
+        });
       }
 
       return menu;

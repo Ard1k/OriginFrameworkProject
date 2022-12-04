@@ -134,16 +134,17 @@ namespace OriginFramework
       bag.modFender = GetVehicleMod(vehicleId, 8);
       bag.modRightFender = GetVehicleMod(vehicleId, 9);
       bag.modRoof = GetVehicleMod(vehicleId, 10);
-
       bag.modEngine = GetVehicleMod(vehicleId, 11);
       bag.modBrakes = GetVehicleMod(vehicleId, 12);
       bag.modTransmission = GetVehicleMod(vehicleId, 13);
       bag.modHorns = GetVehicleMod(vehicleId, 14);
       bag.modSuspension = GetVehicleMod(vehicleId, 15);
       bag.modArmor = GetVehicleMod(vehicleId, 16);
-
+      //bag.modNitrous = GetVehicleMod(vehicleId, 17); //mb toggle on?
       bag.modTurbo = IsToggleModOn(vehicleId, 18);
+      //bag.modSubwoofer = GetVehicleMod(vehicleId, 19);
       bag.modSmokeEnabled = IsToggleModOn(vehicleId, 20);
+      //bag.modHydraulic = GetVehicleMod(vehicleId, 21);
       bag.modXenon = IsToggleModOn(vehicleId, 22);
 
       bag.modFrontWheels = GetVehicleMod(vehicleId, 23);
@@ -162,7 +163,7 @@ namespace OriginFramework
       bag.modAPlate = GetVehicleMod(vehicleId, 35);
       bag.modSpeakers = GetVehicleMod(vehicleId, 36);
       bag.modTrunk = GetVehicleMod(vehicleId, 37);
-      bag.modHydrolic = GetVehicleMod(vehicleId, 38);
+      bag.modHydro = GetVehicleMod(vehicleId, 38);
       bag.modEngineBlock = GetVehicleMod(vehicleId, 39);
       bag.modAirFilter = GetVehicleMod(vehicleId, 40);
       bag.modStruts = GetVehicleMod(vehicleId, 41);
@@ -258,7 +259,7 @@ namespace OriginFramework
       if (props.modAPlate != null) SetVehicleMod(vehicleId, 35, props.modAPlate.Value, false);
       if (props.modSpeakers != null) SetVehicleMod(vehicleId, 36, props.modSpeakers.Value, false);
       if (props.modTrunk != null) SetVehicleMod(vehicleId, 37, props.modTrunk.Value, false);
-      if (props.modHydrolic != null) SetVehicleMod(vehicleId, 38, props.modHydrolic.Value, false);
+      if (props.modHydro != null) SetVehicleMod(vehicleId, 38, props.modHydro.Value, false);
       if (props.modEngineBlock != null) SetVehicleMod(vehicleId, 39, props.modEngineBlock.Value, false);
       if (props.modAirFilter != null) SetVehicleMod(vehicleId, 40, props.modAirFilter.Value, false);
       if (props.modStruts != null) SetVehicleMod(vehicleId, 41, props.modStruts.Value, false);

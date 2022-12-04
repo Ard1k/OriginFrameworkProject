@@ -22,6 +22,7 @@ namespace OriginFramework.Menus
             new NativeMenuItem { Name = "Clothes editor", NameRight = ">>>", IsClose = true, OnSelected = (item) => { SkinEditor.EnterEditor(); } },
             new NativeMenuItem { Name = "Entity positioner", NameRight = ">>>", GetSubMenu = GenerateSubMenu_Entitier },
             new NativeMenuItem { Name = "Handling tool", NameRight = ">>>", GetSubMenu = Vehicle_HandlingInspector.GenerateMenu },
+            new NativeMenuItem { Name = "Vehicle mods", NameRight = ">>>", GetSubMenu = Vehicle_ModMenu.GenerateMenu },
             new NativeMenuItem { Name = "Entity info", NameRight = Misc.IsEntityInfoEnabled ? "ZAP" : "VYP",
               OnSelected = (item) => {
                 Misc.IsEntityInfoEnabled = !Misc.IsEntityInfoEnabled;
