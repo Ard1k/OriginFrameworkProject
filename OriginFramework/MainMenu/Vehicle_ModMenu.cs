@@ -41,7 +41,10 @@ namespace OriginFramework.Menus
         if (VehTuningTypeDefinition.Defined.ContainsKey(i2))
           tuning = VehTuningTypeDefinition.Defined[i2];
 
-        string menu_name = tuning?.Name ?? "Unknown";          
+        string menu_name = GetModSlotName(Veh, i);
+
+        if (string.IsNullOrEmpty(menu_name))
+          menu_name = tuning?.Name ?? "Unknown";
         if (menu_name.Contains("_"))
         {
           var lbl = GetLabelText(menu_name);

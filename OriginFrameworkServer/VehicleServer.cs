@@ -17,6 +17,7 @@ namespace OriginFrameworkServer
   {
     public static event EventHandler<PersistentVehicleRemovedArgs> PersistentVehRemoved;
     private static PersistentVehicleDatabaseBag data = null;
+    private static Dictionary<int, Tuple<int, string>> requestedTunings = new Dictionary<int, Tuple<int, string>>();
     private bool isFirstTick = true;
     private JsonSerializerSettings jsonSettings = new JsonSerializerSettings
     {
@@ -85,6 +86,34 @@ namespace OriginFrameworkServer
       //Tick += PeriodicSave;
 
       InternalDependencyManager.Started(eScriptArea.PersistentVehiclesServer);
+    }
+
+    [EventHandler("ofw_veh:UpdateRequestedTuning")]
+    private async void UpdateRequestedTuning([FromSource] Player source, int veh, int model, string properties)
+    {
+      if (source == null || veh == 0)
+      {
+        return;
+      }
+
+      if (requestedTunings.ContainsKey(veh))
+        requestedTunings[veh] = new Tuple<int, string>(model, properties);
+      else
+        requestedTunings.Add(veh, new Tuple<int, string>(model, properties));
+    }
+
+    [EventHandler("ofw_veh:GetRequestedTuning")]
+    private async void GetRequestedTuning([FromSource] Player source, int veh, int model, NetworkCallbackDelegate callback)
+    {
+      if (source == null || veh == 0)
+      {
+        return;
+      }
+
+      if (requestedTunings.ContainsKey(veh) && requestedTunings[veh].Item1 == model)
+        _ = callback(requestedTunings[veh].Item2);
+      else
+        _ = callback("");
     }
 
     [EventHandler("ofw_veh:SpawnServerVehicle")]

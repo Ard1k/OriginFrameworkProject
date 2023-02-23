@@ -43,6 +43,7 @@ namespace OriginFrameworkServer
       if (!LoggedPlayers.ContainsKey(oid.OID) || charFromClient == null || LoggedPlayers[oid.OID].Id != charFromClient.Id)
       {
         source.TriggerEvent("ofw_char_caretaker:ForceRelogin");
+        return;
       }
 
       var param = new Dictionary<string, object>();

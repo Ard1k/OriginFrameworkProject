@@ -40,7 +40,14 @@ namespace OriginFramework.Menus
         {
           Name = "Tuning catalog",
           NameRight = ">>>",
-          OnSelected = (item) => { TuningClient.OpenCatalog(); }
+          OnSelected = (item) => { TuningCatalogClient.OpenCatalog(); }
+        });
+
+        menu.Items.Insert(2, new NativeMenuItem
+        {
+          Name = "Tuning instalace",
+          NameRight = ">>>",
+          OnSelected = (item) => { TuningInstallClient.OpenTuningInstall(); }
         });
       }
 

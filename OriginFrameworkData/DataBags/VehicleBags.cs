@@ -98,6 +98,7 @@ namespace OriginFrameworkData.DataBags
     public int? pearlescentColor { get; set; }
     public int? wheelColor { get; set; }
     public int? wheels { get; set; }
+    public bool? customTires { get; set; }
     public int? windowTint { get; set; }
     public int? xenonColor { get; set; }
     public List<bool> neonEnabled { get; set; }
@@ -105,118 +106,11 @@ namespace OriginFrameworkData.DataBags
     public Dictionary<string, bool> extras { get; set; }
     public List<int> tyreSmokeColor { get; set; }
 
-    [VehTuningType(0)]
-    public int? modSpoilers { get; set; }
-    [VehTuningType(1)]
-    public int? modFrontBumper { get; set; }
-    [VehTuningType(2)]
-    public int? modRearBumper { get; set; }
-    [VehTuningType(3)]
-    public int? modSideSkirt { get; set; }
-    [VehTuningType(4)]
-    public int? modExhaust { get; set; }
-    [VehTuningType(5)]
-    public int? modFrame { get; set; }
-    [VehTuningType(6)]
-    public int? modGrille { get; set; }
-    [VehTuningType(7)]
-    public int? modHood { get; set; }
-    [VehTuningType(8)]
-    public int? modFender { get; set; }
-    [VehTuningType(9)]
-    public int? modRightFender { get; set; }
-    [VehTuningType(10)]
-    public int? modRoof { get; set; }
-
-    [VehTuningType(11)]
-    public int? modEngine { get; set; }
-    [VehTuningType(12)]
-    public int? modBrakes { get; set; }
-    [VehTuningType(13)]
-    public int? modTransmission { get; set; }
-    [VehTuningType(14)]
-    public int? modHorns { get; set; }
-    [VehTuningType(15)]
-    public int? modSuspension { get; set; }
-    [VehTuningType(16)]
-    public int? modArmor { get; set; }
-
-    [VehTuningType(17)]
-    public bool? modNitro { get; set; }
-    [VehTuningType(18)]
-    public bool? modTurbo { get; set; }
-    [VehTuningType(19)]
-    public int? modSubwoofer { get; set; }
-    [VehTuningType(20)]
-    public bool? modSmokeEnabled { get; set; }
-    [VehTuningType(21)]
-    public bool? modHydraulics { get; set; }
-    [VehTuningType(22)]
-    public bool? modXenon { get; set; }
-
-    [VehTuningType(23)]
-    public int? modFrontWheels { get; set; }
-    [VehTuningType(24)]
-    public int? modBackWheels { get; set; }
-
-    [VehTuningType(25)]
-    public int? modPlateHolder { get; set; }
-    [VehTuningType(26)]
-    public int? modVanityPlate { get; set; }
-    [VehTuningType(27)]
-    public int? modTrimA { get; set; }
-    [VehTuningType(28)]
-    public int? modOrnaments { get; set; }
-    [VehTuningType(29)]
-    public int? modDashboard { get; set; }
-    [VehTuningType(30)]
-    public int? modDial { get; set; }
-    [VehTuningType(31)]
-    public int? modDoorSpeaker { get; set; }
-    [VehTuningType(32)]
-    public int? modSeats { get; set; }
-    [VehTuningType(33)]
-    public int? modSteeringWheel { get; set; }
-    [VehTuningType(34)]
-    public int? modShifterLeavers { get; set; }
-    [VehTuningType(35)]
-    public int? modAPlate { get; set; }
-    [VehTuningType(36)]
-    public int? modSpeakers { get; set; }
-    [VehTuningType(37)]
-    public int? modTrunk { get; set; }
-    [VehTuningType(38)]
-    public int? modHydro { get; set; }
-    [VehTuningType(39)]
-    public int? modEngineBlock { get; set; }
-    [VehTuningType(40)]
-    public int? modAirFilter { get; set; }
-    [VehTuningType(41)]
-    public int? modStruts { get; set; }
-    [VehTuningType(42)]
-    public int? modArchCover { get; set; }
-    [VehTuningType(43)]
-    public int? modAerials { get; set; }
-    [VehTuningType(44)]
-    public int? modTrimB { get; set; }
-    [VehTuningType(45)]
-    public int? modTank { get; set; }
-    [VehTuningType(46)]
-    public int? modWindows { get; set; }
-
-    [VehTuningType(48)]
-    public int? modLivery { get; set; }
-    [VehTuningType(49)]
-    public int? modLightbar { get; set; }
+    public object[] tunings = new object[50];
 
     public bool[] windows { get; set; }
     public bool[] tyres { get; set; }
     public bool[] doors { get; set; }
-
-    public PropertyInfo GetTuningPropertyInfo(int tuningType)
-    {
-      return this.GetType().GetProperties().Where(p => p.GetCustomAttributes(typeof(VehTuningTypeAttribute), false).FirstOrDefault() is VehTuningTypeAttribute att && att.TuningType == tuningType).FirstOrDefault();
-    }
   }
 
   public class VehColor

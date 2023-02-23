@@ -206,8 +206,8 @@ namespace OriginFrameworkData.DataBags
         UsableType = this.UsableType,
         WeaponHash = this.WeaponHash,
         AmmoItemId = this.AmmoItemId,
-        UseAnim = this.UseAnim.GetInstanceCopy(),
-        PutAwayAnim = this.PutAwayAnim.GetInstanceCopy()
+        UseAnim = this.UseAnim?.GetInstanceCopy(),
+        PutAwayAnim = this.PutAwayAnim?.GetInstanceCopy()
       };
     }
   }
