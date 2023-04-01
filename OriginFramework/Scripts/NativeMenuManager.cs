@@ -141,7 +141,7 @@ namespace OriginFramework
         //  BackOrClose();
       }
 
-      if (CurrentMenu.Items == null || CurrentMenu.Items.Count <= 0)
+      if (CurrentMenu?.Items == null || CurrentMenu.Items.Count <= 0)
         return; //nic nemam, nema smysl dal resit
 
       if (IsControlJustPressed(0, control_nav_down))
@@ -395,8 +395,15 @@ namespace OriginFramework
           float iconOffset = 0f;
           if (!string.IsNullOrEmpty(CurrentMenu.Items[i].Icon))
           {
-            DrawSprite("menu_textures", CurrentMenu.Items[i].Icon, xOffset + (((yHeight - spacing) / 2.0f) * htow) - (xLenght / 2.0f), (yOffset + yHeight * (i - indexMin)), (yHeight - spacing) * iconScaleFactor * htow, (yHeight - spacing) * iconScaleFactor, 0f, 255, 255, 255, 200);
+            DrawSprite(CurrentMenu.Items[i].IconTextureDict ?? "menu_textures", CurrentMenu.Items[i].Icon, xOffset + (((yHeight - spacing) / 2.0f) * htow) - (xLenght / 2.0f), (yOffset + yHeight * (i - indexMin)), (yHeight - spacing) * iconScaleFactor * htow, (yHeight - spacing) * iconScaleFactor, 0f, 255, 255, 255, 200);
             iconOffset = (yHeight - spacing) * htow - textMarginName;
+          }
+
+          float iconRightOffset = 0f;
+          if (!string.IsNullOrEmpty(CurrentMenu.Items[i].IconRight) && CurrentMenu.Items[i].NameRight != "✅")
+          {
+            DrawSprite(CurrentMenu.Items[i].IconRightTextureDict ?? "menu_textures", CurrentMenu.Items[i].IconRight, xOffset - (((yHeight - spacing) / 2.0f) * htow) + (xLenght / 2.0f), (yOffset + yHeight * (i - indexMin)), (yHeight - spacing) * iconScaleFactor * htow, (yHeight - spacing) * iconScaleFactor, 0f, 255, 255, 255, 200);
+            iconRightOffset = (yHeight - spacing) * htow - textMarginName;
           }
 
           if (!string.IsNullOrEmpty(CurrentMenu.Items[i].Name) || CurrentMenu.Items[i].IsActive)
@@ -416,9 +423,9 @@ namespace OriginFramework
             SetTextColour(255, 255, 255, 255);
             SetTextEntry("STRING");
             AddTextComponentString(FontsManager.FiraSansString + CurrentMenu.Items[i].NameRight);
-            SetTextWrap(0f, xOffset + xLenght / 2f - textMarginName); //text margin name je odsazeni name od leveho okraje, tak at je to stejny
+            SetTextWrap(0f, xOffset + xLenght / 2f - textMarginName - iconRightOffset); //text margin name je odsazeni name od leveho okraje, tak at je to stejny
             SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
-            DrawText(xOffset - xLenght / 2.0f + textMarginNameRight, (yOffset + (yHeight * (i - indexMin)) - textYOffset));
+            DrawText(xOffset - xLenght / 2.0f + textMarginNameRight + iconRightOffset, (yOffset + (yHeight * (i - indexMin)) - textYOffset));
           }
 
           if (!string.IsNullOrEmpty(CurrentMenu.Items[i].ExtraLeft))

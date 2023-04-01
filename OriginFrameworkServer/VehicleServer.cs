@@ -43,7 +43,7 @@ namespace OriginFrameworkServer
 
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
 
-      RegisterCommand("supercar", new Action<int, List<object>, string>((source, args, raw) =>
+      RegisterCommand("car", new Action<int, List<object>, string>((source, args, raw) =>
       {
         if (args == null || args.Count <= 0)
           return;
@@ -112,6 +112,63 @@ namespace OriginFrameworkServer
 
       if (requestedTunings.ContainsKey(veh) && requestedTunings[veh].Item1 == model)
         _ = callback(requestedTunings[veh].Item2);
+      else
+        _ = callback("");
+    }
+
+    [EventHandler("ofw_veh:InstallRequestedTuning")]
+    private async void InstallRequestedTuning([FromSource] Player source, int veh, int model, string installProperties, NetworkCallbackDelegate callback)
+    {
+      if (source == null || veh == 0)
+      {
+        return;
+      }
+
+      if (installProperties == null)
+      {
+        _ = callback("");
+        return;
+      }
+
+      var installTuning = JsonConvert.DeserializeObject<VehiclePropertiesBag>(installProperties);
+
+      if (installTuning == null)
+      {
+        _ = callback("");
+        return;
+      }
+
+      if (requestedTunings.ContainsKey(veh) && requestedTunings[veh].Item1 == model)
+      {
+        var reqTuning = JsonConvert.DeserializeObject<VehiclePropertiesBag>(requestedTunings[veh].Item2);
+
+        if (reqTuning == null)
+        {
+          requestedTunings.Remove(veh);
+          _ = callback("");
+          return;
+        }
+
+        var prices = installTuning.ComputeUpgradePrice();
+        if (prices != null && prices.Count > 0)
+        {
+          var ret = await OfwServerFunctions.ServerAsyncCallbackToSync<string>("ofw_inventory:RemoveInventoryItemsCB", source.Handle, JsonConvert.SerializeObject(prices));
+
+          if (!string.IsNullOrEmpty(ret))
+          {
+            _ = callback("");
+            source.TriggerEvent("ofw:ValidationErrorNotification", ret);
+            return;
+          }
+        }
+
+        reqTuning.Substract(installTuning);
+
+        var newReqTuning = JsonConvert.SerializeObject(reqTuning, Formatting.None, jsonSettings);
+        requestedTunings[veh] = new Tuple<int, string>(model, newReqTuning);
+
+        _ = callback("true");
+      }
       else
         _ = callback("");
     }

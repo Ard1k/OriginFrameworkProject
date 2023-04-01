@@ -11,7 +11,6 @@ namespace OriginFrameworkData.DataBags
   public class VehTuningTypeDefinition
   {
     public int TuningType { get; set; }
-    public int ParentTuning { get; set; }
     public int Price { get; set; }
     public int PriceItemId { get; set; }
     public string Name { get; set; }
@@ -20,67 +19,72 @@ namespace OriginFrameworkData.DataBags
 
     public static Dictionary<int, VehTuningTypeDefinition> Defined { get; set; } = new Dictionary<int, VehTuningTypeDefinition>
     {
-      { 0, new VehTuningTypeDefinition { TuningType = 0, ParentTuning = -1, Name = "Spoilery", Price = 0, PriceItemId = 0 } },
-      { 1, new VehTuningTypeDefinition { TuningType = 1, ParentTuning = -1, Name = "Přední nárazník", Price = 0, PriceItemId = 0 } },
-      { 2, new VehTuningTypeDefinition { TuningType = 2, ParentTuning = -1, Name = "Zadní nárazník", Price = 0, PriceItemId = 0 } },
-      { 3, new VehTuningTypeDefinition { TuningType = 3, ParentTuning = -1, Name = "Bočnice", Price = 0, PriceItemId = 0 } },
-      { 4, new VehTuningTypeDefinition { TuningType = 4, ParentTuning = -1, Name = "Výfuk", Price = 0, PriceItemId = 0 } },
-      { 5, new VehTuningTypeDefinition { TuningType = 5, ParentTuning = -1, Name = "Klec", Price = 0, PriceItemId = 0 } },
-      { 6, new VehTuningTypeDefinition { TuningType = 6, ParentTuning = -1, Name = "Přední maska", Price = 0, PriceItemId = 0 } },
-      { 7, new VehTuningTypeDefinition { TuningType = 7, ParentTuning = -1, Name = "Kapota", Price = 0, PriceItemId = 0 } },
-      { 8, new VehTuningTypeDefinition { TuningType = 8, ParentTuning = -1, Name = "Doplňky 1", Price = 0, PriceItemId = 0 } },
-      { 9, new VehTuningTypeDefinition { TuningType = 9, ParentTuning = -1, Name = "Doplňky 2", Price = 0, PriceItemId = 0 } },
-      { 10, new VehTuningTypeDefinition { TuningType = 10, ParentTuning = -1, Name = "Střecha", Price = 0, PriceItemId = 0 } },
-      { 11, new VehTuningTypeDefinition { TuningType = 11, ParentTuning = -1, Name = "Motor", Price = 0, PriceItemId = 0 } },
-      { 12, new VehTuningTypeDefinition { TuningType = 12, ParentTuning = -1, Name = "Brzdy", Price = 0, PriceItemId = 0 } },
-      { 13, new VehTuningTypeDefinition { TuningType = 13, ParentTuning = -1, Name = "Převodovka", Price = 0, PriceItemId = 0 } },
-      { 14, new VehTuningTypeDefinition { TuningType = 14, ParentTuning = -1, Name = "Klakson", Price = 0, PriceItemId = 0 } },
-      { 15, new VehTuningTypeDefinition { TuningType = 15, ParentTuning = -1, Name = "Podvozek", Price = 0, PriceItemId = 0 } },
-      { 16, new VehTuningTypeDefinition { TuningType = 16, ParentTuning = -1, Name = "Pancíř", Price = 0, PriceItemId = 0, IsDisabled = true } },
-      { 17, new VehTuningTypeDefinition { TuningType = 17, ParentTuning = -1, Name = "Nitro", Price = 0, PriceItemId = 0, IsDisabled = true, IsToggle = true } },
-      { 18, new VehTuningTypeDefinition { TuningType = 18, ParentTuning = -1, Name = "Turbo", Price = 0, PriceItemId = 0, IsToggle = true} },
-      { 19, new VehTuningTypeDefinition { TuningType = 19, ParentTuning = -1, Name = "Subwoofer", Price = 0, PriceItemId = 0, IsDisabled = true } },
-      { 20, new VehTuningTypeDefinition { TuningType = 20, ParentTuning = -1, Name = "Pneu pigment", Price = 0, PriceItemId = 0 } },
-      { 21, new VehTuningTypeDefinition { TuningType = 21, ParentTuning = -1, Name = "Hydraulika", Price = 0, PriceItemId = 0 } },
-      { 22, new VehTuningTypeDefinition { TuningType = 22, ParentTuning = -1, Name = "Xenony", Price = 0, PriceItemId = 0, IsToggle = true } },
-      { 23, new VehTuningTypeDefinition { TuningType = 23, ParentTuning = -1, Name = "Kola", Price = 0, PriceItemId = 0 } },
-      { 24, new VehTuningTypeDefinition { TuningType = 24, ParentTuning = -1, Name = "Zadní kolo", Price = 0, PriceItemId = 0 } },
-      { 25, new VehTuningTypeDefinition { TuningType = 25, ParentTuning = -1, Name = "SPZ rámeček", Price = 0, PriceItemId = 0 } },
-      { 26, new VehTuningTypeDefinition { TuningType = 26, ParentTuning = -1, Name = "Custom SPZ", Price = 0, PriceItemId = 0 } },
-      { 27, new VehTuningTypeDefinition { TuningType = 27, ParentTuning = -1, Name = "Zdobení 1", Price = 0, PriceItemId = 0 } },
-      { 28, new VehTuningTypeDefinition { TuningType = 28, ParentTuning = -1, Name = "Ornamenty", Price = 0, PriceItemId = 0 } },
-      { 29, new VehTuningTypeDefinition { TuningType = 29, ParentTuning = -1, Name = "Palubní deska", Price = 0, PriceItemId = 0 } },
-      { 30, new VehTuningTypeDefinition { TuningType = 30, ParentTuning = -1, Name = "Budíky", Price = 0, PriceItemId = 0 } },
-      { 31, new VehTuningTypeDefinition { TuningType = 31, ParentTuning = -1, Name = "Repráky ve dveřích", Price = 0, PriceItemId = 0 } },
-      { 32, new VehTuningTypeDefinition { TuningType = 32, ParentTuning = -1, Name = "Sedačky", Price = 0, PriceItemId = 0 } },
-      { 33, new VehTuningTypeDefinition { TuningType = 33, ParentTuning = -1, Name = "Volant", Price = 0, PriceItemId = 0 } },
-      { 34, new VehTuningTypeDefinition { TuningType = 34, ParentTuning = -1, Name = "Řadička", Price = 0, PriceItemId = 0 } },
-      { 35, new VehTuningTypeDefinition { TuningType = 35, ParentTuning = -1, Name = "Plaketa", Price = 0, PriceItemId = 0 } },
-      { 36, new VehTuningTypeDefinition { TuningType = 36, ParentTuning = -1, Name = "Stereo", Price = 0, PriceItemId = 0 } },
-      { 37, new VehTuningTypeDefinition { TuningType = 37, ParentTuning = -1, Name = "Kufr", Price = 0, PriceItemId = 0 } },
-      { 38, new VehTuningTypeDefinition { TuningType = 38, ParentTuning = -1, Name = "Hydraulika 2", Price = 0, PriceItemId = 0 } },
-      { 39, new VehTuningTypeDefinition { TuningType = 39, ParentTuning = -1, Name = "Blok motoru", Price = 0, PriceItemId = 0 } },
-      { 40, new VehTuningTypeDefinition { TuningType = 40, ParentTuning = -1, Name = "Vzduchový filtr", Price = 0, PriceItemId = 0 } },
-      { 41, new VehTuningTypeDefinition { TuningType = 41, ParentTuning = -1, Name = "Vzpěry", Price = 0, PriceItemId = 0 } },
-      { 42, new VehTuningTypeDefinition { TuningType = 42, ParentTuning = -1, Name = "Kryty", Price = 0, PriceItemId = 0 } },
-      { 43, new VehTuningTypeDefinition { TuningType = 43, ParentTuning = -1, Name = "Antény", Price = 0, PriceItemId = 0 } },
-      { 44, new VehTuningTypeDefinition { TuningType = 44, ParentTuning = -1, Name = "Zdobení 2", Price = 0, PriceItemId = 0 } },
-      { 45, new VehTuningTypeDefinition { TuningType = 45, ParentTuning = -1, Name = "Nádrž", Price = 0, PriceItemId = 0 } },
-      { 46, new VehTuningTypeDefinition { TuningType = 46, ParentTuning = -1, Name = "Levé dveře", Price = 0, PriceItemId = 0 } },
-      { 47, new VehTuningTypeDefinition { TuningType = 47, ParentTuning = -1, Name = "Pravé dveře", Price = 0, PriceItemId = 0 } },
-      { 48, new VehTuningTypeDefinition { TuningType = 48, ParentTuning = -1, Name = "Polepy", Price = 0, PriceItemId = 0 } },
-      { 49, new VehTuningTypeDefinition { TuningType = 49, ParentTuning = -1, Name = "Lightbar", Price = 0, PriceItemId = 0 } },
+      { 0, new VehTuningTypeDefinition { TuningType = 0, Name = "Spoilery", Price = 100, PriceItemId = 1 } },
+      { 1, new VehTuningTypeDefinition { TuningType = 1, Name = "Přední nárazník", Price = 100, PriceItemId = 1 } },
+      { 2, new VehTuningTypeDefinition { TuningType = 2, Name = "Zadní nárazník", Price = 100, PriceItemId = 1 } },
+      { 3, new VehTuningTypeDefinition { TuningType = 3, Name = "Bočnice", Price = 100, PriceItemId = 1 } },
+      { 4, new VehTuningTypeDefinition { TuningType = 4, Name = "Výfuk", Price = 100, PriceItemId = 1 } },
+      { 5, new VehTuningTypeDefinition { TuningType = 5, Name = "Klec", Price = 100, PriceItemId = 1 } },
+      { 6, new VehTuningTypeDefinition { TuningType = 6, Name = "Přední maska", Price = 100, PriceItemId = 1 } },
+      { 7, new VehTuningTypeDefinition { TuningType = 7, Name = "Kapota", Price = 100, PriceItemId = 1 } },
+      { 8, new VehTuningTypeDefinition { TuningType = 8, Name = "Doplňky 1", Price = 100, PriceItemId = 1 } },
+      { 9, new VehTuningTypeDefinition { TuningType = 9, Name = "Doplňky 2", Price = 100, PriceItemId = 1 } },
+      { 10, new VehTuningTypeDefinition { TuningType = 10, Name = "Střecha", Price = 100, PriceItemId = 1 } },
+      { 11, new VehTuningTypeDefinition { TuningType = 11, Name = "Motor", Price = 100, PriceItemId = 1 } },
+      { 12, new VehTuningTypeDefinition { TuningType = 12, Name = "Brzdy", Price = 100, PriceItemId = 1 } },
+      { 13, new VehTuningTypeDefinition { TuningType = 13, Name = "Převodovka", Price = 100, PriceItemId = 1 } },
+      { 14, new VehTuningTypeDefinition { TuningType = 14, Name = "Klakson", Price = 100, PriceItemId = 1 } },
+      { 15, new VehTuningTypeDefinition { TuningType = 15, Name = "Podvozek", Price = 100, PriceItemId = 1 } },
+      { 16, new VehTuningTypeDefinition { TuningType = 16, Name = "Pancíř", Price = 100, PriceItemId = 1, IsDisabled = true } },
+      { 17, new VehTuningTypeDefinition { TuningType = 17, Name = "Nitro", Price = 100, PriceItemId = 1, IsDisabled = true, IsToggle = true } },
+      { 18, new VehTuningTypeDefinition { TuningType = 18, Name = "Turbo", Price = 100, PriceItemId = 1, IsToggle = true} },
+      { 19, new VehTuningTypeDefinition { TuningType = 19, Name = "Subwoofer", Price = 100, PriceItemId = 1, IsDisabled = true } },
+      { 20, new VehTuningTypeDefinition { TuningType = 20, Name = "Pneu pigment", Price = 100, PriceItemId = 1 } },
+      { 21, new VehTuningTypeDefinition { TuningType = 21, Name = "Hydraulika", Price = 100, PriceItemId = 1 } },
+      { 22, new VehTuningTypeDefinition { TuningType = 22, Name = "Xenony", Price = 100, PriceItemId = 1, IsToggle = true } },
+      { 23, new VehTuningTypeDefinition { TuningType = 23, Name = "Kola", Price = 100, PriceItemId = 1 } },
+      { 24, new VehTuningTypeDefinition { TuningType = 24, Name = "Zadní kolo", Price = 100, PriceItemId = 1 } },
+      { 25, new VehTuningTypeDefinition { TuningType = 25, Name = "SPZ rámeček", Price = 100, PriceItemId = 1 } },
+      { 26, new VehTuningTypeDefinition { TuningType = 26, Name = "Custom SPZ", Price = 100, PriceItemId = 1 } },
+      { 27, new VehTuningTypeDefinition { TuningType = 27, Name = "Zdobení 1", Price = 100, PriceItemId = 1 } },
+      { 28, new VehTuningTypeDefinition { TuningType = 28, Name = "Ornamenty", Price = 100, PriceItemId = 1 } },
+      { 29, new VehTuningTypeDefinition { TuningType = 29, Name = "Palubní deska", Price = 100, PriceItemId = 1 } },
+      { 30, new VehTuningTypeDefinition { TuningType = 30, Name = "Budíky", Price = 100, PriceItemId = 1 } },
+      { 31, new VehTuningTypeDefinition { TuningType = 31, Name = "Repráky ve dveřích", Price = 100, PriceItemId = 1 } },
+      { 32, new VehTuningTypeDefinition { TuningType = 32, Name = "Sedačky", Price = 100, PriceItemId = 1 } },
+      { 33, new VehTuningTypeDefinition { TuningType = 33, Name = "Volant", Price = 100, PriceItemId = 1 } },
+      { 34, new VehTuningTypeDefinition { TuningType = 34, Name = "Řadička", Price = 100, PriceItemId = 1 } },
+      { 35, new VehTuningTypeDefinition { TuningType = 35, Name = "Plaketa", Price = 100, PriceItemId = 1 } },
+      { 36, new VehTuningTypeDefinition { TuningType = 36, Name = "Stereo", Price = 100, PriceItemId = 1 } },
+      { 37, new VehTuningTypeDefinition { TuningType = 37, Name = "Kufr", Price = 100, PriceItemId = 1 } },
+      { 38, new VehTuningTypeDefinition { TuningType = 38, Name = "Hydraulika 2", Price = 100, PriceItemId = 1 } },
+      { 39, new VehTuningTypeDefinition { TuningType = 39, Name = "Blok motoru", Price = 100, PriceItemId = 1 } },
+      { 40, new VehTuningTypeDefinition { TuningType = 40, Name = "Vzduchový filtr", Price = 100, PriceItemId = 1 } },
+      { 41, new VehTuningTypeDefinition { TuningType = 41, Name = "Vzpěry", Price = 100, PriceItemId = 1 } },
+      { 42, new VehTuningTypeDefinition { TuningType = 42, Name = "Kryty", Price = 100, PriceItemId = 1 } },
+      { 43, new VehTuningTypeDefinition { TuningType = 43, Name = "Antény", Price = 100, PriceItemId = 1 } },
+      { 44, new VehTuningTypeDefinition { TuningType = 44, Name = "Zdobení 2", Price = 100, PriceItemId = 1 } },
+      { 45, new VehTuningTypeDefinition { TuningType = 45, Name = "Nádrž", Price = 100, PriceItemId = 1 } },
+      { 46, new VehTuningTypeDefinition { TuningType = 46, Name = "Levé dveře", Price = 100, PriceItemId = 1 } },
+      { 47, new VehTuningTypeDefinition { TuningType = 47, Name = "Pravé dveře", Price = 100, PriceItemId = 1 } },
+      { 48, new VehTuningTypeDefinition { TuningType = 48, Name = "Polepy", Price = 100, PriceItemId = 1 } },
+      { 49, new VehTuningTypeDefinition { TuningType = 49, Name = "Lightbar", Price = 100, PriceItemId = 1 } },
     };
-  }
 
-  [AttributeUsage(AttributeTargets.Property)]
-  public class VehTuningTypeAttribute : Attribute
-  {
-    public int TuningType { get; set; }
-
-    public VehTuningTypeAttribute(int tuningType)
+    public static Dictionary<string, VehTuningTypeDefinition> DefinedSpecial { get; set; } = new Dictionary<string, VehTuningTypeDefinition>
     {
-      TuningType = tuningType;
+      { "color0", new VehTuningTypeDefinition {Name = "Primární barva laku", Price = 100, PriceItemId = 1 } },
+      { "color1", new VehTuningTypeDefinition {Name = "Sekundární barva laku", Price = 100, PriceItemId = 1 } },
+      { "color2", new VehTuningTypeDefinition {Name = "Perleť", Price = 100, PriceItemId = 1 } },
+      { "colorw", new VehTuningTypeDefinition {Name = "Barva kol", Price = 100, PriceItemId = 1 } },
+      { "customtires", new VehTuningTypeDefinition {Name = "Polepy na kola", Price = 100, PriceItemId = 1, IsToggle = true } },
+    };
+
+    public int ComputeUpgradePrice(int model, int selectedIndex)
+    {
+      double price = Price;
+
+      return (int)Math.Floor(price);
     }
   }
 
@@ -111,6 +115,102 @@ namespace OriginFrameworkData.DataBags
     public bool[] windows { get; set; }
     public bool[] tyres { get; set; }
     public bool[] doors { get; set; }
+
+    public void Substract(VehiclePropertiesBag subVP)
+    {
+      if (subVP == null)
+        return;
+
+      if (subVP.color1 != null) color1 = null;
+      if (subVP.color2 != null) color2 = null;
+      if (subVP.pearlescentColor != null) pearlescentColor = null;
+      if (subVP.wheelColor != null) wheelColor = null;
+      if (subVP.wheels != null) wheels = null;
+      if (subVP.customTires != null) customTires = null;
+      if (subVP.windowTint != null) windowTint = null;
+      if (subVP.xenonColor != null) xenonColor = null;
+      if (subVP.neonEnabled != null) neonEnabled = null;
+      if (subVP.neonColor != null) neonColor = null;
+      if (subVP.extras != null) extras = null;
+      if (subVP.tyreSmokeColor != null) tyreSmokeColor = null;
+      if (subVP.tunings != null && tunings != null)
+      {
+        for (int i = 0; i < subVP.tunings.Length; i++)
+        {
+          if (subVP.tunings[i] != null && tunings.Length >= i + 1)
+            tunings[i] = null;
+        }
+      }
+    }
+
+    public Dictionary<int, int> ComputeUpgradePrice()
+    {
+      var prices = new Dictionary<int, int>();
+      
+      if (color1 != null)
+      {
+        var def = VehTuningTypeDefinition.DefinedSpecial["color0"];
+        var price = def.ComputeUpgradePrice(model, color1.Value);
+        if (prices.ContainsKey(def.PriceItemId))
+          prices[def.PriceItemId] += price;
+        else
+          prices.Add(def.PriceItemId, price);
+      }
+      if (color2 != null)
+      {
+        var def = VehTuningTypeDefinition.DefinedSpecial["color1"];
+        var price = def.ComputeUpgradePrice(model, color2.Value);
+        if (prices.ContainsKey(def.PriceItemId))
+          prices[def.PriceItemId] += price;
+        else
+          prices.Add(def.PriceItemId, price);
+      }
+      if (pearlescentColor != null) 
+      {
+        var def = VehTuningTypeDefinition.DefinedSpecial["color2"];
+        var price = def.ComputeUpgradePrice(model, pearlescentColor.Value);
+        if (prices.ContainsKey(def.PriceItemId))
+          prices[def.PriceItemId] += price;
+        else
+          prices.Add(def.PriceItemId, price);
+      }
+      if (wheelColor != null) 
+      {
+        var def = VehTuningTypeDefinition.DefinedSpecial["colorw"];
+        var price = def.ComputeUpgradePrice(model, wheelColor.Value);
+        if (prices.ContainsKey(def.PriceItemId))
+          prices[def.PriceItemId] += price;
+        else
+          prices.Add(def.PriceItemId, price);
+      }
+      if (customTires != null)
+      {
+        var def = VehTuningTypeDefinition.DefinedSpecial["customtires"];
+        var price = def.ComputeUpgradePrice(model, customTires.Value ? 1 : 0);
+        if (prices.ContainsKey(def.PriceItemId))
+          prices[def.PriceItemId] += price;
+        else
+          prices.Add(def.PriceItemId, price);
+      }
+
+      if (tunings != null)
+      {
+        for (int i = 0; i < tunings.Length; i++)
+        {
+          if (tunings[i] != null)
+          {
+            var def = VehTuningTypeDefinition.Defined[i];
+            var price = def.ComputeUpgradePrice(model, def.IsToggle ? 0 : Convert.ToInt32(tunings[i]));
+            if (prices.ContainsKey(def.PriceItemId))
+              prices[def.PriceItemId] += price;
+            else
+              prices.Add(def.PriceItemId, price);
+          }
+        }
+      }
+
+      return prices;
+    }
   }
 
   public class VehColor

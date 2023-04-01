@@ -407,6 +407,60 @@ namespace OriginFrameworkServer
       return null;
     }
 
+    private async Task<string> RemoveItems(string place, Dictionary<int, int> items)
+    {
+      if (items == null || items.Count == 0 || string.IsNullOrEmpty(place) || items.Any(it => it.Key <= 0 || it.Value <= 0))
+        return "Neznámý inventář, předmět nebo počet";
+
+      foreach (var item in items)
+      {
+        if (ItemsDefinitions.Items[item.Key] == null)
+          return $"Neplatné id předmětu: {item.Key}";
+      }
+
+      var inv = await FetchInventory(place);
+
+      if (inv == null)
+        return "Nezdařilo se načtení dat inventáře";
+      var sql = new StringBuilder();
+
+      for (int i = 0; i < items.Count; i++)
+      {
+        int key = items.Keys.ElementAt(i);
+
+        if (!inv.HasEnoughItems(key, items[key]))
+          return "Nedostatečný počet předmětu k odstranění";
+
+        while (items[key] > 0)
+        {
+          InventoryItemBag foundItem = inv.GetNextItemOfType(key);
+
+          if (foundItem == null)
+            return "Nedostatečný počet předmětu k odstranění";
+          if (foundItem.Count > items[key])
+          {
+            foundItem.Count = foundItem.Count - items[key];
+            items[key] = 0;
+
+            sql.AppendLine($" update `inventory_item` set `count` = '{foundItem.Count}' where `id` = '{foundItem.Id}'; ");
+          }
+          else
+          {
+            sql.AppendLine($" delete from `inventory_item` where `id` = '{foundItem.Id}'; ");
+
+            items[key] -= foundItem.Count;
+            inv.Items.Remove(foundItem);
+          }
+        }
+      }
+      await VSql.ExecuteAsync(sql.ToString(), null);
+
+      BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
+      if (place.StartsWith("world_"))
+        ReloadGroundMarkers();
+      return null;
+    }
+
     private async Task<string> SplitItem(int id, string sourcePlace, string targetPlace, int target_x, int target_y, int count)
     {
       if (id <= 0 || string.IsNullOrEmpty(sourcePlace) || string.IsNullOrEmpty(targetPlace))
@@ -664,6 +718,46 @@ namespace OriginFrameworkServer
       }
       
 
+    }
+
+    [EventHandler("ofw_inventory:RemoveInventoryItemsCB")]
+    private async void RemoveInventoryItemsCB([FromSource] Player source, string playerHandle, string itemsJson, CallbackDelegate callback)
+    {
+      if (source != null)
+      {
+        _ = callback("Nelze volat z klienta");
+        return;
+      }
+
+      Dictionary<int, int> items = JsonConvert.DeserializeObject<Dictionary<int, int>>(itemsJson);
+
+      var player = Players.Where(p => p.Handle == playerHandle).FirstOrDefault();
+      if (player == null)
+      {
+        _ = callback("Nepodarilo se najit hrace");
+        return;
+      }
+      int charId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(player);
+      if (charId <= 0)
+      {
+        _ = callback("Hrac neni lognuty");
+        return;
+      }
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        string result = await RemoveItems($"char_{charId}", items);
+        await Delay(0); //MRDKA. Nedavat pryc. Potrebujem zpatky do main threadu
+        if (result == null)
+        {
+          _ = callback(String.Empty);
+          return;
+        }
+        else
+        {
+          _ = callback(result);
+          return;
+        }
+      }
     }
   }
 }

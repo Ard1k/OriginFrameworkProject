@@ -36,6 +36,9 @@ namespace OriginFramework.Menus
     public int[] ColorOverride { get; set; }
 
     public string Icon { get; set; }
+    public string IconTextureDict { get; set; }
+    public string IconRight { get; set; }
+    public string IconRightTextureDict { get; set; }
 
     public bool IsBack { get; set; }
     public bool IsClose { get; set; }

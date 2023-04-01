@@ -22,6 +22,7 @@ namespace OriginFramework
     public static int CurrentVehicleModel = 0;
     public static VehiclePropertiesBag OriginalProperties = null;
     public static VehiclePropertiesBag RequestedProperties = null;
+    public static bool IsOpening = false;
 
     public TuningCatalogClient()
     {
@@ -37,11 +38,8 @@ namespace OriginFramework
 
     private async Task OnTick()
 		{
-      if (CurrentVehicle == 0)
+      if (CurrentVehicle == 0 || IsOpening)
       {
-        if (NativeMenuManager.IsMenuOpen(MenuName))
-          NativeMenuManager.CloseAndUnlockMenu(MenuName);
-
         await Delay(250);
         return;
       }
@@ -59,11 +57,17 @@ namespace OriginFramework
         }
         CurrentVehicle = 0;
         OriginalProperties = null;
+
+        if (NativeMenuManager.IsMenuOpen(MenuName))
+          NativeMenuManager.CloseAndUnlockMenu(MenuName);
       }
 		}
 
     public static async void OpenCatalog()
     {
+      if (!HasStreamedTextureDictLoaded("inventory_textures"))
+        RequestStreamedTextureDict("inventory_textures", true);
+      IsOpening = true;
       CurrentVehicle = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
       if (CurrentVehicle == 0)
       {
@@ -84,6 +88,7 @@ namespace OriginFramework
       else
         RequestedProperties = new VehiclePropertiesBag();
       NativeMenuManager.OpenNewMenu(MenuName, getCatalogMenu);
+      IsOpening = false;
     }
 
     private static NativeMenu getCatalogMenu()
@@ -251,10 +256,12 @@ namespace OriginFramework
           menu.Items.Add(new NativeMenuItem
           {
             Name = mod_label,
-            NameRight = ((RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) as int? == i2) ? "✅" : String.Empty,
+            NameRight = ((RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) as int? == i2) ? "✅" : $"{VehTuningTypeDefinition.Defined[tuningType].ComputeUpgradePrice(CurrentVehicleModel, i2)}",
+            IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.Defined[tuningType].PriceItemId].Texture,
+            IconRightTextureDict = "inventory_textures",
             OnHover = () => { SetVehicleMod(CurrentVehicle, tuningType, i2, false); },
             OnSelected = (item) => { RequestedProperties.tunings[tuningType] = i2; },
-            OnRefresh = (item) => { item.NameRight = ((RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) as int? == i2) ? "✅" : String.Empty; },
+            OnRefresh = (item) => { item.NameRight = ((RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) as int? == i2) ? "✅" : $"{VehTuningTypeDefinition.Defined[tuningType].ComputeUpgradePrice(CurrentVehicleModel, i2)}"; },
             IsRefresh = true,
           });
         }
@@ -286,20 +293,24 @@ namespace OriginFramework
       menu.Items.Add(new NativeMenuItem
       {
         Name = "Stock/None",
-        NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == false ? "✅" : String.Empty,
+        NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == false ? "✅" : $"{VehTuningTypeDefinition.Defined[tuningType].ComputeUpgradePrice(CurrentVehicleModel, 0)}",
+        IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.Defined[tuningType].PriceItemId].Texture,
+        IconRightTextureDict = "inventory_textures",
         OnHover = () => { ToggleVehicleMod(CurrentVehicle, tuningType, false); },
         OnSelected = (item) => { RequestedProperties.tunings[tuningType] = false; },
-        OnRefresh = (item) => { item.NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == false ? "✅" : String.Empty; },
+        OnRefresh = (item) => { item.NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == false ? "✅" : $"{VehTuningTypeDefinition.Defined[tuningType].ComputeUpgradePrice(CurrentVehicleModel, 0)}"; },
         IsRefresh = true,
       });
 
       menu.Items.Add(new NativeMenuItem
       {
         Name = $"{menu_name}",
-        NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == true ? "✅" : String.Empty,
+        NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == true ? "✅" : $"{VehTuningTypeDefinition.Defined[tuningType].ComputeUpgradePrice(CurrentVehicleModel, 1)}",
+        IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.Defined[tuningType].PriceItemId].Texture,
+        IconRightTextureDict = "inventory_textures",
         OnHover = () => { ToggleVehicleMod(CurrentVehicle, tuningType, true); },
         OnSelected = (item) => { RequestedProperties.tunings[tuningType] = true; },
-        OnRefresh = (item) => { item.NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == true ? "✅" : String.Empty; },
+        OnRefresh = (item) => { item.NameRight = ((bool?)(RequestedProperties.tunings[tuningType] ?? OriginalProperties.tunings[tuningType]) ?? false) == true ? "✅" : $"{VehTuningTypeDefinition.Defined[tuningType].ComputeUpgradePrice(CurrentVehicleModel, 1)}"; },
         IsRefresh = true,
       });
 
@@ -318,7 +329,7 @@ namespace OriginFramework
             {
               Name = "Primární",
               NameRight = ">>>",
-              GetSubMenu = () => { return getColorMenu(0, "Primární"); },
+              GetSubMenu = () => { return getColorMenu(0, VehTuningTypeDefinition.DefinedSpecial["color0"].Name); },
               OnRefresh = (item) =>
               {
                 SetVehicleColours(CurrentVehicle, RequestedProperties?.color1 ?? OriginalProperties?.color1 ?? 0, RequestedProperties?.color2 ?? OriginalProperties?.color2 ?? 0);
@@ -328,7 +339,7 @@ namespace OriginFramework
             {
               Name = "Sekundární",
               NameRight = ">>>",
-              GetSubMenu = () => { return getColorMenu(1, "Sekundární"); },
+              GetSubMenu = () => { return getColorMenu(1, VehTuningTypeDefinition.DefinedSpecial["color1"].Name); },
               OnRefresh = (item) =>
               {
                 //refresh obstara primarni polozka
@@ -338,7 +349,7 @@ namespace OriginFramework
             {
               Name = "Perleť",
               NameRight = ">>>",
-              GetSubMenu = () => { return getColorMenu(2, "Perleť"); },
+              GetSubMenu = () => { return getColorMenu(2, VehTuningTypeDefinition.DefinedSpecial["color2"].Name); },
               OnRefresh = (item) =>
               {
                 SetVehicleExtraColours(CurrentVehicle, RequestedProperties?.pearlescentColor ?? OriginalProperties?.pearlescentColor ?? 0, RequestedProperties?.wheelColor ?? OriginalProperties?.wheelColor ?? 0);
@@ -443,8 +454,10 @@ namespace OriginFramework
             menu.Items.Add(new NativeMenuItem
             {
               Name = $"[{c.ColorIndex}]{c.ColorName}",
-              NameRight = ((RequestedProperties?.color1 ?? OriginalProperties?.color1 ?? 0) == c.ColorIndex) ? "✅" : String.Empty,
-              OnSelected = (item) =>
+              NameRight = ((RequestedProperties?.color1 ?? OriginalProperties?.color1 ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["color0"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}",
+              IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color0"].PriceItemId].Texture,
+              IconRightTextureDict = "inventory_textures",
+            OnSelected = (item) =>
               {
                 RequestedProperties.color1 = c.ColorIndex;
               },
@@ -454,7 +467,7 @@ namespace OriginFramework
               },
               OnRefresh = (item) =>
               {
-                item.NameRight = ((RequestedProperties?.color1 ?? OriginalProperties?.color1 ?? 0) == c.ColorIndex) ? "✅" : String.Empty;
+                item.NameRight = ((RequestedProperties?.color1 ?? OriginalProperties?.color1 ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["color0"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}";
               },
               IsRefresh = true,
             });
@@ -463,7 +476,9 @@ namespace OriginFramework
             menu.Items.Add(new NativeMenuItem
             {
               Name = $"[{c.ColorIndex}]{c.ColorName}",
-              NameRight = ((RequestedProperties?.color2 ?? OriginalProperties?.color2 ?? 0) == c.ColorIndex) ? "✅" : String.Empty,
+              NameRight = ((RequestedProperties?.color2 ?? OriginalProperties?.color2 ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["color1"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}",
+              IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color1"].PriceItemId].Texture,
+              IconRightTextureDict = "inventory_textures",
               OnSelected = (item) =>
               {
                 RequestedProperties.color2 = c.ColorIndex;
@@ -474,7 +489,7 @@ namespace OriginFramework
               },
               OnRefresh = (item) =>
               {
-                item.NameRight = ((RequestedProperties?.color2 ?? OriginalProperties?.color2 ?? 0) == c.ColorIndex) ? "✅" : String.Empty;
+                item.NameRight = ((RequestedProperties?.color2 ?? OriginalProperties?.color2 ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["color1"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}";
               },
               IsRefresh = true,
             });
@@ -483,7 +498,9 @@ namespace OriginFramework
             menu.Items.Add(new NativeMenuItem
             {
               Name = $"[{c.ColorIndex}]{c.ColorName}",
-              NameRight = ((RequestedProperties?.pearlescentColor ?? OriginalProperties?.pearlescentColor ?? 0) == c.ColorIndex) ? "✅" : String.Empty,
+              NameRight = ((RequestedProperties?.pearlescentColor ?? OriginalProperties?.pearlescentColor ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["color2"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}",
+              IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color2"].PriceItemId].Texture,
+              IconRightTextureDict = "inventory_textures",
               OnSelected = (item) =>
               {
                 RequestedProperties.pearlescentColor = c.ColorIndex;
@@ -494,7 +511,7 @@ namespace OriginFramework
               },
               OnRefresh = (item) =>
               {
-                item.NameRight = ((RequestedProperties?.pearlescentColor ?? OriginalProperties?.pearlescentColor ?? 0) == c.ColorIndex) ? "✅" : String.Empty;
+                item.NameRight = ((RequestedProperties?.pearlescentColor ?? OriginalProperties?.pearlescentColor ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["color2"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}";
               },
               IsRefresh = true,
             });
@@ -601,7 +618,9 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = $"[{c.ColorIndex}]{c.ColorName}",
-          NameRight = ((RequestedProperties?.wheelColor ?? OriginalProperties?.wheelColor ?? 0) == c.ColorIndex) ? "✅" : String.Empty,
+          NameRight = ((RequestedProperties?.wheelColor ?? OriginalProperties?.wheelColor ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["colorw"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}",
+          IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["colorw"].PriceItemId].Texture,
+          IconRightTextureDict = "inventory_textures",
           OnSelected = (item) =>
           {
             RequestedProperties.wheelColor = c.ColorIndex;
@@ -612,7 +631,7 @@ namespace OriginFramework
           },
           OnRefresh = (item) =>
           {
-            item.NameRight = ((RequestedProperties?.wheelColor ?? OriginalProperties?.wheelColor ?? 0) == c.ColorIndex) ? "✅" : String.Empty;
+            item.NameRight = ((RequestedProperties?.wheelColor ?? OriginalProperties?.wheelColor ?? 0) == c.ColorIndex) ? "✅" : $"{VehTuningTypeDefinition.DefinedSpecial["colorw"].ComputeUpgradePrice(CurrentVehicleModel, c.ColorIndex)}";
           },
           IsRefresh = true,
         });
@@ -699,7 +718,9 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = wheelName,
-          NameRight = (((RequestedProperties?.wheels ?? OriginalProperties?.wheels ?? -1) == wheelType) && ((int)(RequestedProperties?.tunings[23] ?? OriginalProperties?.tunings[23] ?? -1) == i2)) ? "✅" : String.Empty,
+          NameRight = (((RequestedProperties?.wheels ?? OriginalProperties?.wheels ?? -1) == wheelType) && ((int)(RequestedProperties?.tunings[23] ?? OriginalProperties?.tunings[23] ?? -1) == i2)) ? "✅" : $"{VehTuningTypeDefinition.Defined[23].ComputeUpgradePrice(CurrentVehicleModel, i2)}",
+          IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.Defined[23].PriceItemId].Texture,
+          IconRightTextureDict = "inventory_textures",
           OnSelected = (item) =>
           {
             RequestedProperties.wheels = GetVehicleWheelType(CurrentVehicle);
@@ -711,7 +732,7 @@ namespace OriginFramework
           },
           OnRefresh = (item) =>
           {
-            item.NameRight = (((RequestedProperties?.wheels ?? OriginalProperties?.wheels ?? -1) == wheelType) && ((int)(RequestedProperties?.tunings[23] ?? OriginalProperties?.tunings[23] ?? -1) == i2)) ? "✅" : String.Empty;
+            item.NameRight = (((RequestedProperties?.wheels ?? OriginalProperties?.wheels ?? -1) == wheelType) && ((int)(RequestedProperties?.tunings[23] ?? OriginalProperties?.tunings[23] ?? -1) == i2)) ? "✅" : $"{VehTuningTypeDefinition.Defined[23].ComputeUpgradePrice(CurrentVehicleModel, i2)}";
           },
           IsRefresh = true,
         });
