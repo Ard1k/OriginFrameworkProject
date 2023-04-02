@@ -560,7 +560,14 @@ namespace OriginFramework
             SetMouseCursorVisibleInMenus(false);
             string input = await TextUtils.GetUserInput($"Kolik chcete přesunout z {dragData.SrcItem.Count}?", null, 7);
             int splitCount;
-            if (Int32.TryParse(input, out splitCount))
+            decimal money;
+            if (ItemsDefinitions.Items[dragData.SrcItem.ItemId].IsMoney == true && Decimal.TryParse(input, out money))
+            {
+              splitCount = (int)(money * 100);
+              TriggerServerEvent("ofw_inventory:Operation_Split", dragData.SrcItem.Id, dragData.SrcItem.Place, dragData.TargetInv.Place, dragData.targetX, dragData.targetY, splitCount);
+            }
+            else
+            if (ItemsDefinitions.Items[dragData.SrcItem.ItemId].IsMoney == false && Int32.TryParse(input, out splitCount))
             {
               TriggerServerEvent("ofw_inventory:Operation_Split", dragData.SrcItem.Id, dragData.SrcItem.Place , dragData.TargetInv.Place, dragData.targetX, dragData.targetY, splitCount);
             }
@@ -724,7 +731,7 @@ namespace OriginFramework
       SetTextScale(itemCountScale, itemCountScale);
       SetTextColour(255, 255, 255, 255);
       SetTextEntry("STRING");
-      AddTextComponentString(FontsManager.FiraSansString + it.Count);
+      AddTextComponentString(FontsManager.FiraSansString + ItemsDefinitions.Items[it.ItemId].FormatAmount(it.Count));
       SetTextWrap((float)x1, (float)x2);
       SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
       DrawText((float)x1, (float)y1);
@@ -736,7 +743,7 @@ namespace OriginFramework
       SetTextScale(itemCountScale, itemCountScale);
       SetTextColour(255, 255, 255, 255);
       SetTextEntry("STRING");
-      AddTextComponentString(FontsManager.FiraSansString + it.Count);
+      AddTextComponentString(FontsManager.FiraSansString + ItemsDefinitions.Items[it.ItemId].FormatAmount(it.Count));
       SetTextWrap((float)(cursorData.xRelative - cellWidth / 2f + cellWidth / 10), (float)(cursorData.xRelative + cellWidth / 2f - cellWidth / 10));
       SetTextJustification((int)CitizenFX.Core.UI.Alignment.Right);
       DrawText((float)(cursorData.xRelative - cellWidth / 2f), (float)(cursorData.yRelative + cellHeight / 2f - itemCountYOffset - cellHeight / 10));

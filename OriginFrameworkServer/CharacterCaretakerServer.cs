@@ -103,6 +103,14 @@ namespace OriginFrameworkServer
       return LoggedPlayers[oid.OID].Id;
     }
 
+    public static int GetCharLoggedServerId(int charId)
+    {
+      var oid = LoggedPlayers.FirstOrDefault(x => x.Value.Id == charId).Key;
+      if (oid <= 0) return -1;
+
+      return OIDServer.GetLastKnownServerID(oid);
+    }
+
     public static bool HasPlayerAdminLevel(Player source, int level)
     {
       var oid = OIDServer.GetOriginServerID(source);

@@ -113,7 +113,10 @@
     <None Include="fxmanifest.lua">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="index.html">
+    <None Include="nui\fonts\FiraSans.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="nui\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="stream\fs.gfx">
@@ -125,6 +128,14 @@
     <None Include="stream\menu_textures.ytd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="nui\app.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="nui\style.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

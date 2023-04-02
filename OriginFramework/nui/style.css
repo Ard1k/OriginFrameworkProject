@@ -1,0 +1,68 @@
+﻿@font-face {
+  font-family: FiraSans;
+  src: url(fonts/FiraSans.ttf);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: transparent !important;
+  font-family: FiraSans;
+}
+
+.inventoryNotifications {
+  margin-top: 50vh;
+  margin-right: 1vw;
+  height: 40vh;
+  float: right;
+  flex-flow: column nowrap;
+  display: flex;
+}
+
+.inventoryNotificationItem {
+  position: relative;
+  color: white;
+  border: solid;
+  border-color: rgba(255, 255, 255, 0.6);
+  border-width: 0.05vh;
+  height: auto;
+  font-size: 1.6vh;
+  font-family: FiraSans;
+  align-self: flex-start;
+  margin-top: 0.2vh;
+}
+
+.positiveAmount, .negativeAmount, .text {
+  padding: 0.2vh 0.2vw 0.2vh 0.2vw;
+  display: inline-block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.text {
+  width: 11vw;
+  max-width: 11vw;
+  background-color: rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.positiveAmount, .negativeAmount {
+  width: 4vw;
+  max-width: 4vw;
+  text-align: right;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.positiveAmount {
+  color: green;
+}
+.negativeAmount {
+  color: red;
+  
+}
+

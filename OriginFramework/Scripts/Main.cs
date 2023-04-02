@@ -65,6 +65,29 @@ namespace OriginFramework
         }
       }), false);
 
+      RegisterCommand("test", new Action<int, List<object>, string>(async (source, args, raw) =>
+      {
+        if (args != null && args.Count > 0)
+        {
+          var text = String.Join(" ", args);
+
+          var message = new
+          {
+            type = "inventoryNotification",
+            amount = "+2.66$",
+            text = text
+          };
+          SendNuiMessage(JsonConvert.SerializeObject(message));
+          message = new
+          {
+            type = "inventoryNotification",
+            amount = "-2.66$",
+            text = text
+          };
+          SendNuiMessage(JsonConvert.SerializeObject(message));
+        }
+      }), false);
+
       #endregion
 
       var dynamicItemsDefString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_core:GetDynamicItemDefinitions");
@@ -132,6 +155,12 @@ namespace OriginFramework
     private async void SuccessNotification(string message)
     {
       Notify.Success(message);
+    }
+
+    [EventHandler("ofw:InventoryNotification")]
+    private async void InventoryNotification(string itemName, string amount)
+    {
+      Notify.ShowInventoryNotification(itemName, amount);
     }
   }
 }

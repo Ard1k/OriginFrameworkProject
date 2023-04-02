@@ -47,11 +47,11 @@ namespace OriginFramework
         {
           wasShooting = true;
           shotPrevFrame = true;
+          lastShootTime = timer;
         }
         else if (shotPrevFrame)
         {
           shotPrevFrame = false;
-          lastShootTime = timer;
         }
 
         if (wasShooting && timer - lastShootTime > 1000)

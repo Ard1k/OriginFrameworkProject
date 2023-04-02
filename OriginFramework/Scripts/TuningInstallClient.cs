@@ -85,7 +85,7 @@ namespace OriginFramework
         RequestedProperties = JsonConvert.DeserializeObject<VehiclePropertiesBag>(reqData);
       }
       else
-        c = new VehiclePropertiesBag();
+        RequestedProperties = new VehiclePropertiesBag();
       NativeMenuManager.OpenNewMenu(MenuName, getTuningInstallMenu);
     }
 

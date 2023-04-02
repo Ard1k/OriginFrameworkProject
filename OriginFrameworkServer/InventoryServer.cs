@@ -294,11 +294,25 @@ namespace OriginFrameworkServer
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
       if (place.StartsWith("world_"))
         ReloadGroundMarkers();
+      if (place.StartsWith("char_"))
+      {
+        int serverId = CharacterCaretakerServer.GetCharLoggedServerId(Int32.Parse(place.Substring(5)));
+        if (serverId > 0)
+        {
+          var player = Players.Where(p => p.Handle == serverId.ToString()).FirstOrDefault();
+          if (player != null)
+          {
+            player.TriggerEvent("ofw:InventoryNotification", "Inventář", "-VŠE");
+          }
+        }
+      }
       return null;
     }
 
     private async Task<string> GiveItem(string place, int item_id, int count)
     {
+      int resultCount = count;
+
       if (item_id <= 0 || string.IsNullOrEmpty(place))
         return "Neznámý předmět nebo inventář";
 
@@ -352,11 +366,29 @@ namespace OriginFrameworkServer
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
       if (place.StartsWith("world_"))
         ReloadGroundMarkers();
+      if (place.StartsWith("char_"))
+      {
+        int serverId = CharacterCaretakerServer.GetCharLoggedServerId(Int32.Parse(place.Substring(5)));
+        if (serverId > 0)
+        {
+          var player = Players.Where(p => p.Handle == serverId.ToString()).FirstOrDefault();
+          if (player != null)
+          {
+            var def = ItemsDefinitions.Items[item_id];
+            if (def != null)
+            {
+              player.TriggerEvent("ofw:InventoryNotification", def.Name, def.FormatAmount(resultCount, true));
+            }
+          }
+        }
+      }
       return null;
     }
 
     private async Task<string> RemoveItem(string place, int item_id, int count)
     {
+      int resultCount = count * -1;
+
       if (item_id <= 0 || string.IsNullOrEmpty(place))
         return "Neznámý předmět nebo inventář";
 
@@ -404,6 +436,22 @@ namespace OriginFrameworkServer
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
       if (place.StartsWith("world_"))
         ReloadGroundMarkers();
+      if (place.StartsWith("char_"))
+      {
+        int serverId = CharacterCaretakerServer.GetCharLoggedServerId(Int32.Parse(place.Substring(5)));
+        if (serverId > 0)
+        {
+          var player = Players.Where(p => p.Handle == serverId.ToString()).FirstOrDefault();
+          if (player != null)
+          {
+            var def = ItemsDefinitions.Items[item_id];
+            if (def != null)
+            {
+              player.TriggerEvent("ofw:InventoryNotification", def.Name, def.FormatAmount(resultCount, true));
+            }
+          }
+        }
+      }
       return null;
     }
 
@@ -411,6 +459,8 @@ namespace OriginFrameworkServer
     {
       if (items == null || items.Count == 0 || string.IsNullOrEmpty(place) || items.Any(it => it.Key <= 0 || it.Value <= 0))
         return "Neznámý inventář, předmět nebo počet";
+
+      var removeItems = new Dictionary<int, int>(items);
 
       foreach (var item in items)
       {
@@ -458,6 +508,25 @@ namespace OriginFrameworkServer
       BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", place, null);
       if (place.StartsWith("world_"))
         ReloadGroundMarkers();
+      if (place.StartsWith("char_"))
+      {
+        int serverId = CharacterCaretakerServer.GetCharLoggedServerId(Int32.Parse(place.Substring(5)));
+        if (serverId > 0)
+        {
+          var player = Players.Where(p => p.Handle == serverId.ToString()).FirstOrDefault();
+          if (player != null)
+          {
+            foreach (var removeItem in removeItems)
+            {
+              var def = ItemsDefinitions.Items[removeItem.Key];
+              if (def != null)
+              {
+                player.TriggerEvent("ofw:InventoryNotification", def.Name, def.FormatAmount(removeItem.Value * -1, true));
+              }
+            }
+          }
+        }
+      }
       return null;
     }
 

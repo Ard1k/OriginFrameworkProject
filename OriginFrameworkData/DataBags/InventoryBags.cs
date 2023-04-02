@@ -190,6 +190,7 @@ namespace OriginFrameworkData.DataBags
     public int AmmoItemId { get; set; }
     public AnimationBag UseAnim { get; set; }
     public AnimationBag PutAwayAnim { get; set; }
+    public bool IsMoney { get; set; }
 
     public ItemDefinition GetInstanceCopy()
     {
@@ -209,6 +210,14 @@ namespace OriginFrameworkData.DataBags
         UseAnim = this.UseAnim?.GetInstanceCopy(),
         PutAwayAnim = this.PutAwayAnim?.GetInstanceCopy()
       };
+    }
+
+    public string FormatAmount(int amount, bool addSign = false)
+    {
+      if (IsMoney)
+        return ((decimal)amount / 100).ToString("0.##") + "$";
+
+      return ((amount >= 0 && addSign) ? "+" : String.Empty) + amount.ToString();
     }
   }
 
@@ -581,6 +590,14 @@ namespace OriginFrameworkData.DataBags
           IsUpperBodyOnly = true,
           Time = 1400
         }
+      };
+      _items[17] = new ItemDefinition
+      {
+        ItemId = 17,
+        Name = "Peníze",
+        Texture = "ammo_rifle",
+        StackSize = 100000,
+        IsMoney = true
       };
       #endregion
 
