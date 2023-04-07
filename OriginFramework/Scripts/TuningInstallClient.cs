@@ -120,15 +120,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color0"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { color1 = RequestedProperties.color1 }, 
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                int colorPrimary = 0, colorSecondary = 0;
-                GetVehicleColours(veh, ref colorPrimary, ref colorSecondary);
-                SetVehicleColours(veh, RequestedProperties.color1.Value, colorSecondary);
-                RequestedProperties.color1 = null;
-              });
+            InstallTuning(new VehiclePropertiesBag { color1 = RequestedProperties.color1 });
           },
         });
       }
@@ -142,15 +134,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color1"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { color2 = RequestedProperties.color2 },
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                int colorPrimary = 0, colorSecondary = 0;
-                GetVehicleColours(veh, ref colorPrimary, ref colorSecondary);
-                SetVehicleColours(veh, colorPrimary, RequestedProperties.color2.Value);
-                RequestedProperties.color2 = null;
-              });
+            InstallTuning(new VehiclePropertiesBag { color2 = RequestedProperties.color2 });
           },
         });
       }
@@ -164,15 +148,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color2"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { pearlescentColor = RequestedProperties.pearlescentColor },
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                int pearlescentColor = 0, wheelColor = 0;
-                GetVehicleExtraColours(veh, ref pearlescentColor, ref wheelColor);
-                SetVehicleExtraColours(veh, RequestedProperties.pearlescentColor.Value, wheelColor);
-                RequestedProperties.pearlescentColor = null;
-              });
+            InstallTuning(new VehiclePropertiesBag { pearlescentColor = RequestedProperties.pearlescentColor });
           },
         });
       }
@@ -186,15 +162,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["colorw"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { wheelColor = RequestedProperties.wheelColor },
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                int pearlescentColor = 0, wheelColor = 0;
-                GetVehicleExtraColours(veh, ref pearlescentColor, ref wheelColor);
-                SetVehicleExtraColours(veh, pearlescentColor, RequestedProperties.wheelColor.Value);
-                RequestedProperties.wheelColor = null;
-              });
+            InstallTuning(new VehiclePropertiesBag { wheelColor = RequestedProperties.wheelColor });
           },
         });
       }
@@ -210,19 +178,7 @@ namespace OriginFramework
           OnSelected = (item) => {
             var vp = new VehiclePropertiesBag() { wheels = RequestedProperties.wheels };
             vp.tunings[23] = RequestedProperties.tunings[23];
-            InstallTuning(vp,
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                int wheelType = RequestedProperties.wheels ?? GetVehicleWheelType(veh);
-                int wheelNumber = RequestedProperties.tunings[23] != null ? Convert.ToInt32(RequestedProperties.tunings[23]) : GetVehicleMod(veh, 23);
-                var customTires = GetVehicleModVariation(veh, 23);
-
-                SetVehicleWheelType(veh, wheelType);
-                SetVehicleMod(veh, 23, wheelNumber, customTires);
-                RequestedProperties.wheels = null;
-                RequestedProperties.tunings[23] = null;
-              });
+            InstallTuning(vp);
           },
         });
       }
@@ -236,15 +192,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["customtires"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag() { customTires = RequestedProperties.customTires },
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                int wheelNumber = GetVehicleMod(veh, 23);
-
-                SetVehicleMod(veh, 23, wheelNumber, RequestedProperties.customTires.Value);
-                RequestedProperties.customTires = null;
-              });
+            InstallTuning(new VehiclePropertiesBag() { customTires = RequestedProperties.customTires });
           },
         });
       }
@@ -284,20 +232,7 @@ namespace OriginFramework
           OnSelected = (item) => {
             var vp = new VehiclePropertiesBag();
             vp.tunings[i2] = RequestedProperties?.tunings[i2];
-            InstallTuning(vp,
-              () => {
-                var veh = NetToVeh(CurrentVehicleNet);
-
-                if (VehTuningTypeDefinition.Defined[i2].IsToggle)
-                  ToggleVehicleMod(veh, i2, Convert.ToBoolean(RequestedProperties?.tunings[i2]));
-                else
-                {
-                  var customTires = GetVehicleModVariation(veh, 23);
-                  SetVehicleMod(veh, i2, Convert.ToInt32(RequestedProperties?.tunings[i2]), customTires); //Convert protoze je to pole objektu a pri deserializaci to muze skoncit jako byte treba...
-                }
-
-                RequestedProperties.tunings[i2] = null;
-              });
+            InstallTuning(vp);
           },
         });
       }
@@ -305,23 +240,17 @@ namespace OriginFramework
       return items;
     }
 
-    private static async void InstallTuning(VehiclePropertiesBag requestedTuning, Action modifyCurrentCar)
+    private static async void InstallTuning(VehiclePropertiesBag requestedTuning)
     {
-      //bool tuningResult = await Callbacks.ServerAsyncCallbackToSync<bool>("ofw_veh:PurchaseTuning", CurrentVehicleNet, CurrentVehicleModel, JsonConvert.SerializeObject(requestedTuning));
       if (CurrentVehicleNet == 0)
         return;
 
       string result = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_veh:InstallRequestedTuning", CurrentVehicleNet, CurrentVehicleModel, JsonConvert.SerializeObject(requestedTuning));
       if (string.IsNullOrEmpty(result) || result != "true")
         return;
-        
-      if (modifyCurrentCar != null)
-      {
-        if (CurrentVehicleNet != 0 && NetworkDoesEntityExistWithNetworkId(CurrentVehicleNet))
-          modifyCurrentCar();
 
-        NativeMenuManager.OpenNewMenu(MenuName, getTuningInstallMenu);
-      }
+      RequestedProperties.Substract(requestedTuning);
+      NativeMenuManager.OpenNewMenu(MenuName, getTuningInstallMenu);
     }
   }
 }

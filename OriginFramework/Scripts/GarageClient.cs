@@ -157,7 +157,10 @@ namespace OriginFramework
             {
               item.OnSelected = (menuItem) =>
               {
-                TakeOutVehicle(veh2, g, p);
+                if (OfwFunctions.GetBoxMarkerBlockingVehicle(p.Center, p.Dimensions) != 0)
+                  Notify.Error("Spawn je blokován");
+                else
+                  TakeOutVehicle(veh2, g, p);
               };
             }
 

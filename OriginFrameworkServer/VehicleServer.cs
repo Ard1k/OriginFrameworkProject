@@ -11,6 +11,7 @@ using OriginFrameworkData.DataBags;
 using CitizenFX.Core.Native;
 using System.Dynamic;
 using System.Runtime.ConstrainedExecution;
+using System.IO;
 
 namespace OriginFrameworkServer
 {
@@ -106,27 +107,52 @@ namespace OriginFrameworkServer
           sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Chyba");
       }), false);
 
+      //new PersistentVehicleBag { NetID = veh.NetworkId, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model }
+      RegisterCommand("resptest", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+
+        //X = 225.9405f, Y = -773.949f, Z = 29.6246f, Heading = 250.7624f
+        float x = 225;
+        float y = -773;
+        float z = 30;
+        float heading = 250;
+
+        if (sourcePlayer != null)
+        {
+          var ped = Ped.FromPlayerHandle(source.ToString());
+          var pos = ped.Position;
+          x = pos.X;
+          y = pos.Y;
+          z = pos.Z;
+          heading = ped.Heading;
+        }
+
+        persistentVehicles.Add(new PersistentVehicleBag { NetID = 445, LastKnownPos = new PosBag(x, y, z, heading), ModelHash = 1663218586 });
+
+      }), false);
+
+      RegisterCommand("delnet", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        try
+        {
+          if (args == null || args.Count != 1)
+            return;
+
+          int ent = NetworkGetEntityFromNetworkId(Convert.ToInt32(args[0]));
+          DeleteEntity(ent);
+
+        }
+        catch { }
+      }), false);
+
       while (SettingsManager.Settings == null)
         await Delay(0);
 
       while (!VSql.IsReadyToUse)
         await Delay(0);
 
-      //var res = await VSql.FetchScalarAsync("select `data` from `cfw_jsondata` where `key` = 'pvs'", null);
-      //if (res != null && res != DBNull.Value && res is string)
-      //{
-      //  Debug.WriteLine($"Filling data: {res ?? "null"}");
-      //  var newData = JsonConvert.DeserializeObject<PersistentVehicleDatabaseBag>((string)res);
-      //  if (newData != null)
-      //    data = newData;
-      //  else
-      //  {
-          //data = new PersistentVehicleDatabaseBag { Vehicles = new List<PersistentVehicleBag>() };
-      //  }
-      //}
-
       Tick += VehicleManagerTick;
-      //Tick += PeriodicSave;
 
       InternalDependencyManager.Started(eScriptArea.PersistentVehiclesServer);
     }
@@ -162,9 +188,9 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_veh:InstallRequestedTuning")]
-    private async void InstallRequestedTuning([FromSource] Player source, int veh, int model, string installProperties, NetworkCallbackDelegate callback)
+    private async void InstallRequestedTuning([FromSource] Player source, int vehNetId, int model, string installProperties, NetworkCallbackDelegate callback)
     {
-      if (source == null || veh == 0)
+      if (source == null || vehNetId == 0)
       {
         return;
       }
@@ -183,39 +209,93 @@ namespace OriginFrameworkServer
         return;
       }
 
-      if (requestedTunings.ContainsKey(veh) && requestedTunings[veh].Item1 == model)
+      if (!requestedTunings.ContainsKey(vehNetId) || requestedTunings[vehNetId].Item1 != model)
       {
-        var reqTuning = JsonConvert.DeserializeObject<VehiclePropertiesBag>(requestedTunings[veh].Item2);
+        _ = callback("");
+        return;
+      }
 
-        if (reqTuning == null)
+      var reqTuning = JsonConvert.DeserializeObject<VehiclePropertiesBag>(requestedTunings[vehNetId].Item2);
+
+      if (reqTuning == null)
+      {
+        requestedTunings.Remove(vehNetId);
+        _ = callback("");
+        return;
+      }
+
+      int veh = NetworkGetEntityFromNetworkId(vehNetId);
+      string plate = GetVehicleNumberPlateText(veh).ToLower().Trim();
+      
+      var param = new Dictionary<string, object>();
+      param.Add("@plate", plate);
+      var result = await VSql.FetchAllAsync("SELECT `id`, `properties` FROM `vehicle` WHERE `plate` = @plate", param);
+
+      VehiclePropertiesBag savedProperties = null;
+      if (result != null && result.Count > 0)
+      {
+        var sProps = (string)result[0]["properties"];
+
+        if (sProps != null)
         {
-          requestedTunings.Remove(veh);
+          savedProperties = JsonConvert.DeserializeObject<VehiclePropertiesBag>(sProps, jsonSettings);
+        }
+      }
+
+      await Delay(0); //navrat do main threadu;
+      var prices = installTuning.ComputeUpgradePrice();
+      if (prices != null && prices.Count > 0)
+      {
+        var ret = await OfwServerFunctions.ServerAsyncCallbackToSync<string>("ofw_inventory:RemoveInventoryItemsCB", source.Handle, JsonConvert.SerializeObject(prices));
+
+        if (!string.IsNullOrEmpty(ret))
+        {
           _ = callback("");
+          source.TriggerEvent("ofw:ValidationErrorNotification", ret);
           return;
         }
+      }
 
-        var prices = installTuning.ComputeUpgradePrice();
-        if (prices != null && prices.Count > 0)
+      reqTuning.Substract(installTuning);
+
+      var newReqTuning = JsonConvert.SerializeObject(reqTuning, Formatting.None, jsonSettings);
+      requestedTunings[vehNetId] = new Tuple<int, string>(model, newReqTuning);
+
+      if (savedProperties != null)
+      {
+        savedProperties.Add(installTuning);
+
+        var param2 = new Dictionary<string, object>();
+        param2.Add("@plate", plate);
+        param2.Add("@properties", JsonConvert.SerializeObject(savedProperties));
+        var result2 = await VSql.ExecuteAsync("UPDATE `vehicle` SET `properties` = @properties WHERE `plate` = @plate", param2);
+
+        await Delay(0);
+      }
+
+      int veh2 = NetworkGetEntityFromNetworkId(vehNetId);
+      int entityOwner = NetworkGetEntityOwner(veh2);
+      {
+        var entityOwnerPlayer = Players.Where(p => p.Handle == entityOwner.ToString()).FirstOrDefault();
+        
+        if (entityOwnerPlayer == null)
         {
-          var ret = await OfwServerFunctions.ServerAsyncCallbackToSync<string>("ofw_inventory:RemoveInventoryItemsCB", source.Handle, JsonConvert.SerializeObject(prices));
-
-          if (!string.IsNullOrEmpty(ret))
-          {
-            _ = callback("");
-            source.TriggerEvent("ofw:ValidationErrorNotification", ret);
-            return;
-          }
+          Debug.WriteLine("ofw_veh:InstallRequestedTuning: entityOwnerNotFound, trying sourcePlayer");
+          entityOwnerPlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
         }
 
-        reqTuning.Substract(installTuning);
+        if (entityOwnerPlayer == null)
+        {
+          Debug.WriteLine("ofw_veh:InstallRequestedTuning: sourcePlayer not found, not installing tuning");
+          entityOwnerPlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+        }
 
-        var newReqTuning = JsonConvert.SerializeObject(reqTuning, Formatting.None, jsonSettings);
-        requestedTunings[veh] = new Tuple<int, string>(model, newReqTuning);
-
-        _ = callback("true");
+        if (entityOwnerPlayer != null)
+          entityOwnerPlayer.TriggerEvent("ofw_veh:ApplyPropertiesOnVehicle", vehNetId, installProperties);
       }
-      else
-        _ = callback("");
+
+      await Delay(300);
+      _ = callback("true");
     }
 
     #endregion
@@ -474,24 +554,38 @@ namespace OriginFrameworkServer
       _ = callback(veh.NetworkId);
     }
 
-    
-
-    [EventHandler("ofw_veh:IsVehicleWithPlateOutOfGarage")]
-    private async void IsVehicleWithPlateOutOfGarage([FromSource] Player source, string plate, NetworkCallbackDelegate callback)
+    [EventHandler("ofw_veh:AckPropertiesSynced")]
+    private async void AckPropertiesSynced([FromSource] Player source, string plate)
     {
-      if (source == null)
+      if (plate == null)
         return;
 
-      for (int i = 0; i < persistentVehicles.Count; i++)
-      {
-        if (persistentVehicles[i].Plate == plate)
-        {
-          _ = callback(true);
-          return;
-        }
-      }
+      plate = plate.ToLower().Trim();
 
-      _ = callback(false);
+      var syncVeh = persistentVehicles.Where(x => x.Plate.ToLower().Trim() == plate).FirstOrDefault();
+
+      if (syncVeh != null)
+      {
+        syncVeh.IsInPropertiesSync = false;
+        Debug.WriteLine("ofw_veh:AckPropertiesSynced: Ack received for synced properties plate: " + plate);
+      }
+    }
+
+    [EventHandler("ofw_veh:AddPersistentVehicle")]
+    private async void AddPersistentVehicle([FromSource] Player source, int netId, string plate, string properties)
+    {
+      try
+      {
+        if (plate == null)
+          return;
+
+        plate = plate.ToLower().Trim();
+        var vehId = NetworkGetEntityFromNetworkId(netId);
+        var veh = Vehicle.FromHandle(vehId);
+
+        persistentVehicles.Add(new PersistentVehicleBag { NetID = netId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, Properties = properties });
+      }
+      catch { }
     }
 
     private async void OnResourceStop(string resourceName)
@@ -520,16 +614,81 @@ namespace OriginFrameworkServer
 
     private async Task VehicleManagerTick()
     {
+      if (Players.Count() <= 0)
+        return; //nikdo na serveru neni, nema cenu kontrolovat
+
       for (int i = persistentVehicles.Count - 1; i >= 0; i--)
       {
         var iveh = persistentVehicles[i];
+        if (iveh.IsServerRespawning)
+          continue;
 
         if (NetworkGetEntityFromNetworkId(iveh.NetID) <= 0 || GetEntityModel(NetworkGetEntityFromNetworkId(iveh.NetID)) != iveh.ModelHash)
         {
-          Debug.WriteLine($"PersistentVehicles: Removing no longer existing vehicle from sync [NetID: {iveh.NetID}, Model: {iveh.ModelHash}]");
-          //PersistentVehRemoved?.Invoke(this, new PersistentVehicleRemovedArgs { NetID = iveh.NetID });
-          persistentVehicles.Remove(iveh);
+          if (iveh.ModelHash == 0 || iveh.LastKnownPos == null)
+          {
+            persistentVehicles.Remove(iveh);
+            Debug.WriteLine($"PersistentVehicles: Removing no longer existing vehicle from sync [NetID: {iveh.NetID}, Model: {iveh.ModelHash}]");
+            continue;
+          }
+
+          iveh.IsServerRespawning = true;
+          int respVehID = -1;
+          respVehID = SpawnPersistentVehicle(iveh.ModelHash, new Vector3(iveh.LastKnownPos.X, iveh.LastKnownPos.Y, iveh.LastKnownPos.Z), iveh.LastKnownPos.Heading);
+
+          await Delay(200);
+
+          int frameCounter = 0;
+          while (!DoesEntityExist(respVehID))
+          {
+            await Delay(1000);
+            frameCounter++;
+            if (frameCounter >= 5)
+            {
+              Debug.WriteLine("PersistentVehicles: Vehicle server respawn timeout!");
+              iveh.IsServerRespawning = false;
+              continue;
+            }
+          }
+
+          var veh = new Vehicle(respVehID);
+          iveh.NetID = veh.NetworkId;
+          iveh.IsServerRespawning = false;
+
+          string syncProperties = null;
+          if (iveh.GarageId != null)
+          {
+            var param = new Dictionary<string, object>();
+            param.Add("@id", iveh.GarageId);
+            var result = await VSql.FetchAllAsync("SELECT `properties` FROM `vehicle` WHERE `id` = @id", param);
+
+            if (result != null && result.Count > 0)
+            {
+              syncProperties = (string)result[0]["properties"];
+            }
+
+            if (syncProperties != null)
+              iveh.Properties = syncProperties;
+            await Delay(0);
+          }
+
+          if (iveh.Properties != null)
+          {
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
+            iveh.IsInPropertiesSync = true;
+            iveh.LastPropertiesSync = GetGameTimer();
+          }
+
           continue;
+        }
+
+        if (iveh.IsInPropertiesSync && iveh.LastPropertiesSync != null)
+        {
+          if (GetGameTimer() - iveh.LastPropertiesSync.Value > 10000) //10s
+          {
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
+            iveh.LastPropertiesSync = GetGameTimer();
+          }
         }
 
         var vehID = NetworkGetEntityFromNetworkId(iveh.NetID);
@@ -541,24 +700,8 @@ namespace OriginFrameworkServer
         iveh.LastKnownPos.Heading = vehEnt.Heading;
       }
 
-      await Delay(10000);
+      await Delay(1000);
     }
-
-    //private async Task PeriodicSave()
-    //{
-    //  await Delay(10000);
-
-    //  if (data == null)
-    //    return;
-
-    //  string serialized = JsonConvert.SerializeObject(data);
-
-    //  var param = new Dictionary<string, object> { };
-    //  param.Add("@value", serialized);
-
-    //  await VSql.ExecuteAsync("INSERT INTO cfw_jsondata (`key`, `data`) VALUES ('pvs', @value) ON DUPLICATE KEY UPDATE `key` = 'pvs', `data` = @value", param);
-    //  Debug.WriteLine("PersistenVehicles: CurrentData: " + JsonConvert.SerializeObject(data));
-    //}
 
     public int SpawnPersistentVehicle(int hash, Vector3 pos, float heading)
     {

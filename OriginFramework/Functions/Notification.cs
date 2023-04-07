@@ -88,23 +88,23 @@ namespace OriginFramework
     public static void Alert(string message, bool blink = true, bool saveToBrief = true)
     {
       //Custom("~y~~h~Alert~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
-      ShowNotification("~y~~h~Alert~h~~s~: " + (message ?? String.Empty));
+      ShowNotification(/*"~y~~h~Alert~h~~s~: " + */(message ?? String.Empty));
     }
     public static void Error(string message, bool blink = true, bool saveToBrief = true)
     {
       //Custom("~r~~h~Error~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
-      ShowNotification("~r~~h~Error~h~~s~: " + (message ?? String.Empty));
+      ShowNotification(/*"~r~~h~Error~h~~s~: " + */(message ?? String.Empty));
       Debug.Write("[OFW] [ERROR] " + (message ?? String.Empty) + "\n");
     }
     public static void Info(string message, bool blink = true, bool saveToBrief = true)
     {
       //Custom("~b~~h~Info~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
-      ShowNotification("~b~~h~Info~h~~s~: " + (message ?? String.Empty));
+      ShowNotification(/*"~b~~h~Info~h~~s~: " + */(message ?? String.Empty));
     }
     public static void Success(string message, bool blink = true, bool saveToBrief = true)
     {
       //Custom("~g~~h~Success~h~~s~: " + (message ?? String.Empty), blink, saveToBrief);
-      ShowNotification("~g~~h~Success~h~~s~: " + (message ?? String.Empty));
+      ShowNotification(/*"~g~~h~Success~h~~s~: " + */(message ?? String.Empty));
     }
   }
 

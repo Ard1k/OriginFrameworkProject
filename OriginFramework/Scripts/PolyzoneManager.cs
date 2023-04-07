@@ -63,7 +63,7 @@ namespace OriginFramework
         if (testsFrozen)
           break;
 
-        var blocked = GetBoxMarkerBlockingVehicle(i.Center, i.Dimensions) > 0;
+        var blocked = GetBoxMarkerBlockingVehicle(i.Center, i.Dimensions) != 0;
         BoxMarkerSolidDraw(i.Center, i.Dimensions, blocked);
       }
     }

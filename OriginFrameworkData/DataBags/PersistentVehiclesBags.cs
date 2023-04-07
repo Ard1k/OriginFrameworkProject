@@ -10,11 +10,14 @@ namespace OriginFrameworkData.DataBags
 	{
 		public Guid UniqueId { get; set; }
 		public int? GarageId { get; set; }
-		public bool IsServerRestored { get; set; }
-		public int NetID { get; set; }
+		public bool IsServerRespawning { get; set; }
+    public int NetID { get; set; }
 		public int ModelHash { get; set; }
 		public PosBag LastKnownPos { get; set; }
 		public string Plate { get; set; }
+		public string Properties { get; set; }
+		public bool IsInPropertiesSync { get; set; }
+		public long? LastPropertiesSync { get; set; }
 
 		public PersistentVehicleBag() 
 		{
