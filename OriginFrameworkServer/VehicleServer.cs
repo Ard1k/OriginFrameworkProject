@@ -562,7 +562,7 @@ namespace OriginFrameworkServer
 
       plate = plate.ToLower().Trim();
 
-      var syncVeh = persistentVehicles.Where(x => x.Plate.ToLower().Trim() == plate).FirstOrDefault();
+      var syncVeh = persistentVehicles.Where(x => x.Plate?.ToLower().Trim() == plate).FirstOrDefault();
 
       if (syncVeh != null)
       {
@@ -583,7 +583,15 @@ namespace OriginFrameworkServer
         var vehId = NetworkGetEntityFromNetworkId(netId);
         var veh = Vehicle.FromHandle(vehId);
 
-        persistentVehicles.Add(new PersistentVehicleBag { NetID = netId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, Properties = properties });
+        var existing = persistentVehicles.Where(x => x.NetID == netId).FirstOrDefault();
+
+        if (existing != null)
+        {
+          if (existing.Plate == null) existing.Plate = plate;
+          if (existing.Properties == null) existing.Properties = properties;
+        }
+        else
+          persistentVehicles.Add(new PersistentVehicleBag { NetID = netId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, Properties = properties });
       }
       catch { }
     }
@@ -672,7 +680,7 @@ namespace OriginFrameworkServer
             await Delay(0);
           }
 
-          if (iveh.Properties != null)
+          if (iveh.Properties != null && iveh.Plate != null)
           {
             TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
             iveh.IsInPropertiesSync = true;
