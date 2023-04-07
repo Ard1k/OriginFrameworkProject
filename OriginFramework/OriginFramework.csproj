@@ -49,7 +49,6 @@
     <Compile Include="Functions\Blips.cs" />
     <Compile Include="Functions\DrawUtils.cs" />
     <Compile Include="Functions\TextUtils.cs" />
-    <Compile Include="Functions\Markers.cs" />
     <Compile Include="Functions\TheBugger.cs" />
     <Compile Include="Functions\Vehicles.cs" />
     <Compile Include="Helpers\MapHelper.cs" />
@@ -66,6 +65,7 @@
     <Compile Include="MainMenu\MainMenu_Default.cs" />
     <Compile Include="Menus\NativeMenu.cs" />
     <Compile Include="Scripts\CharacterCaretaker.cs" />
+    <Compile Include="Scripts\GarageClient.cs" />
     <Compile Include="Scripts\TuningInstallClient.cs" />
     <Compile Include="Scripts\TuningCatalogClient.cs" />
     <Compile Include="Scripts\SkinEditor.cs" />
@@ -73,6 +73,7 @@
     <Compile Include="Scripts\SkinManager.cs" />
     <Compile Include="Scripts\ProgressBar.cs" />
     <Compile Include="Scripts\VehicleHud.cs" />
+    <Compile Include="Scripts\PolyzoneManager.cs" />
     <Compile Include="Scripts\WeaponManager.cs" />
     <Compile Include="Scripts\ZKeyHud.cs" />
     <Compile Include="Scripts\InventoryManager.cs" />

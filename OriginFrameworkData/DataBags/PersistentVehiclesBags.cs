@@ -6,35 +6,19 @@ using System.Threading.Tasks;
 
 namespace OriginFrameworkData.DataBags
 {
-	public class PersistentVehicleDatabaseBag
-	{
-		public List<PersistentVehicleBag> Vehicles { get; set; }
-	}
-
 	public class PersistentVehicleBag
 	{
-		public int GlobalVehID { get; set; }
+		public Guid UniqueId { get; set; }
+		public int? GarageId { get; set; }
 		public bool IsServerRestored { get; set; }
 		public int NetID { get; set; }
 		public int ModelHash { get; set; }
-		public VehiclePosBag LastKnownPos { get; set; }
+		public PosBag LastKnownPos { get; set; }
 		public string Plate { get; set; }
-	}
 
-	public class VehiclePosBag
-	{
-		public VehiclePosBag() { }
-		public VehiclePosBag(float x, float y, float z, float heading)
+		public PersistentVehicleBag() 
 		{
-			this.X = x;
-			this.Y = y;
-			this.Z = z;
-			this.Heading = heading;
+			UniqueId = Guid.NewGuid();
 		}
-
-		public float X { get; set; }
-		public float Y { get; set; }
-		public float Z { get; set; }
-		public float Heading { get; set; }
 	}
 }

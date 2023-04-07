@@ -143,6 +143,60 @@ namespace OriginFrameworkData.DataBags
       }
     }
 
+    public void FillNulls(VehiclePropertiesBag subVP)
+    {
+      if (subVP == null)
+        return;
+
+      if (color1 == null) color1 = subVP.color1;
+      if (color2 == null) color2 = subVP.color2;
+      if (pearlescentColor == null) pearlescentColor = subVP.pearlescentColor;
+      if (wheelColor == null) wheelColor = subVP.wheelColor;
+      if (wheels == null) wheels = subVP.wheels;
+      if (customTires == null) customTires = subVP.customTires;
+      if (windowTint == null) windowTint = subVP.windowTint;
+      if (xenonColor == null) xenonColor = subVP.xenonColor;
+      if (neonEnabled == null) neonEnabled = subVP.neonEnabled;
+      if (neonColor == null) neonColor = subVP.neonColor;
+      if (extras == null) extras = subVP.extras;
+      if (tyreSmokeColor == null) tyreSmokeColor = subVP.tyreSmokeColor;
+      if (subVP.tunings != null && tunings != null)
+      {
+        for (int i = 0; i < subVP.tunings.Length; i++)
+        {
+          if (tunings.Length >= i + 1 && tunings[i] == null)
+            tunings[i] = subVP.tunings[i];
+        }
+      }
+    }
+
+    public void Add(VehiclePropertiesBag subVP)
+    {
+      if (subVP == null)
+        return;
+
+      if (subVP.color1 != null) color1 = subVP.color1;
+      if (subVP.color2 != null) color2 = subVP.color2;
+      if (subVP.pearlescentColor != null) pearlescentColor = subVP.pearlescentColor;
+      if (subVP.wheelColor != null) wheelColor = subVP.wheelColor;
+      if (subVP.wheels != null) wheels = subVP.wheels;
+      if (subVP.customTires != null) customTires = subVP.customTires;
+      if (subVP.windowTint != null) windowTint = subVP.windowTint;
+      if (subVP.xenonColor != null) xenonColor = subVP.xenonColor;
+      if (subVP.neonEnabled != null) neonEnabled = subVP.neonEnabled;
+      if (subVP.neonColor != null) neonColor = subVP.neonColor;
+      if (subVP.extras != null) extras = subVP.extras;
+      if (subVP.tyreSmokeColor != null) tyreSmokeColor = subVP.tyreSmokeColor;
+      if (subVP.tunings != null && tunings != subVP.tunings)
+      {
+        for (int i = 0; i < subVP.tunings.Length; i++)
+        {
+          if (subVP.tunings[i] != null && tunings.Length >= i + 1)
+            tunings[i] = subVP.tunings[i];
+        }
+      }
+    }
+
     public Dictionary<int, int> ComputeUpgradePrice()
     {
       var prices = new Dictionary<int, int>();
@@ -210,6 +264,14 @@ namespace OriginFrameworkData.DataBags
       }
 
       return prices;
+    }
+
+    public static VehiclePropertiesBag InitializeNew(int model, string plate)
+    {
+      var prop = new VehiclePropertiesBag();
+      prop.model = model;
+      prop.plate = plate;
+      return prop;
     }
   }
 

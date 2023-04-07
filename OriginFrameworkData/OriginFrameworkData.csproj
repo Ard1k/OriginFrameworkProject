@@ -46,12 +46,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataBags\AnimationBag.cs" />
+    <Compile Include="DataBags\GarageVehicleBag.cs" />
+    <Compile Include="DataBags\PolyzoneBag.cs" />
     <Compile Include="DataBags\InventoryBags.cs" />
     <Compile Include="DataBags\Global.cs" />
     <Compile Include="DataBags\GroupBags.cs" />
     <Compile Include="DataBags\LuxuryCarsDeliveryBags.cs" />
     <Compile Include="DataBags\MapBags.cs" />
     <Compile Include="DataBags\CharacterBags.cs" />
+    <Compile Include="DataBags\GarageBags.cs" />
     <Compile Include="DataBags\NPCBags.cs" />
     <Compile Include="DataBags\OIDBag.cs" />
     <Compile Include="DataBags\PersistentVehiclesBags.cs" />

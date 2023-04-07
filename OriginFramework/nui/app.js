@@ -5,8 +5,8 @@
       var x = Number((event.data.x).toFixed(4));
       var y = Number((event.data.y).toFixed(4));
       var z = Number((event.data.z).toFixed(4));
-      //var str = x + " " + y + " " + z;
-      var str = "\"X\": " + x + ", \"Y\": " + y + ", \"Z\": " + z;
+      var str = x + " " + y + " " + z;
+      //var str = "\"X\": " + x + ", \"Y\": " + y + ", \"Z\": " + z;
       console.log('Copied:' + str)
       copyTextToClipboard(str);
     }
@@ -15,8 +15,8 @@
       var y = Number((event.data.y).toFixed(4));
       var z = Number((event.data.z).toFixed(4));
       var h = Number((event.data.h).toFixed(4));
-      //var str = x + " " + y + " " + z + " " + h;
-      var str = "\"X\": " + x + ", \"Y\": " + y + ", \"Z\": " + z + ", \"Heading\": " + h;
+      var str = x + " " + y + " " + z + " " + h;
+      //var str = "\"X\": " + x + ", \"Y\": " + y + ", \"Z\": " + z + ", \"Heading\": " + h;
       console.log('Copied:' + str)
       copyTextToClipboard(str);
     }

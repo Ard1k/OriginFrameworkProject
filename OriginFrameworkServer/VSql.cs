@@ -76,6 +76,27 @@ namespace OriginFrameworkServer
                                 " INDEX (`place`) " +
                                 " );", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `item_definition` (`id` int NOT NULL, `data` LONGTEXT NOT NULL, PRIMARY KEY (`id`));", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `organization` " +
+                    " (`id` int NOT NULL AUTO_INCREMENT, " +
+                    "  `name` varchar(50) NOT NULL, " +
+                    "  `tag` varchar(8) NOT NULL, " +
+                    "  `owner` int NOT NULL, " +
+                    " PRIMARY KEY (`id`), " +
+                    " CONSTRAINT `fk_organization_owner_id` FOREIGN KEY (`owner`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT " +
+                    " );", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `vehicle` " +
+                          " (`id` int NOT NULL AUTO_INCREMENT, " +
+                          "  `model` varchar(50) NOT NULL, " +
+                          "  `plate` varchar(8) NOT NULL, " +
+                          "  `place` varchar(20) NOT NULL, " +
+                          "  `properties` varchar(2000) NOT NULL, " +
+                          "  `owner_char` int NULL, " +
+                          "  `owner_organization` int NULL, " +
+                          " PRIMARY KEY (`id`), " +
+                          " CONSTRAINT `fk_vehicle_character_id` FOREIGN KEY (`owner_char`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT," +
+                          " CONSTRAINT `fk_vehicle_organization_id` FOREIGN KEY (`owner_organization`) REFERENCES `organization` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT, " +
+                          " CONSTRAINT `unique_plate` UNIQUE (`plate`) " +
+                          " );", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }

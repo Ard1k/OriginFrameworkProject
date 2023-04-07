@@ -595,7 +595,7 @@ namespace OriginFrameworkData.DataBags
       {
         ItemId = 17,
         Name = "Peníze",
-        Texture = "ammo_rifle",
+        Texture = "money1",
         StackSize = 100000,
         IsMoney = true
       };
