@@ -19,6 +19,7 @@ namespace OriginFramework
     public static string CurrentMenuName { get; set; }
     public static string LockedInMenuName { get; set; }
     private static bool IsInputtingText { get; set; }
+    private static bool IsSubMenuLoading { get; set; }
 
     private static float xOffset = 0.65f;
     private static float xLenght = 0.20f;
@@ -75,7 +76,7 @@ namespace OriginFramework
     #region private metody
     private async void UpdateSelection()
     {
-      if (IsInputtingText)
+      if (IsInputtingText || IsSubMenuLoading)
         return;
 
       if (IsHidden)
@@ -251,6 +252,16 @@ namespace OriginFramework
           Refresh();
         }
 
+        if (currentItem.GetSubMenuAsync != null)
+        {
+          IsSubMenuLoading = true;
+          var prevMenu = CurrentMenu;
+          CurrentMenu = await currentItem.GetSubMenuAsync();
+          CurrentMenu.PreviousMenu = prevMenu;
+          IsSubMenuLoading = false;
+          Refresh();
+        }
+
         if (funcOnSelected != null)
         {
           funcOnSelected(currentItem);
@@ -381,11 +392,11 @@ namespace OriginFramework
           else
           {
             if (CurrentMenu.Items[i].ColorOverride != null)
-              boxColor = new int[] { CurrentMenu.Items[i].ColorOverride[3], CurrentMenu.Items[i].ColorOverride[4], CurrentMenu.Items[i].ColorOverride[5], CurrentMenu.Items[i].IsUnselectable ? 0 : 230 };
+              boxColor = new int[] { CurrentMenu.Items[i].ColorOverride[3], CurrentMenu.Items[i].ColorOverride[4], CurrentMenu.Items[i].ColorOverride[5], (CurrentMenu.Items[i].IsUnselectable && CurrentMenu.Items[i].Name == null) ? 0 : 230 };
             else if (CurrentMenu.Items[i].IsColorAsUnavailable)
-              boxColor = new int[] { 120, 45, 45, CurrentMenu.Items[i].IsUnselectable ? 0 : 230 };
+              boxColor = new int[] { 120, 45, 45, (CurrentMenu.Items[i].IsUnselectable && CurrentMenu.Items[i].Name == null) ? 0 : 230 };
             else
-              boxColor = new int[] { 45, 45, 45, CurrentMenu.Items[i].IsUnselectable ? 0 : 230 };
+              boxColor = new int[] { 45, 45, 45, (CurrentMenu.Items[i].IsUnselectable && CurrentMenu.Items[i].Name == null) ? 0 : 230 };
           }
 
           DrawRect(xOffset, yOffset + (yHeight * (i - indexMin)), xLenght, yHeight - spacing, boxColor[0], boxColor[1], boxColor[2], boxColor[3]);

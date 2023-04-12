@@ -81,6 +81,19 @@ namespace OriginFrameworkServer
       return true;
     }
 
+    public static async void UpdateOrganization(OIDBag oid, Player player, int? organizationId)
+    {
+      if (!LoggedPlayers.ContainsKey(oid.OID) || LoggedPlayers[oid.OID] == null)
+        return;
+
+      LoggedPlayers[oid.OID].OrganizationId = organizationId;
+
+      if (player != null)
+      {
+        player.TriggerEvent("ofw_char_caretaker:UpdateOrganization", organizationId);
+      }
+    }
+
     public static int GetPlayerLoggedCharacterId(int oid)
     {
       if (!LoggedPlayers.ContainsKey(oid))
@@ -101,6 +114,20 @@ namespace OriginFrameworkServer
         return -1;
 
       return LoggedPlayers[oid.OID].Id;
+    }
+
+    public static CharacterBag GetPlayerLoggedCharacter(Player player)
+    {
+      var oid = OIDServer.GetOriginServerID(player);
+      if (oid == null)
+      {
+        return null;
+      }
+
+      if (!LoggedPlayers.ContainsKey(oid.OID))
+        return null;
+
+      return LoggedPlayers[oid.OID];
     }
 
     public static int GetCharLoggedServerId(int charId)
@@ -124,6 +151,27 @@ namespace OriginFrameworkServer
         return false;
 
       return LoggedPlayers[oid.OID].AdminLevel >= level;
+    }
+
+    [EventHandler("ofw_char:GetPlayerCharacter")]
+    private async void GetPlayerCharacter([FromSource] Player source, int playerHandle, NetworkCallbackDelegate callback)
+    {
+      var player = Players.Where(p => p.Handle == playerHandle.ToString()).FirstOrDefault();
+      if (player == null)
+      {
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var character = GetPlayerLoggedCharacter(player);
+      if (character == null)
+      {
+        _ = callback(String.Empty);
+        return;
+      }
+      await Delay(2000);
+
+      _ = callback(JsonConvert.SerializeObject(character));
     }
   }
 }

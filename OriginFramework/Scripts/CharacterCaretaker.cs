@@ -114,6 +114,23 @@ namespace OriginFramework
       FirstSpawn();
     }
 
+
+    [EventHandler("ofw_char_caretaker:UpdateOrganization")]
+    private async void UpdateOrganization(int? organizationId)
+    {
+      if (LoggedCharacter == null)
+        return;
+
+      LoggedCharacter.OrganizationId = organizationId;
+
+      if (organizationId != null)
+        Notify.Alert("Přidal ses k organizaci");
+      else
+        Notify.Alert("Organizace opuštěna");
+
+      TriggerServerEvent("ofw_org:RequestOrganizationData");
+    }
+
     [EventHandler("ofw_char_caretaker:ForceRelogin")]
     private async void ForceRelogin()
     {
@@ -280,6 +297,7 @@ namespace OriginFramework
     {
       LoggedCharacter = character;
       SpawnLoggedCharacter();
+      TriggerServerEvent("ofw_org:RequestOrganizationData");
     }
   }
 }

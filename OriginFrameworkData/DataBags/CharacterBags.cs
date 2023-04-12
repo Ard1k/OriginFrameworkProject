@@ -19,6 +19,7 @@ namespace OriginFrameworkData.DataBags
 		[JsonIgnore]
 		public int? DiedGameTime { get; set; }
 		public DateTime? DiedServerTime { get; set; }
+		public int? OrganizationId { get; set; }
 
 		private CharacterBag()
 		{ 
@@ -38,10 +39,13 @@ namespace OriginFrameworkData.DataBags
 				AdminLevel = Convert.ToInt32(row["admin_level"])
 			};
 
+			if (row.ContainsKey("organization_id") && row["organization_id"] != null && row["organization_id"] != DBNull.Value)
+				it.OrganizationId = Convert.ToInt32(row["organization_id"]);
+
 			if (row.ContainsKey("pos") && row["pos"] != null)
 				it.LastKnownPos = JsonConvert.DeserializeObject<PlayerPosBag>(Convert.ToString(row["pos"]));
 			
-			if (row.ContainsKey("model") && row["model"] != null)
+			if (row.ContainsKey("model") && row["model"] != null && row["model"] != DBNull.Value)
 				it.Model = Convert.ToInt32(row["model"]);
 
 			return it;

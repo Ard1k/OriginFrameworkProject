@@ -129,7 +129,6 @@ namespace OriginFramework
 
       if (GetVehicleNumberPlateText(veh)?.Trim().ToLower() == originalPlate)
       {
-        Debug.WriteLine("a");
         TriggerServerEvent("ofw_veh:AckPropertiesSynced", originalPlate);
         return; //uz ma nastaveny properties
       }
@@ -141,7 +140,6 @@ namespace OriginFramework
         return;
 
       Vehicles.SetVehicleProperties(veh, propertiesBag);
-      Debug.WriteLine("b");
       TriggerServerEvent("ofw_veh:AckPropertiesSynced", originalPlate);
     }
   }

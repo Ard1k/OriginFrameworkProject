@@ -66,6 +66,7 @@
     <Compile Include="Menus\NativeMenu.cs" />
     <Compile Include="Scripts\CharacterCaretaker.cs" />
     <Compile Include="Scripts\GarageClient.cs" />
+    <Compile Include="Scripts\OrganizationClient.cs" />
     <Compile Include="Scripts\TuningInstallClient.cs" />
     <Compile Include="Scripts\TuningCatalogClient.cs" />
     <Compile Include="Scripts\SkinEditor.cs" />

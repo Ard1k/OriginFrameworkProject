@@ -60,10 +60,21 @@ namespace OriginFrameworkServer
     }
     private async void EnsureDB_tables()
     {
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `organization` " +
+                    " (`id` int NOT NULL AUTO_INCREMENT, " +
+                    "  `name` varchar(50) NOT NULL, " +
+                    "  `tag` char(3) NOT NULL, " +
+                    "  `owner` int NOT NULL, " +
+                    "  `color` int NOT NULL, " +
+                    "  `data` longtext NULL, " +
+                    " PRIMARY KEY (`id`), " +
+                    //" CONSTRAINT `fk_organization_owner_id` FOREIGN KEY (`owner`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT, " + //Tohle se musi resit pozdeji kvuli vzajemne referenci
+                    " CONSTRAINT `unique_orgtag` UNIQUE (`tag`)" +
+                    " );", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map` (`id` int NOT NULL AUTO_INCREMENT, `name` varchar(200) NOT NULL, PRIMARY KEY (`id`));", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `prop_map_item` (`id` int NOT NULL AUTO_INCREMENT, `prop_map_id` int NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_prop_map_item_id` FOREIGN KEY (`prop_map_id`) REFERENCES prop_map (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT );", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `user` (`identifier` varchar(200) NOT NULL, `name` varchar(200) NULL, `steam` varchar(200) NULL, `license` varchar(200) NULL, `discord` varchar(200) NULL, `ip` varchar(200) NULL, `admin_level` int NOT NULL DEFAULT(0), `active_character` int NULL, PRIMARY KEY (`identifier`));", null);
-      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `character` (`id` int NOT NULL AUTO_INCREMENT, `user_identifier` varchar(200) NOT NULL, `name` varchar(200) NOT NULL, `pos` varchar(500) NULL, `model` int NULL, `is_disabled` int NOT NULL DEFAULT(0), PRIMARY KEY (`id`), CONSTRAINT `fk_character_user_identifier` FOREIGN KEY (`user_identifier`) REFERENCES user (`identifier`) ON DELETE RESTRICT ON UPDATE RESTRICT);", null);
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `character` (`id` int NOT NULL AUTO_INCREMENT, `user_identifier` varchar(200) NOT NULL, `name` varchar(200) NOT NULL, `pos` varchar(500) NULL, `model` int NULL, `is_disabled` int NOT NULL DEFAULT(0), `organization_id` int NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_character_user_identifier` FOREIGN KEY (`user_identifier`) REFERENCES user (`identifier`) ON DELETE RESTRICT ON UPDATE RESTRICT, CONSTRAINT `fk_organization_id_organization_id` FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT);", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `inventory_item` " +
                                 " (`id` int NOT NULL AUTO_INCREMENT, " +
                                 "  `place` varchar(200) NOT NULL, " +
@@ -76,14 +87,6 @@ namespace OriginFrameworkServer
                                 " INDEX (`place`) " +
                                 " );", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `item_definition` (`id` int NOT NULL, `data` LONGTEXT NOT NULL, PRIMARY KEY (`id`));", null);
-      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `organization` " +
-                    " (`id` int NOT NULL AUTO_INCREMENT, " +
-                    "  `name` varchar(50) NOT NULL, " +
-                    "  `tag` varchar(8) NOT NULL, " +
-                    "  `owner` int NOT NULL, " +
-                    " PRIMARY KEY (`id`), " +
-                    " CONSTRAINT `fk_organization_owner_id` FOREIGN KEY (`owner`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT " +
-                    " );", null);
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `vehicle` " +
                           " (`id` int NOT NULL AUTO_INCREMENT, " +
                           "  `model` varchar(50) NOT NULL, " +
@@ -97,6 +100,10 @@ namespace OriginFrameworkServer
                           " CONSTRAINT `fk_vehicle_organization_id` FOREIGN KEY (`owner_organization`) REFERENCES `organization` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT, " +
                           " CONSTRAINT `unique_plate` UNIQUE (`plate`) " +
                           " );", null);
+
+      var r1 = await VSql.FetchAllAsync("SELECT `CONSTRAINT_NAME` FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_NAME = 'fk_organization_owner_id'", null);
+      if (r1 == null || r1.Count <= 0)
+        await VSql.ExecuteAsync("ALTER TABLE `organization` ADD CONSTRAINT `fk_organization_owner_id` FOREIGN KEY (`owner`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }

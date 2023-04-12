@@ -76,6 +76,7 @@ namespace OriginFramework
     Login = 13,
     CharacterCreator = 14,
     CharacterCaretaker = 15,
-    InventoryManager = 16
+    InventoryManager = 16,
+    OrganizationClient = 17
   }
 }

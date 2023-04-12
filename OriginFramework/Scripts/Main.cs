@@ -88,6 +88,13 @@ namespace OriginFramework
         }
       }), false);
 
+      TriggerEvent("chat:addSuggestion", "/createorg", "Založení nové organizace", new[]
+      {
+        new { name="owner", help="Id vlastníka" },
+        new { name="name", help="Název - minimálně 3 znaky" },
+        new { name="tag", help="Tag - přesně 3 znaky" },
+        new { name="color", help=$"Barva - {String.Join("/", Enum.GetNames(typeof(eOrganizationColor)))}" }
+      });
       #endregion
 
       var dynamicItemsDefString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_core:GetDynamicItemDefinitions");

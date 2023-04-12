@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="DataBags\AnimationBag.cs" />
     <Compile Include="DataBags\GarageVehicleBag.cs" />
+    <Compile Include="DataBags\OrganizationBags.cs" />
     <Compile Include="DataBags\PolyzoneBag.cs" />
     <Compile Include="DataBags\InventoryBags.cs" />
     <Compile Include="DataBags\Global.cs" />

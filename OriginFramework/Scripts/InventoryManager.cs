@@ -558,7 +558,7 @@ namespace OriginFramework
             dragData.SrcItem.IsDragged = false;
             IsWaitingInput = true;
             SetMouseCursorVisibleInMenus(false);
-            string input = await TextUtils.GetUserInput($"Kolik chcete přesunout z {dragData.SrcItem.Count}?", null, 7);
+            string input = await TextUtils.GetUserInput($"Kolik chcete přesunout z {ItemsDefinitions.Items[dragData.SrcItem.ItemId].FormatAmount(dragData.SrcItem.Count)}?", null, 7);
             int splitCount;
             decimal money;
             if (ItemsDefinitions.Items[dragData.SrcItem.ItemId].IsMoney == true && Decimal.TryParse(input, out money))

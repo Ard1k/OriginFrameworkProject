@@ -61,6 +61,7 @@ namespace OriginFramework.Menus
     public Action<NativeMenuItem,string> OnTextInput { get; set; }
     public Action<NativeMenuItem> OnRefresh { get; set; }
     public Func<NativeMenu> GetSubMenu { get; set; }
+    public Func<Task<NativeMenu>> GetSubMenuAsync { get; set; }
 
     public NativeMenu SubMenu { get; set; }
   }
