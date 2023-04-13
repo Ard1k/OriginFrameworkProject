@@ -78,6 +78,31 @@ namespace OriginFramework.Scripts
           {
             new NativeMenuItem
             {
+              Name = "Opustit organizaci",
+              SubMenu = new NativeMenu
+              {
+                MenuTitle = "Opravdu opustit organizaci?",
+                Items = new List<NativeMenuItem>
+                {
+                  new NativeMenuItem
+                  {
+                    Name = "Ano",
+                    OnSelected = (item) =>
+                    {
+                      TriggerServerEvent("ofw_org:LeaveOrganization");
+                    },
+                    IsClose = true
+                  },
+                  new NativeMenuItem
+                  {
+                    Name = "Ne",
+                    IsBack = true
+                  }
+                }
+              }
+            },
+            new NativeMenuItem
+            {
               Name = "Zavřít",
               IsClose = true
             }
@@ -85,7 +110,7 @@ namespace OriginFramework.Scripts
       };
 
       if (CurrentOrganization.Owner == CharacterCaretaker.LoggedCharacter?.Id)
-      menu.Items.Insert(menu.Items.Count - 1, new NativeMenuItem
+      menu.Items.Insert(0, new NativeMenuItem
       {
         Name = "Správa organizace",
         SubMenu = new NativeMenu 
@@ -100,12 +125,45 @@ namespace OriginFramework.Scripts
             },
             new NativeMenuItem
             {
+              Name = "Členové",
+              GetSubMenu = getMembersMenu
+            },
+            new NativeMenuItem
+            {
               Name = "Zpět",
               IsBack = true
             },
           }
         },
       });
+
+      return menu;
+    }
+
+    public static NativeMenu getMembersMenu()
+    {
+      var menu = new NativeMenu
+      {
+        MenuTitle = "Členové organizace",
+        Items = new List<NativeMenuItem>
+        {
+          new NativeMenuItem
+          {
+            Name = "Zpět",
+            IsBack = true
+          }
+        }
+      };
+
+      if (CurrentOrganization?.Members == null)
+        return menu;
+
+      foreach (var member in CurrentOrganization.Members)
+      {
+        menu.Items.Insert(0, new NativeMenuItem { 
+          Name = member.CharName
+        });
+      }
 
       return menu;
     }

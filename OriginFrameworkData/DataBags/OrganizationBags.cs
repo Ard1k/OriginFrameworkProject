@@ -30,7 +30,8 @@ namespace OriginFrameworkData.DataBags
     public string Tag { get; set; }
     public int Owner { get; set; }
     public eOrganizationColor OrganizationColor { get; set; }
-    public OrganizationData Data { get; set; }
+    public OrganizationDataBag Data { get; set; }
+    public List<OrganizationMemberBag> Members { get; set; } = new List<OrganizationMemberBag> { };
 
     public static OrganizationBag ParseFromSql(Dictionary<string, object> row)
     {
@@ -44,15 +45,21 @@ namespace OriginFrameworkData.DataBags
       };
 
       if (row.ContainsKey("data") && row["data"] != null && row["data"] != DBNull.Value)
-        it.Data = JsonConvert.DeserializeObject<OrganizationData>(Convert.ToString(row["data"]));
+        it.Data = JsonConvert.DeserializeObject<OrganizationDataBag>(Convert.ToString(row["data"]));
 
       return it;
     }
   }
 
-  public class OrganizationData
+  public class OrganizationDataBag
   {
     
+  }
+
+  public class OrganizationMemberBag
+  {
+    public int CharId { get; set; }
+    public string CharName { get; set; }
   }
 
   public class OrganizationInviteBag

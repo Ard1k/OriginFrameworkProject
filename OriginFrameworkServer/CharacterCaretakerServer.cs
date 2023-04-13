@@ -81,16 +81,30 @@ namespace OriginFrameworkServer
       return true;
     }
 
-    public static async void UpdateOrganization(OIDBag oid, Player player, int? organizationId)
+    public static async void UpdateOrganization(OIDBag oid, Player player, int? organizationId, PlayerList playerList)
     {
       if (!LoggedPlayers.ContainsKey(oid.OID) || LoggedPlayers[oid.OID] == null)
         return;
+
+      int? changedOrganization = organizationId ?? LoggedPlayers[oid.OID].OrganizationId;
 
       LoggedPlayers[oid.OID].OrganizationId = organizationId;
 
       if (player != null)
       {
         player.TriggerEvent("ofw_char_caretaker:UpdateOrganization", organizationId);
+      }
+
+      foreach (var lp in LoggedPlayers)
+      {
+        if (lp.Value.OrganizationId == changedOrganization)
+        {
+          var p = playerList.FirstOrDefault(x => OIDServer.GetOriginServerID(x).OID == lp.Key);
+          if (p != null)
+          {
+            p.TriggerEvent("ofw_char_caretaker:UpdateOrganization", organizationId);
+          }
+        }
       }
     }
 

@@ -14,6 +14,8 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using System.ComponentModel;
+using System.Xml.Linq;
 
 namespace OriginFrameworkServer
 {
@@ -47,6 +49,23 @@ namespace OriginFrameworkServer
         }
       }
 
+      var organizationMembersResults = await VSql.FetchAllAsync("select `id`, `name`, `organization_id` from `character` where `organization_id` is not null", null);
+      if (organizationMembersResults != null && organizationMembersResults.Count > 0)
+      {
+        foreach (var memberRes in organizationMembersResults)
+        {
+          var charId = Convert.ToInt32(memberRes["id"]);
+          var charName = Convert.ToString(memberRes["name"]);
+          var organizationId = Convert.ToInt32(memberRes["organization_id"]);
+
+          foreach (var org in Organizations)
+          {
+            if (org.Id == organizationId)
+              org.Members.Add(new OrganizationMemberBag { CharId = charId, CharName = charName });
+          }
+        }
+      }
+
       Debug.WriteLine($"ofw_org: Organizations loaded: {Organizations.Count}");
       #endregion
 
@@ -71,7 +90,7 @@ namespace OriginFrameworkServer
         }
 
         int playerId = 0;
-        int characterId = 0;
+        CharacterBag character = null;
         OIDBag ownerOID = null;
         Player ownerPlayer = null;
         if (Int32.TryParse((string)args[0], out playerId))
@@ -79,19 +98,19 @@ namespace OriginFrameworkServer
           ownerPlayer = Players.Where(p => p.Handle == playerId.ToString()).FirstOrDefault();
           if (ownerPlayer != null)
           {
-            characterId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(ownerPlayer);
+            character = CharacterCaretakerServer.GetPlayerLoggedCharacter(ownerPlayer);
             ownerOID = OIDServer.GetOriginServerID(ownerPlayer);
           }
         }
 
-        if (characterId <= 0)
+        if (character == null || character.Id <= 0)
         {
           sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nenalezen vlastník");
           return;
         }
 
         var param = new Dictionary<string, object>();
-        param.Add("@owner", characterId);
+        param.Add("@owner", character.Id);
         object ownerCurrentOrg = await VSql.FetchScalarAsync("select `organization_id` from `character` where `id` = @owner", param);
         if (ownerCurrentOrg != null && ownerCurrentOrg != DBNull.Value) 
         {
@@ -146,7 +165,15 @@ namespace OriginFrameworkServer
             int id = (int)objId;
             param.Add("@orgId", id);
             _ = await VSql.ExecuteAsync("update `character` set `organization_id` = @orgId where `id` = @owner", param);
-            CharacterCaretakerServer.UpdateOrganization(ownerOID, ownerPlayer, id);
+            foreach (var org in Organizations)
+            {
+              if (org.Id == id)
+              {
+                org.Members.Add(new OrganizationMemberBag { CharId = character.Id, CharName = character.Name });
+                break;
+              }
+            }
+            CharacterCaretakerServer.UpdateOrganization(ownerOID, ownerPlayer, id, Players);
             
             sourcePlayer.TriggerEvent("ofw:SuccessNotification", $"Organizace založena ID:{objId}");
             return;
@@ -296,8 +323,16 @@ namespace OriginFrameworkServer
         return;
       }
 
+      foreach (var org in Organizations)
+      {
+        if (org.Id == invite.OrganizationId)
+        {
+          org.Members.Add(new OrganizationMemberBag { CharId = character.Id, CharName = character.Name });
+          break;
+        }
+      }
       var oid = OIDServer.GetOriginServerID(sourcePlayer);
-      CharacterCaretakerServer.UpdateOrganization(oid, sourcePlayer, invite.OrganizationId);
+      CharacterCaretakerServer.UpdateOrganization(oid, sourcePlayer, invite.OrganizationId, Players);
 
       var inviteSenderPlayer = Players.Where(p => p.Handle == invite.InvitedByHandle).FirstOrDefault();
       if (inviteSenderPlayer != null)
@@ -319,6 +354,53 @@ namespace OriginFrameworkServer
 
       if (OrgInvites.Any(inv => inv.CharId == character.Id))
         OrgInvites.Remove(OrgInvites.Where(inv => inv.CharId == character.Id).First());
+    }
+
+    [EventHandler("ofw_org:LeaveOrganization")]
+    private async void LeaveOrganization([FromSource] Player source)
+    {
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+        return;
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
+        return;
+
+      if (character.OrganizationId == null)
+        return;
+
+      if (Organizations.Any(org => org.Owner == character.Id))
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Majitel nemůže opustit organizaci");
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", character.Id);
+      var result = await VSql.ExecuteAsync("update `character` set `organization_id` = null where `id` = @charId", param);
+
+      if (result != 1)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Chyba při nastavování organizace");
+        return;
+      }
+
+      foreach (var org in Organizations)
+      {
+        if (org.Id == character.OrganizationId)
+        {
+          var member = org.Members.Where(x => x.CharId == character.Id).FirstOrDefault();
+          if (member != null)
+          {
+            org.Members.Remove(member);
+            break;
+          }
+        }
+      }
+
+      var oid = OIDServer.GetOriginServerID(sourcePlayer);
+      CharacterCaretakerServer.UpdateOrganization(oid, sourcePlayer, null, Players);
     }
 
     #endregion
