@@ -32,6 +32,7 @@ namespace OriginFrameworkData.DataBags
     public eOrganizationColor OrganizationColor { get; set; }
     public OrganizationDataBag Data { get; set; }
     public List<OrganizationMemberBag> Members { get; set; } = new List<OrganizationMemberBag> { };
+    public List<OrganizationManagerBag> Managers { get; set; } = new List<OrganizationManagerBag> { };
 
     public static OrganizationBag ParseFromSql(Dictionary<string, object> row)
     {
@@ -60,6 +61,11 @@ namespace OriginFrameworkData.DataBags
   {
     public int CharId { get; set; }
     public string CharName { get; set; }
+  }
+
+  public class OrganizationManagerBag
+  {
+    public int CharId { get; set; }
   }
 
   public class OrganizationInviteBag

@@ -109,7 +109,7 @@ namespace OriginFramework.Scripts
           }
       };
 
-      if (CurrentOrganization.Owner == CharacterCaretaker.LoggedCharacter?.Id)
+      if (CurrentOrganization.Owner == CharacterCaretaker.LoggedCharacter?.Id || CurrentOrganization.Managers.Any(m => m.CharId == CharacterCaretaker.LoggedCharacter?.Id))
       menu.Items.Insert(0, new NativeMenuItem
       {
         Name = "Správa organizace",
@@ -160,12 +160,66 @@ namespace OriginFramework.Scripts
 
       foreach (var member in CurrentOrganization.Members)
       {
-        menu.Items.Insert(0, new NativeMenuItem { 
-          Name = member.CharName
+        menu.Items.Insert(0, new NativeMenuItem {
+          Name = member.CharName,
+          GetSubMenu = () => { return getMemberMenu(member.CharId, member.CharName); }
         });
       }
 
       return menu;
+    }
+
+    public static NativeMenu getMemberMenu(int charId, string name)
+    {
+      return new NativeMenu
+      {
+        MenuTitle = name,
+        Items = new List<NativeMenuItem>
+        {
+          new NativeMenuItem
+          {
+            Name = "Manager",
+            NameRight = CurrentOrganization.Managers.Any(m => m.CharId == charId) ? "✅" : "❌",
+            OnSelected = async (item) => 
+            {
+              bool isManager = CurrentOrganization.Managers.Any(m => m.CharId == charId);
+              var res = await Callbacks.ServerAsyncCallbackToSync<bool>("ofw_org:SetManager", charId, !isManager);
+              if (res == true)
+                item.NameRight = !isManager ? "✅" : "❌";
+            }
+          },
+          new NativeMenuItem
+          { 
+            Name = "Vyhodit",
+            SubMenu = new NativeMenu
+            { 
+              MenuTitle = $"Vyhodit {name}?",
+              Items = new List<NativeMenuItem>
+              {
+                new NativeMenuItem
+                {
+                  Name = "Ne",
+                  IsBack = true
+                },
+                new NativeMenuItem
+                {
+                  Name = "Ano",
+                  OnSelected = (item) =>
+                  {
+                    TriggerServerEvent("ofw_org:KickMember", charId);
+                  },
+                  IsClose = true
+                }
+              }
+            },
+          },
+          new NativeMenuItem
+          {
+            Name = "Zpět",
+            IsBack = true
+          }
+        }
+      };
     }
 
     public static async Task<NativeMenu> getOrganizationInviteMenu()

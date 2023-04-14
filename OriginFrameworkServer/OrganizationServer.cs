@@ -66,6 +66,22 @@ namespace OriginFrameworkServer
         }
       }
 
+      var organizationManagersResults = await VSql.FetchAllAsync("select `organization_id`, `character_id` from `organization_manager`", null);
+      if (organizationManagersResults != null && organizationManagersResults.Count > 0)
+      {
+        foreach (var managerRes in organizationManagersResults)
+        {
+          var orgId = Convert.ToInt32(managerRes["organization_id"]);
+          var charId = Convert.ToInt32(managerRes["character_id"]);
+
+          foreach (var org in Organizations)
+          {
+            if (org.Id == orgId)
+              org.Managers.Add(new OrganizationManagerBag { CharId = charId });
+          }
+        }
+      }
+
       Debug.WriteLine($"ofw_org: Organizations loaded: {Organizations.Count}");
       #endregion
 
@@ -204,6 +220,43 @@ namespace OriginFrameworkServer
       }
     }
 
+    public static void OrganizationUpdated(int organizationId, PlayerList playerList)
+    {
+      var org = Organizations.Where(x => x.Id == organizationId).FirstOrDefault();
+      if (org == null)
+        return;
+
+      var orgString = JsonConvert.SerializeObject(org);
+
+      for (int i = 0; i < CharacterCaretakerServer.LoggedPlayers.Count; i++)
+      {
+        if (CharacterCaretakerServer.LoggedPlayers.ElementAt(i).Value.OrganizationId == organizationId)
+        {
+          var p = playerList.FirstOrDefault(x => OIDServer.GetOriginServerID(x).OID == CharacterCaretakerServer.LoggedPlayers.ElementAt(i).Key);
+          if (p != null)
+          {
+            p.TriggerEvent("ofw_org:OrganizationUpdated", orgString);
+          }
+        }
+      }
+    }
+
+    public static async void CleanCharacterFromOrganization(int organizationId, int charId)
+    {
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", charId);
+      param.Add("@orgId", organizationId);
+      var result = await VSql.ExecuteAsync("delete from `organization_manager` where `organization_id` = @orgId and `character_id` = @charId", param);
+
+      var orgBag = Organizations.Where(o => o.Id == organizationId).FirstOrDefault();
+      if (orgBag != null)
+      {
+        var manager = orgBag.Managers.Where(c => c.CharId == charId).FirstOrDefault();
+        if (manager != null)
+          orgBag.Managers.Remove(manager);
+      }
+    }
+
     [EventHandler("ofw_org:RequestOrganizationData")]
     private async void RequestOrganizationData([FromSource] Player source)
     {
@@ -256,6 +309,12 @@ namespace OriginFrameworkServer
       }
 
       if (orgBag == null)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nejsi v žádné organizaci");
+        return;
+      }
+
+      if (character.Id != orgBag.Owner && !orgBag.Managers.Any(m => m.CharId == character.Id))
       {
         sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Na tohle nemáš oprávnění");
         return;
@@ -386,6 +445,8 @@ namespace OriginFrameworkServer
         return;
       }
 
+      CleanCharacterFromOrganization(character.OrganizationId.Value, character.Id);
+
       foreach (var org in Organizations)
       {
         if (org.Id == character.OrganizationId)
@@ -403,6 +464,130 @@ namespace OriginFrameworkServer
       CharacterCaretakerServer.UpdateOrganization(oid, sourcePlayer, null, Players);
     }
 
+    [EventHandler("ofw_org:SetManager")]
+    private async void SetManager([FromSource] Player source, int memberCharacter, bool isManager, NetworkCallbackDelegate callback)
+    {
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      if (character.OrganizationId == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      var org = Organizations.Where(o => o.Owner == character.Id).FirstOrDefault();
+      if (org == null)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Jen majitel může nastavit managera");
+        _ = callback(false);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", memberCharacter);
+      param.Add("@orgId", org.Id);
+
+      if (isManager)
+      {
+        var result = await VSql.ExecuteAsync("insert into `organization_manager` (`organization_id`, `character_id`) values (@orgId, @charId) ON DUPLICATE KEY UPDATE `character_id` = `character_id`", param);
+        if (!org.Managers.Any(m => m.CharId == memberCharacter))
+          org.Managers.Add(new OrganizationManagerBag { CharId = memberCharacter });
+      }
+      else
+      {
+        var result = await VSql.ExecuteAsync("delete from `organization_manager` where `organization_id` = @orgId  and `character_id` = @charId", param);
+        var manager = org.Managers.Where(m => m.CharId == memberCharacter).FirstOrDefault();
+        if (manager != null)
+          org.Managers.Remove(manager);
+      }
+
+      OrganizationUpdated(org.Id, Players);
+
+      await Delay(200);
+      _ = callback(true);
+    }
+
+    [EventHandler("ofw_org:KickMember")]
+    private async void KickMember([FromSource] Player source, int memberCharacter)
+    {
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+        return;
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
+        return;
+
+      if (character.OrganizationId == null)
+        return;
+
+      if (!Organizations.Any(org => org.Owner == character.Id || org.Managers.Any(m => m.CharId == character.Id)))
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Na tohle nemáš oprávnění");
+        return;
+      }
+
+      if (Organizations.Any(org => org.Id == character.OrganizationId && org.Owner == memberCharacter))
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nemůžeš vyhodit majitele");
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", memberCharacter);
+      param.Add("@orgId", character.OrganizationId);
+      var result = await VSql.ExecuteAsync("update `character` set `organization_id` = null where `id` = @charId and `organization_id` = @orgId", param);
+
+      if (result != 1)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Vyhození se nezdařilo");
+        return;
+      }
+
+      foreach (var org in Organizations)
+      {
+        if (org.Id == character.OrganizationId)
+        {
+          var member = org.Members.Where(x => x.CharId == memberCharacter).FirstOrDefault();
+          if (member != null)
+          {
+            org.Members.Remove(member);
+            break;
+          }
+        }
+      }
+
+      CleanCharacterFromOrganization(character.OrganizationId.Value, memberCharacter);
+
+      var memberPlayerServerId = CharacterCaretakerServer.GetCharLoggedServerId(memberCharacter);
+      Player memberPlayer = null;
+      if (memberPlayerServerId > 0)
+        memberPlayer = Players.Where(p => p.Handle == memberPlayerServerId.ToString()).FirstOrDefault();
+
+      if (memberPlayer != null)
+      {
+        var oid = OIDServer.GetOriginServerID(memberPlayer);
+        CharacterCaretakerServer.UpdateOrganization(oid, memberPlayer, null, Players);
+      }
+      else
+      {
+        OrganizationUpdated(character.OrganizationId.Value, Players);
+      }
+
+      sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Hráč vyhozen");
+    }
     #endregion
 
     #region private

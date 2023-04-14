@@ -104,6 +104,14 @@ namespace OriginFrameworkServer
       var r1 = await VSql.FetchAllAsync("SELECT `CONSTRAINT_NAME` FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_NAME = 'fk_organization_owner_id'", null);
       if (r1 == null || r1.Count <= 0)
         await VSql.ExecuteAsync("ALTER TABLE `organization` ADD CONSTRAINT `fk_organization_owner_id` FOREIGN KEY (`owner`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;", null);
+
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `organization_manager` " +
+                          " (`organization_id` int NOT NULL, " +
+                          "  `character_id` int NOT NULL, " +
+                          " PRIMARY KEY (`organization_id`, `character_id`), " +
+                          " CONSTRAINT `fk_organization_manager_organization_id` FOREIGN KEY (`organization_id`) REFERENCES `organization` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT," +
+                          " CONSTRAINT `fk_organization_manager_character_id` FOREIGN KEY (`character_id`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT " +
+                          " );", null);
     }
     private static void PrintException(Exception ex)
     { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }

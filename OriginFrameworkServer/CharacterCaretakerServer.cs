@@ -95,17 +95,8 @@ namespace OriginFrameworkServer
         player.TriggerEvent("ofw_char_caretaker:UpdateOrganization", organizationId);
       }
 
-      foreach (var lp in LoggedPlayers)
-      {
-        if (lp.Value.OrganizationId == changedOrganization)
-        {
-          var p = playerList.FirstOrDefault(x => OIDServer.GetOriginServerID(x).OID == lp.Key);
-          if (p != null)
-          {
-            p.TriggerEvent("ofw_char_caretaker:UpdateOrganization", organizationId);
-          }
-        }
-      }
+      if (changedOrganization != null)
+        OrganizationServer.OrganizationUpdated(changedOrganization.Value, playerList);
     }
 
     public static int GetPlayerLoggedCharacterId(int oid)
