@@ -53,6 +53,7 @@ namespace OriginFramework.Menus
     public string TextInputRequest { get; set; } = "Enter text";
     public string TextInputPrefill { get; set; } = String.Empty;
     public int TextInputMaxLength { get; set; } = 60;
+    public object MetaData { get; set; }
 
     public Action OnHover { get; set; }
     public Action<NativeMenuItem> OnSelected { get; set; }

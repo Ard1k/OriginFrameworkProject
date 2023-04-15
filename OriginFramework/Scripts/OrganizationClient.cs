@@ -78,6 +78,11 @@ namespace OriginFramework.Scripts
           {
             new NativeMenuItem
             {
+              Name = "Auta",
+              GetSubMenuAsync = getOrganizationCarsMenu
+            },
+            new NativeMenuItem
+            {
               Name = "Opustit organizaci",
               SubMenu = new NativeMenu
               {
@@ -220,6 +225,100 @@ namespace OriginFramework.Scripts
           }
         }
       };
+    }
+
+    public static async Task<NativeMenu> getOrganizationCarsMenu()
+    {
+      NativeMenu menu = new NativeMenu
+      {
+        MenuTitle = "Auta organizace",
+        Items = new List<NativeMenuItem>
+        {
+          new NativeMenuItem
+            {
+              Name = "Zpět",
+              IsBack = true
+            },
+        }
+      };
+
+      var vehiclesString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_garage:GetOrganizationVehicles");
+      if (string.IsNullOrEmpty(vehiclesString))
+        return menu;
+
+      var vehicles = JsonConvert.DeserializeObject<List<GarageVehicleBag>>(vehiclesString);
+
+      if (vehicles == null || vehicles.Count <= 0)
+        return menu;
+
+      foreach (var veh in vehicles)
+      {
+        var item = new NativeMenuItem
+        {
+          Name = $"{veh.Plate.ToUpper()} - {GetDisplayNameFromVehicleModel((uint)veh.Properties.model)}",
+          NameRight = veh.IsOut ? "V provozu" : (GarageClient.Garages.Where(g => g.Place == veh.Place).FirstOrDefault()?.Name ?? veh.Place),
+          //OnSelected = async (item) => {
+          //  await Delay(0);
+          //  BaseScript.TriggerServerEvent("ofw_org:InvitePlayerToOrg", p.ServerId);
+          //},
+          //IsClose = true
+        };
+
+        if (CharacterCaretaker.LoggedCharacter?.Id == CurrentOrganization?.Owner || CurrentOrganization.Managers.Any(m => m.CharId == CharacterCaretaker.LoggedCharacter?.Id))
+        {
+          item.GetSubMenuAsync = async () => { return await getVehicleRightsMenu(veh.Id, veh.Plate); };
+        }
+
+        menu.Items.Insert(0, item);
+          
+      }
+
+      return menu;
+    }
+
+    public static async Task<NativeMenu> getVehicleRightsMenu(int vehicleId, string vehicleName)
+    {
+      NativeMenu menu = new NativeMenu
+      {
+        MenuTitle = $"Oprávnění: {vehicleName}",
+        Items = new List<NativeMenuItem>
+        {
+
+        }
+      };
+
+      if (CurrentOrganization?.Members == null || CurrentOrganization.Members.Count <= 0)
+        return menu;
+
+      await Delay(0);
+      string rightDataString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_org:GetOrgVehicleRights", vehicleId);
+      List<OrganizationVehicleRightsBag> rights = null;
+      if (!string.IsNullOrEmpty(rightDataString))
+      {
+        rights = JsonConvert.DeserializeObject<List<OrganizationVehicleRightsBag>>(rightDataString);
+      }
+
+      foreach (var member in CurrentOrganization.Members)
+      {
+        menu.Items.Add(new NativeMenuItem 
+        {
+          MetaData = new OrganizationVehicleRightsBag { CharId = member.CharId, VehicleId = vehicleId },
+          Name = member.CharName,
+          NameRight = rights?.Any(r => r.CharId == member.CharId) == true ? "✅" : "❌",
+          OnSelected = async (item) =>
+          {
+            var bag = item.MetaData as OrganizationVehicleRightsBag;
+            if (bag == null)
+              return;
+
+            await Delay(0);
+            var res = await Callbacks.ServerAsyncCallbackToSync<bool>("ofw_org:SetVehicleRights", bag.VehicleId, bag.CharId, item.NameRight == "✅" ? false : true);
+            item.NameRight = res ? "✅" : "❌";
+          }
+        });
+      }
+
+      return menu;
     }
 
     public static async Task<NativeMenu> getOrganizationInviteMenu()

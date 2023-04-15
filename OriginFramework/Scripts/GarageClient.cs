@@ -18,9 +18,9 @@ namespace OriginFramework
 {
   public class GarageClient : BaseScript
   {
-    private static List<GarageBag> garages = new List<GarageBag>()
+    public static List<GarageBag> Garages { get; set; } = new List<GarageBag>()
     {
-      new GarageBag { 
+      new GarageBag {
         Place = "main",
         Name = "Hlavní garáž",
         GarageLocation = new PosBag { X = 225.0306f, Y = -786.6935f, Z = 30.0226f, Heading = 0.0f },
@@ -55,7 +55,7 @@ namespace OriginFramework
 
       if (TheBugger.DebugMode && false)
       {
-        foreach (var g in garages)
+        foreach (var g in Garages)
         {
           if (g.Parkings == null || g.Parkings.Count <= 0)
             continue;
@@ -75,7 +75,7 @@ namespace OriginFramework
       var currentPos = GetEntityCoords(coordsEntity, true);
       bool markerHit = false;
 
-      foreach (var g in garages)
+      foreach (var g in Garages)
       {
         if (g.Parkings == null || g.Parkings.Count <= 0 || PosBagToVector3(g.GarageLocation).DistanceToSquared2D(currentPos) > 2500f)
           continue;
@@ -149,7 +149,7 @@ namespace OriginFramework
             var veh2 = veh;
             var item = new NativeMenuItem
             {
-              Name = $"{GetDisplayNameFromVehicleModel((uint)veh2.Properties.model)} [{veh2.Plate}]",
+              Name = $"{veh2.Plate.ToUpper()} - {GetDisplayNameFromVehicleModel((uint)veh2.Properties.model)}",
               NameRight = veh2.IsOut ? "V provozu" : null
             };
 

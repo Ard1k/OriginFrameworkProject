@@ -43,6 +43,7 @@ namespace OriginFrameworkServer
 
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
 
+      #region register commands
       RegisterCommand("car", new Action<int, List<object>, string>((source, args, raw) =>
       {
         var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
@@ -73,7 +74,7 @@ namespace OriginFrameworkServer
         });
       }), false);
 
-      RegisterCommand("givecar", new Action<int, List<object>, string>(async (source, args, raw) =>
+      RegisterCommand("getcar", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
         var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
         if (sourcePlayer == null)
@@ -145,6 +146,7 @@ namespace OriginFrameworkServer
         }
         catch { }
       }), false);
+      #endregion
 
       while (SettingsManager.Settings == null)
         await Delay(0);
@@ -302,7 +304,7 @@ namespace OriginFrameworkServer
 
     #region garaz
     [EventHandler("ofw_garage:TakeOutVehicle")]
-    private async void SpawnServerVehicleFromGarage([FromSource] Player source, string plate, string garage, Vector3 pos, float heading, NetworkCallbackDelegate callback)
+    private async void TakeOutVehicle([FromSource] Player source, string plate, string garage, Vector3 pos, float heading, NetworkCallbackDelegate callback)
     {
       if (source == null)
       {
@@ -317,8 +319,8 @@ namespace OriginFrameworkServer
         return;
       }
 
-      int charId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(sourcePlayer);
-      if (charId <= 0)
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
       {
         sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná postava");
         _ = callback(-1);
@@ -330,8 +332,9 @@ namespace OriginFrameworkServer
       var param = new Dictionary<string, object>();
       param.Add("@plate", plate);
       param.Add("@place", garage);
-      param.Add("@charId", charId);
-      var result = await VSql.FetchAllAsync("SELECT `id`, `properties` FROM `vehicle` WHERE `plate` = @plate and `owner_char` = @charId and `place` = @place" , param);
+      param.Add("@charId", character.Id);
+      param.Add("@orgId", character.OrganizationId);
+      var result = await VSql.FetchAllAsync("SELECT `id`, `properties` FROM `vehicle` WHERE `plate` = @plate and (`owner_char` = @charId OR (@orgId is not null AND `owner_organization` = @orgId)) and `place` = @place" , param);
 
       if (result == null || result.Count <= 0)
       {
@@ -429,7 +432,25 @@ namespace OriginFrameworkServer
       var param = new Dictionary<string, object>();
       param.Add("@place", garage);
       param.Add("@charId", charId);
-      var result = await VSql.FetchAllAsync("SELECT `id`, `model`, `plate`, `place`, `owner_char`, `owner_organization`, `properties` FROM `vehicle` WHERE `owner_char` = @charId and `place` = @place", param);
+      var result = await VSql.FetchAllAsync(
+        "    SELECT v.* " +
+        "      FROM `vehicle` v " +
+        " LEFT JOIN `character` c ON c.`id` = @charId " +
+        " LEFT JOIN `organization` o ON o.`id` = c.`organization_id` " +
+        "     WHERE v.`place` = @place " +
+        "       AND (" +
+        "             v.`owner_char` = @charId " +
+        "             OR ( " +
+        "                  c.`organization_id` is not null AND " +
+        "                  c.`organization_id` = v.`owner_organization` AND " +
+        "                  ( " +
+        "                    o.`owner` = c.`id` " +
+        "                    OR EXISTS(select 1 from `organization_manager` om where om.`organization_id` = c.`organization_id` and om.`character_id` = c.`id`) " +
+        "                    OR EXISTS(select 1 from `organization_vehiclerights` vr where vr.`vehicle_id` = v.`id` and vr.`character_id` = c.`id`) " +
+        "                  ) " +
+        "                ) " +
+        "           ); "
+        , param);
 
       if (result == null || result.Count <= 0)
       {
@@ -520,9 +541,74 @@ namespace OriginFrameworkServer
 
       sourcePlayer.TriggerEvent("ofw_garage:VehicleReturned", plate);
     }
+
+    [EventHandler("ofw_garage:GetOrganizationVehicles")]
+    private async void GetOrganizationVehicles([FromSource] Player source, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+      {
+        Debug.WriteLine($"ofw_garage:GetOrganizationVehicles: Nenalezen hrac {source.Handle}");
+        _ = callback(String.Empty);
+        return;
+      }
+
+      int charId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(sourcePlayer);
+      if (charId <= 0)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná postava");
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", charId);
+      var result = await VSql.FetchAllAsync(
+        "    SELECT v.* " +
+        "      FROM `vehicle` v " +
+        " LEFT JOIN `character` c ON c.`id` = @charId " +
+        " LEFT JOIN `organization` o ON o.`id` = c.`organization_id` " +
+        "     WHERE v.`owner_organization` = c.`organization_id` " +
+        "       AND c.`organization_id` is not null " +
+        "       AND " +
+        "           (" +
+        "                o.`owner` = c.`id`" +
+        "             OR EXISTS(select 1 from `organization_manager` om where om.`organization_id` = c.`organization_id` and om.`character_id` = c.`id`) " +
+        "             OR EXISTS(select 1 from `organization_vehiclerights` vr where vr.`vehicle_id` = v.`id` and vr.`character_id` = c.`id`) " +
+        "           ) "
+        , param) ;
+
+      if (result == null || result.Count <= 0)
+      {
+        Debug.WriteLine($"ofw_garage:GetOrganizationVehicles: Zadne auto pro char:{charId}");
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var garageVehicles = new List<GarageVehicleBag>();
+      foreach (var row in result)
+      {
+        garageVehicles.Add(GarageVehicleBag.ParseFromSql(row));
+      }
+
+      foreach (var v in garageVehicles)
+      {
+        v.IsOut = IsOwnedVehicleOut(v.Id);
+      }
+
+      _ = callback(JsonConvert.SerializeObject(garageVehicles));
+    }
+
     #endregion
 
 
+    //Legacy, nez se to nekde pouzije, tak zkontrolovat kod
     [EventHandler("ofw_veh:SpawnServerVehicle")]
     private async void SpawnServerVehicle([FromSource] Player source, string model, Vector3 pos, float heading, CallbackDelegate callback)
     {
@@ -554,6 +640,7 @@ namespace OriginFrameworkServer
       _ = callback(veh.NetworkId);
     }
 
+    #region persistence eventy
     [EventHandler("ofw_veh:AckPropertiesSynced")]
     private async void AckPropertiesSynced([FromSource] Player source, string plate)
     {
@@ -595,6 +682,7 @@ namespace OriginFrameworkServer
       }
       catch { }
     }
+    #endregion
 
     private async void OnResourceStop(string resourceName)
     {
@@ -711,6 +799,13 @@ namespace OriginFrameworkServer
       await Delay(1000);
     }
 
+    /// <summary>
+    /// Spawne auto a vrati vehId. Ale bacha, v tuhle chvili uz ma entita handle, ale pravdepodobne jeste realne neexistuje. Pri pouziti pockat nez DoesEntityExist bude true
+    /// </summary>
+    /// <param name="hash"></param>
+    /// <param name="pos"></param>
+    /// <param name="heading"></param>
+    /// <returns></returns>
     public int SpawnPersistentVehicle(int hash, Vector3 pos, float heading)
     {
       // native "CREATE_VEHICLE"

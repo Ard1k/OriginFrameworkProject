@@ -255,6 +255,8 @@ namespace OriginFrameworkServer
         if (manager != null)
           orgBag.Managers.Remove(manager);
       }
+
+      var result2 = await VSql.ExecuteAsync("delete from `organization_vehiclerights` where `character_id` = @charId", param);
     }
 
     [EventHandler("ofw_org:RequestOrganizationData")]
@@ -517,6 +519,96 @@ namespace OriginFrameworkServer
 
       await Delay(200);
       _ = callback(true);
+    }
+
+    [EventHandler("ofw_org:GetOrgVehicleRights")]
+    private async void GetOrgVehicleRights([FromSource] Player source, int vehicleId, NetworkCallbackDelegate callback)
+    {
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+      {
+        _ = callback("");
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
+      {
+        _ = callback("");
+        return;
+      }
+
+      if (character.OrganizationId == null)
+      {
+        _ = callback("");
+        return;
+      }
+
+      var rights = new List<OrganizationVehicleRightsBag>();
+
+      var param = new Dictionary<string, object>();
+      param.Add("@vehicleId", vehicleId);
+
+      var result = await VSql.FetchAllAsync("select * from `organization_vehiclerights` where `vehicle_id` = @vehicleId", param);
+      if (result == null || result.Count <= 0)
+      {
+        _ = callback(JsonConvert.SerializeObject(rights));
+        return;
+      }
+
+      foreach (var row in result)
+      {
+        rights.Add(OrganizationVehicleRightsBag.ParseFromSql(row));
+      }
+
+      _ = callback(JsonConvert.SerializeObject(rights));
+    }
+
+    [EventHandler("ofw_org:SetVehicleRights")]
+    private async void SetVehicleRights([FromSource] Player source, int vehicleId, int memberCharacter, bool hasRight, NetworkCallbackDelegate callback)
+    {
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      if (character.OrganizationId == null)
+      {
+        _ = callback(false);
+        return;
+      }
+
+      var org = Organizations.Where(o => o.Owner == character.Id || o.Managers?.Any(m => m.CharId == character.Id) == true).FirstOrDefault();
+      if (org == null)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nemáš právo nastavovat přístup k autům");
+        _ = callback(false);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", memberCharacter);
+      param.Add("@vehId", vehicleId);
+
+      if (hasRight)
+      {
+        var result = await VSql.ExecuteAsync("insert into `organization_vehiclerights` (`vehicle_id`, `character_id`) values (@vehId, @charId) ON DUPLICATE KEY UPDATE `character_id` = `character_id`", param);
+        _ = callback(true);
+      }
+      else
+      {
+        var result = await VSql.ExecuteAsync("delete from `organization_vehiclerights` where `vehicle_id` = @vehId  and `character_id` = @charId", param);
+        _ = callback(false);
+      }
     }
 
     [EventHandler("ofw_org:KickMember")]

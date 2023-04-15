@@ -68,6 +68,23 @@ namespace OriginFrameworkData.DataBags
     public int CharId { get; set; }
   }
 
+  public class OrganizationVehicleRightsBag
+  {
+    public int VehicleId { get; set; }
+    public int CharId { get; set; }
+
+    public static OrganizationVehicleRightsBag ParseFromSql(Dictionary<string, object> row)
+    {
+      var it = new OrganizationVehicleRightsBag
+      {
+        VehicleId = Convert.ToInt32(row["vehicle_id"]),
+        CharId = Convert.ToInt32(row["character_id"]),
+      };
+
+      return it;
+    }
+  }
+
   public class OrganizationInviteBag
   {
     public int CharId { get; set; }
