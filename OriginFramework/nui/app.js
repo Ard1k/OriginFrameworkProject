@@ -1,4 +1,7 @@
-﻿$(document).ready(function () {
+﻿
+
+
+$(document).ready(function () {
   window.addEventListener('message', function (event) {
     var eventName = event.data.type;
     if (eventName === 'copyCoords') {
@@ -43,6 +46,36 @@
       setTimeout(function () {
         $(content).css('display', 'none')
       }, 5000)
+    }
+    else if (eventName === 'showInventoryTooltip') {
+      var header = event.data.header;
+      var rows = event.data.rows;
+
+      var tooltip = document.querySelector('.inventoryTooltip');
+      tooltip.style.display = 'block';
+      tooltip.style.top = event.data.y * 100 + 'vh';
+      tooltip.style.left = event.data.x * 100 + 'vw';
+
+      var headerDiv = tooltip.querySelector('.tooltipHeader');
+      headerDiv.innerHTML = header;
+
+      var rowsDiv = tooltip.querySelector('.tooltipRows');
+      rowsDiv.innerHTML = '';
+
+      for (var i = 0; i < rows.length; i++) {
+        var rowDiv = document.createElement('div');
+
+        if (rows[i].s1 != null)
+          rowDiv.innerHTML = '<div class="tooltipRow"><span>' + rows[i].s1 + ':</span> ' + rows[i].s2 + "</div>";
+        else
+          rowDiv.innerHTML = '<div class="tooltipRow">' + rows[i].s2 + "</div>";
+
+        rowsDiv.appendChild(rowDiv);
+      }
+    }
+    else if (eventName === 'hideInventoryTooltip') {
+      var tooltip = document.querySelector('.inventoryTooltip');
+      tooltip.style.display = 'none';
     }
   })
 })

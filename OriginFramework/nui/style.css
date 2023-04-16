@@ -63,6 +63,48 @@ body {
 }
 .negativeAmount {
   color: red;
-  
+}
+
+.inventoryTooltip {
+  font-family: FiraSans;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: solid thin;
+  border-color: rgba(200, 200, 200, 0.6);
+  color: rgb(200, 200, 200);
+  min-width: 10vw;
+  max-width: 15vw;
+  max-height: fit-content;
+}
+
+.tooltipHeader {
+  font-size: 1.6vh;
+  font-weight: bold;
+  padding: 0.3vh 0.2vw 0.3vh 0.2vw;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+  text-align :center;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.tooltipRows {
+  border-top: solid thin;
+  border-color: rgba(200, 200, 200, 0.6);
+}
+
+.tooltipRow {
+  font-size: 1.5vh;
+  padding: 0.3vh 0.2vw 0.3vh 0.2vw;
+  white-space: normal;
+  vertical-align: top;
+  text-align: left;
+  width: 100%;
+  background-color: rgba(30, 30, 30, 0.8);
+}
+
+.tooltipRows span {
+  font-weight: bold;
 }
 

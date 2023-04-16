@@ -106,6 +106,7 @@ namespace OriginFramework
       if (CharacterCaretaker.LoggedCharacter == null)
       {
         IsInventoryOpen = false;
+        CloseTooltip();
         return;
       }
 
@@ -151,6 +152,8 @@ namespace OriginFramework
             TriggerServerEvent("ofw_inventory:ReloadInventory", $"world_{(int)Math.Floor(Game.PlayerPed.Position.X/2)}_{(int)Math.Floor(Game.PlayerPed.Position.Y/2)}");
           }
         }
+        else
+          CloseTooltip();
       }
 
       if (!IsInventoryOpen)
@@ -191,6 +194,7 @@ namespace OriginFramework
       if (Game.IsDisabledControlJustPressed(0, Control.FrontendRright) || Game.IsDisabledControlJustPressed(0, Control.FrontendPauseAlternate))
       {
         IsInventoryOpen = false;
+        CloseTooltip();
         return;
       }
 
@@ -220,13 +224,16 @@ namespace OriginFramework
       ShowCursorThisFrame();
       RenderInstructionalButtons();
 
-      if (IsDrawingTooltip)
-        tooltipData.SetAndComputeData((float)(cursorData.xRelative + cellWidth/3), (float)cursorData.yRelative, cursorData.HoverItem);
-
       Render();
 
+      //TODO tooltip - tohle je neskutecna picovina delat kazdy frame. Kdyz je to ted pres NUI, meli by se eventy posilat jen kdyz se to zmeni... ale ted mrdat :D
       if (IsDrawingTooltip)
+      {
+        tooltipData.SetAndComputeData((float)(cursorData.xRelative + cellWidth / 3), (float)cursorData.yRelative, cursorData.HoverItem);
         tooltipData.Render();
+      }
+      else
+        CloseTooltip();
     }
 
     #region event handlers
@@ -241,6 +248,7 @@ namespace OriginFramework
         TheBugger.DebugLog("INVENTORY - InventoryUpdated: invalid inventory data");
         IsInventoryOpen = false;
         IsWaiting = false;
+        CloseTooltip();
         return;
       }
 
@@ -306,6 +314,7 @@ namespace OriginFramework
       WeaponManager.EquipWeapon(itemId, ammoCount);
       
       IsInventoryOpen = false;
+      CloseTooltip();
     }
     #endregion
 
@@ -724,9 +733,6 @@ namespace OriginFramework
       x2 = bounds.X1 + (x + 1) * cellWidth - cellWidth / 10;
       y2 = bounds.Y1 + (y + 1) * cellHeight - cellHeight / 10;
 
-      if (IsDrawingTooltip && tooltipData.Bounds.IntersectsWith(x1, y1, x2, y2))
-        return;
-
       SetTextFont(4);
       SetTextScale(itemCountScale, itemCountScale);
       SetTextColour(255, 255, 255, 255);
@@ -763,6 +769,15 @@ namespace OriginFramework
 
       if (definition.UsableType == eUsableType.Weapon)
         TriggerServerEvent("ofw_inventory:UseItem", it.Id, it.Place, it.ItemId);
+    }
+
+    private void CloseTooltip()
+    {
+      var message = new
+      {
+        type = "hideInventoryTooltip",
+      };
+      SendNuiMessage(JsonConvert.SerializeObject(message));
     }
     #endregion
 
@@ -814,9 +829,11 @@ namespace OriginFramework
       private static float textScale = 0.3f;
       private static float tooltipWidth = 0.3f / Screen.AspectRatio;
       private static float vertical_offset = (tooltipWidth / 30) * Screen.AspectRatio;
-      public RectBounds Bounds { get; private set; } = new RectBounds();
-      private string _text = null;
-      private string _text2 = null;
+
+      private string _header = null;
+      private List<object> _rows = null;
+      private float _x = 0;
+      private float _y = 0;
 
       public void SetAndComputeData(float x, float y, InventoryItemBag item)
       {
@@ -824,41 +841,41 @@ namespace OriginFramework
           return;
 
         var itDef = ItemsDefinitions.Items[item.ItemId];
-        _text2 = String.Empty;
-        int linesCount = 1;
-
-        _text = $"~h~{itDef.Name ?? "Nepojmenovaný předmět"}~h~";
+        _header = $"{itDef.Name ?? "Nepojmenovaný předmět"}";
+        _rows = new List<object>();
 
         if (itDef?.Color?.Label != null)
         {
-          _text2 += $"Barva: {itDef.Color.Label}~n~";
-          linesCount++;
+          _rows.Add(new { s1 = "Barva", s2 = itDef.Color.Label });
         }
 
         if (itDef.MaleSkin != null || itDef.FemaleSkin != null)
         {
           if (itDef.MaleSkin != null && itDef.FemaleSkin != null)
-            _text2 += "Střih: Univerzální~n~";
+            _rows.Add(new { s1 = "Střih", s2 = "Univerzální" });
           else if (itDef.MaleSkin != null)
-            _text2 += "Střih: Pánský~n~";
+            _rows.Add(new { s1 = "Střih", s2 = "Pánský" });
           else if (itDef.FemaleSkin != null)
-            _text2 += "Střih: Dámský~n~";
-
-          linesCount++;
+            _rows.Add(new { s1 = "Střih", s2 = "Dámský" });
         }
 
-        Bounds.X1 = x;
-        Bounds.Y1 = y - vertical_offset;
-        Bounds.X2 = x + tooltipWidth;
-        Bounds.Y2 = y + linesCount * (textScale / TextUtils.TxtHConst) + vertical_offset;
+        _rows.Add(new { s2 = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam sed tellus id magna elementum tincidunt. Ut tempus purus at lorem. Mauris dolor felis, sagittis at, luctus sed, aliquam non, tellus. Donec vitae arcu. Nam quis nulla. Ut enim ad minima veniam" });
+
+        _x = x;
+        _y = y - vertical_offset;
       }
 
       public async void Render()
       {
-        DrawUtils.DrawRect2(Bounds, 50, 50, 50, 255);
-        TextUtils.DrawTextOnScreen(_text, (float)Bounds.X1 + tooltipWidth/2, (float)Bounds.Y1 + vertical_offset, textScale, Alignment.Center);
-        if (!string.IsNullOrEmpty(_text2))
-          TextUtils.DrawTextOnScreen(_text2, (float)Bounds.X1 + tooltipWidth/30, (float)Bounds.Y1 + vertical_offset + textScale / TextUtils.TxtHConst, textScale);
+        var message = new
+        {
+          type = "showInventoryTooltip",
+          x = _x,
+          y = _y,
+          header = _header,
+          rows = _rows
+        };
+        SendNuiMessage(JsonConvert.SerializeObject(message));
       }
     }
     #endregion
