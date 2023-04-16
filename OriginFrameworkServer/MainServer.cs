@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;
 using CitizenFX.Core.Native;
+using System.IO;
 
 namespace OriginFrameworkServer
 {
@@ -147,6 +148,30 @@ namespace OriginFrameworkServer
       var result = await VSql.FetchAllAsync("SELECT * from `job_grades` where `job_name` = @jobname order by grade asc ", param);
 
       _ = callback(result != null ? JsonConvert.SerializeObject(result) : null);
+    }
+
+    [EventHandler("ofw_core:SaveImageJpg")]
+    private async void SaveImageJpg([FromSource] Player source, string image)
+    {
+      if (source == null)
+        return;
+
+      try
+      {
+        if (!Directory.Exists("RecievedImages"))
+          Directory.CreateDirectory("RecievedImages");
+
+        string base64Image = image;
+        string base64Data = base64Image.Substring(base64Image.IndexOf(',') + 1); // remove data URI scheme
+        byte[] imageBytes = Convert.FromBase64String(base64Data); // decode base64 string to byte array
+        string name = $"RecievedImages/image{DateTime.Now.Ticks}.jpg";
+        File.WriteAllBytes(name, imageBytes); // write byte array to file
+        Debug.WriteLine($"Image Saved: {name} Bytes: {imageBytes.Length}");
+      }
+      catch (Exception ex)
+      {
+        Debug.WriteLine("SaveImage: " + ex.Message);
+      }
     }
   }
 }

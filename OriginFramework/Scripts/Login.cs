@@ -5,6 +5,7 @@ using OriginFrameworkData;
 using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
@@ -18,6 +19,7 @@ namespace OriginFramework
     public static bool IsInLoginScreen { get; private set; } = false;
     private const string loginMenuName = "loginMenu";
     private static List<CharacterBag> ExistingCaracters = null;
+    private static dynamic ScreenshotBasic = null;
 
     public Login()
     {
@@ -32,6 +34,7 @@ namespace OriginFramework
         return;
 
       Tick += OnTick;
+      ScreenshotBasic = Exports["screenshot-basic"];
 
       InternalDependencyManager.Started(eScriptArea.Login);
     }
@@ -104,6 +107,23 @@ namespace OriginFramework
 
       if (result == true)
       {
+        try
+        {
+          if (ScreenshotBasic != null)
+          {
+            ScreenshotBasic.requestScreenshot(new { encoding = "jpg", quality = 0.8f } ,new Action<string> ((data) =>
+            {
+              //Debug.WriteLine(data);
+              //TriggerEvent("chat:addMessage", new { template = $"<img src=\"{data}\" style=\"max-width: 300px;\" />" });
+
+              TriggerLatentServerEvent("ofw_core:SaveImageJpg", 20000, data); //20kB /s -> 160kb/s
+            }));
+          }
+        }
+        catch
+        {
+        }
+
         CharacterCaretaker.LoggedIn(character);
         IsInLoginScreen = false;
         NativeMenuManager.CloseAndUnlockMenu(loginMenuName);
