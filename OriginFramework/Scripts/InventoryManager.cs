@@ -859,8 +859,6 @@ namespace OriginFramework
             _rows.Add(new { s1 = "Střih", s2 = "Dámský" });
         }
 
-        _rows.Add(new { s2 = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam sed tellus id magna elementum tincidunt. Ut tempus purus at lorem. Mauris dolor felis, sagittis at, luctus sed, aliquam non, tellus. Donec vitae arcu. Nam quis nulla. Ut enim ad minima veniam" });
-
         _x = x;
         _y = y - vertical_offset;
       }
