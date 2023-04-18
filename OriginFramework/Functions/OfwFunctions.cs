@@ -226,6 +226,31 @@ namespace OriginFramework
     }
     #endregion
 
+    public static async Task<bool> MovePedToCoordForSeconds(int ped, Vector3 pos, float heading, float slideDist, float moveForSeconds)
+    {
+      Function.Call(Hash.TASK_GO_STRAIGHT_TO_COORD, ped, pos.X, pos.Y, pos.Z + 0.5f, 1.0f, -1, heading, slideDist);
+      TaskGoStraightToCoord(ped, pos.X, pos.Y, pos.Z + 0.5f, 1.0f, -1, heading, slideDist);
+
+      while (true)
+      {
+        await BaseScript.Delay(0);
+        moveForSeconds -= Game.LastFrameTime;
+        Vector3 newCoords = GetEntityCoords(ped, false);
+        float newHeading = GetEntityHeading(ped);
+
+        float coordsDiff = Vector2.Distance(new Vector2(newCoords.X, newCoords.Y), new Vector2(pos.X, pos.Y));
+        float headingDiff = Math.Abs(newHeading - heading);
+
+        if (coordsDiff < 0.1f && headingDiff < 5.0f || moveForSeconds < 0.0f)
+        {
+          await BaseScript.Delay(100);
+          break;
+        }
+      }
+
+      return true;
+    }
+
     public static Vector3 PosBagToVector3(PosBag posBag)
     {
       return new Vector3(posBag.X, posBag.Y, posBag.Z);

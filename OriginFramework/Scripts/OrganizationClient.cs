@@ -41,8 +41,6 @@ namespace OriginFramework.Scripts
 
       Tick += OnTick;
 
-      TriggerServerEvent("ofw_map:GetAllMaps");
-
       InternalDependencyManager.Started(eScriptArea.OrganizationClient);
     }
 

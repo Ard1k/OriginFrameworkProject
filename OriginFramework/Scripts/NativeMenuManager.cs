@@ -507,6 +507,9 @@ namespace OriginFramework
       if (LockedInMenuName != null && LockedInMenuName != menuName)
         return;
 
+      if (getMenu == null)
+        return;
+
       if (CurrentMenuName == menuName)
       {
         if (!IsHidden)

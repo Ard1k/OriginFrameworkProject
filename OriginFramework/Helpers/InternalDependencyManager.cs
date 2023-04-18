@@ -77,6 +77,8 @@ namespace OriginFramework
     CharacterCreator = 14,
     CharacterCaretaker = 15,
     InventoryManager = 16,
-    OrganizationClient = 17
+    OrganizationClient = 17,
+    MMenu = 18,
+    AtmClient = 19
   }
 }

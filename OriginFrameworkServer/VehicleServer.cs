@@ -605,6 +605,59 @@ namespace OriginFrameworkServer
       _ = callback(JsonConvert.SerializeObject(garageVehicles));
     }
 
+    [EventHandler("ofw_garage:GetCharacterVehicles")]
+    private async void GetCharacterVehicles([FromSource] Player source, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+      {
+        Debug.WriteLine($"ofw_garage:GetCharacterVehicles: Nenalezen hrac {source.Handle}");
+        _ = callback(String.Empty);
+        return;
+      }
+
+      int charId = CharacterCaretakerServer.GetPlayerLoggedCharacterId(sourcePlayer);
+      if (charId <= 0)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná postava");
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", charId);
+      var result = await VSql.FetchAllAsync(
+        "    SELECT v.* " +
+        "      FROM `vehicle` v " +
+        "     WHERE v.`owner_char` = @charId "
+        , param);
+
+      if (result == null || result.Count <= 0)
+      {
+        Debug.WriteLine($"ofw_garage:GetCharacterVehicles: Zadne auto pro char:{charId}");
+        _ = callback(String.Empty);
+        return;
+      }
+
+      var garageVehicles = new List<GarageVehicleBag>();
+      foreach (var row in result)
+      {
+        garageVehicles.Add(GarageVehicleBag.ParseFromSql(row));
+      }
+
+      foreach (var v in garageVehicles)
+      {
+        v.IsOut = IsOwnedVehicleOut(v.Id);
+      }
+
+      _ = callback(JsonConvert.SerializeObject(garageVehicles));
+    }
     #endregion
 
 
