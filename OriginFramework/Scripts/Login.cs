@@ -107,26 +107,32 @@ namespace OriginFramework
 
       if (result == true)
       {
-        try
-        {
-          if (ScreenshotBasic != null)
-          {
-            ScreenshotBasic.requestScreenshot(new { encoding = "jpg", quality = 0.8f } ,new Action<string> ((data) =>
-            {
-              //Debug.WriteLine(data);
-              //TriggerEvent("chat:addMessage", new { template = $"<img src=\"{data}\" style=\"max-width: 300px;\" />" });
-
-              TriggerLatentServerEvent("ofw_core:SaveImageJpg", 20000, data); //20kB /s -> 160kb/s
-            }));
-          }
-        }
-        catch
-        {
-        }
+        TakeTestScreenShot();
 
         CharacterCaretaker.LoggedIn(character);
         IsInLoginScreen = false;
         NativeMenuManager.CloseAndUnlockMenu(loginMenuName);
+      }
+    }
+
+    public static async void TakeTestScreenShot()
+    {
+      try
+      {
+        if (ScreenshotBasic != null)
+        {
+          await Delay(4000);
+          ScreenshotBasic.requestScreenshot(new { encoding = "jpg", quality = 0.8f }, new Action<string>((data) =>
+          {
+            //Debug.WriteLine(data);
+            //TriggerEvent("chat:addMessage", new { template = $"<img src=\"{data}\" style=\"max-width: 300px;\" />" });
+
+            TriggerLatentServerEvent("ofw_core:SaveImageJpg", 20000, data); //20kB /s -> 160kb/s
+          }));
+        }
+      }
+      catch
+      {
       }
     }
   }
