@@ -828,5 +828,77 @@ namespace OriginFrameworkServer
         }
       }
     }
+
+    [EventHandler("ofw_inventory:GetCharBankBalance")]
+    private async void GetMyCharBankBalance([FromSource] Player source, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        _ = callback(false, 0);
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(source);
+      if (character == null)
+      {
+        _ = callback(false, 0);
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", character.Id);
+      var result = await VSql.FetchScalarAsync("select `bank_money` from `character` where id = @charId", param);
+
+      if (result == null || result == DBNull.Value)
+        _ = callback(false, 0);
+      else
+        _ = callback(true, Convert.ToInt32(result));
+    }
+
+    [EventHandler("ofw_inventory:WithdrawBankBalance")]
+    private async void WithdrawBankBalance([FromSource] Player source, int amount)
+    {
+      if (source == null)
+      {
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(source);
+      if (character == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      if (amount <= 0)
+      {
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná částka");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@charId", character.Id);
+        var bankResult = await VSql.FetchScalarAsync("select `bank_money` from `character` where id = @charId", param);
+        int bankMoney = Convert.ToInt32(bankResult);
+        if (bankMoney < amount)
+        {
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Na účtě není tolik peněz");
+          return;
+        }
+
+        string result = await GiveItem($"char_{character.Id}", 17, amount);
+        if (result != null)
+        {
+          source.TriggerEvent("ofw:ValidationErrorNotification", result);
+          return;
+        }
+
+        param.Add("@amount", amount);
+        await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` - @amount where id = @charId", param);
+      }
+    }
   }
 }

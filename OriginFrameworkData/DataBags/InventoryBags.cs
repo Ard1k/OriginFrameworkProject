@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -215,7 +216,7 @@ namespace OriginFrameworkData.DataBags
     public string FormatAmount(int amount, bool addSign = false)
     {
       if (IsMoney)
-        return ((decimal)amount / 100).ToString("0.##") + "$";
+        return ((decimal)amount / 100).ToString("#,0.##").Replace(',', ' ') + "$";
 
       return ((amount >= 0 && addSign) ? "+" : String.Empty) + amount.ToString();
     }

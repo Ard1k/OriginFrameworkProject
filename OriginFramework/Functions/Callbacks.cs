@@ -82,6 +82,44 @@ namespace OriginFramework
       return ret;
     }
 
+    /// <summary>
+    /// Pouziva dvouparametrovy callback kde prvni parametr je bool jestli se operace povedla a druha error message. Pokud se callback vrati s false, automaticky se vyhodi error notifikace
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="eventName"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public static async Task<Tuple<bool, int>> ServerAsyncCallbackToSyncNumberWithSuccessBool(string eventName, params object[] args)
+    {
+      if (args == null)
+        args = new object[0];
+
+      var expandedArgs = new object[args.Length + 1];
+      args.CopyTo(expandedArgs, 0);
+
+      bool wasSuccess = default;
+      int amount = default;
+      bool completed = false;
+      Func<bool, int, bool> CallbackFunction = (data, data2) =>
+      {
+        wasSuccess = data;
+        amount = data2;
+        completed = true;
+        return true;
+      };
+
+      expandedArgs[args.Length] = CallbackFunction;
+
+      BaseScript.TriggerServerEvent(eventName, expandedArgs);
+
+      while (!completed)
+      {
+        await BaseScript.Delay(0);
+      }
+
+      return new Tuple<bool, int>(wasSuccess, amount);
+    }
+
     public static async Task<T> ServerAsyncCallbackToSyncWithText<T>(string eventName, string waitText, params object[] args)
     {
       if (args == null)
