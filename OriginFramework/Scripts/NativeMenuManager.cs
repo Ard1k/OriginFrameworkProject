@@ -584,7 +584,6 @@ namespace OriginFramework
 
     public static bool IsMenuOpen(string menuName)
     {
-      Debug.WriteLine($"{menuName == null} {CurrentMenuName}{menuName == CurrentMenuName} {!IsHidden}");
       if ((menuName == null || menuName == CurrentMenuName) && !IsHidden)
         return true;
       else
