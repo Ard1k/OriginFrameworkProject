@@ -95,6 +95,32 @@ namespace OriginFramework
         new { name="tag", help="Tag - přesně 3 znaky" },
         new { name="color", help=$"Barva - {String.Join("/", Enum.GetNames(typeof(eOrganizationColor)))}" }
       });
+
+      TriggerEvent("chat:addSuggestion", "/givebankcash", "Dát peníze na účet (dá se i záporná částka)", new[]
+      {
+        new { name="id", help="Id hráče" },
+        new { name="type", help="char/org" },
+        new { name="amount", help="kolik?" }
+      });
+
+      TriggerEvent("chat:addSuggestion", "/resetinventory", "Vymaže inventář hráče", new[]
+      {
+        new { name="id", help="Id hráče" },
+      });
+
+      TriggerEvent("chat:addSuggestion", "/removeitem", "Odstranit předmět z inventáře", new[]
+      {
+        new { name="id", help="Id hráče" },
+        new { name="item_id", help="Id itemu" },
+        new { name="amount", help="kolik?" }
+      });
+
+      TriggerEvent("chat:addSuggestion", "/giveitem", "Dát předmět do inventáře", new[]
+      {
+        new { name="id", help="Id hráče" },
+        new { name="item_id", help="Id itemu" },
+        new { name="amount", help="kolik?" }
+      });
       #endregion
 
       var dynamicItemsDefString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_core:GetDynamicItemDefinitions");
@@ -168,6 +194,12 @@ namespace OriginFramework
     private async void InventoryNotification(string itemName, string amount)
     {
       Notify.ShowInventoryNotification(itemName, amount);
+    }
+
+    [EventHandler("ofw_misc:ClearArea")]
+    private async void ClearArea(Vector3 pos, float radius)
+    {
+      ClearAreaOfEverything(pos.X, pos.Y, pos.Z, radius, false, false, false, false);
     }
   }
 }

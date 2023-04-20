@@ -63,8 +63,19 @@ namespace OriginFrameworkServer
           sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Hrac neni lognuty");
           return;
         }
-        var item_id = Convert.ToInt32(args[1]);
-        var count = Convert.ToInt32(args[2]);
+
+        int item_id = 0;
+        if (!Int32.TryParse(args[1].ToString(), out item_id))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatné id předmětu");
+          return;
+        }
+        int count = 0;
+        if (!Int32.TryParse(args[2].ToString(), out count))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatný počet");
+          return;
+        }
 
         using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
         {
@@ -107,8 +118,19 @@ namespace OriginFrameworkServer
           sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Hrac neni lognuty");
           return;
         }
-        var item_id = Convert.ToInt32(args[1]);
-        var count = Convert.ToInt32(args[2]);
+
+        int item_id = 0;
+        if (!Int32.TryParse(args[1].ToString(), out item_id))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatné id předmětu");
+          return;
+        }
+        int count = 0;
+        if (!Int32.TryParse(args[2].ToString(), out count))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatný počet");
+          return;
+        }
 
         using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
         {
@@ -159,6 +181,79 @@ namespace OriginFrameworkServer
             sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Inventar resetovany");
           else
             sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", result);
+        }
+      }), false);
+
+      RegisterCommand("givebankcash", new Action<int, List<object>, string>(async (source, args, raw) =>
+      {
+        var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+        if (sourcePlayer == null)
+          return;
+
+        if (!CharacterCaretakerServer.HasPlayerAdminLevel(sourcePlayer, 10))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nedostatecne opravneni");
+          return;
+        }
+
+        if (args == null || args.Count != 3)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Natplatne pocet parametru");
+          return;
+        }
+
+        var player = Players.Where(p => p.Handle == args[0].ToString()).FirstOrDefault();
+        if (player == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nepodarilo se najit hrace");
+          return;
+        }
+
+        var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(player);
+        if (character == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Hrac neni lognuty");
+          return;
+        }
+
+        bool isOrg = false;
+        if (args[1].ToString().ToLower().Trim() == "char")
+          isOrg = false;
+        else if (args[1].ToString().ToLower().Trim() == "org")
+          isOrg = true;
+        else
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatny ucet");
+          return;
+        }
+
+        if (isOrg && character.OrganizationId == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Hráč nemá organizaci");
+          return;
+        }
+
+        int count = 0;
+        if (!Int32.TryParse(args[2].ToString(), out count))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatný počet");
+          return;
+        }
+
+        using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+        {
+          var param = new Dictionary<string, object>();
+          param.Add("@charId", character.Id);
+          param.Add("@orgId", character.OrganizationId);
+          param.Add("@amount", count);
+
+          if (isOrg)
+            await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` + @amount where `id` = @orgId", param);
+          else
+            await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` + @amount where `id` = @charId", param);
+
+          await Delay(0);
+          sourcePlayer.TriggerEvent("ofw:SuccessNotification", "Má to tam");
         }
       }), false);
 
@@ -830,7 +925,7 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_inventory:GetCharBankBalance")]
-    private async void GetMyCharBankBalance([FromSource] Player source, NetworkCallbackDelegate callback)
+    private async void GetCharBankBalance([FromSource] Player source, NetworkCallbackDelegate callback)
     {
       if (source == null)
       {
@@ -856,8 +951,41 @@ namespace OriginFrameworkServer
         _ = callback(true, Convert.ToInt32(result));
     }
 
-    [EventHandler("ofw_inventory:WithdrawBankBalance")]
-    private async void WithdrawBankBalance([FromSource] Player source, int amount)
+    [EventHandler("ofw_inventory:GetOrganizationBankBalance")]
+    private async void GetOrganizationBankBalance([FromSource] Player source, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        _ = callback(false, 0);
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(source);
+      if (character == null)
+      {
+        _ = callback(false, 0);
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      if (character.OrganizationId == null || !OrganizationServer.Organizations.Any(org => org.Id == character.OrganizationId && (org.Owner == character.Id || org.Managers.Any(c => c.CharId == character.Id))))
+      {
+        _ = callback(false, 0);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@orgId", character.OrganizationId);
+      var result = await VSql.FetchScalarAsync("select `bank_money` from `organization` where `id` = @orgId", param);
+
+      if (result == null || result == DBNull.Value)
+        _ = callback(false, 0);
+      else
+        _ = callback(true, Convert.ToInt32(result));
+    }
+
+    [EventHandler("ofw_inventory:WithdrawCharBankBalance")]
+    private async void WithdrawCharBankBalance([FromSource] Player source, int amount)
     {
       if (source == null)
       {
@@ -898,6 +1026,57 @@ namespace OriginFrameworkServer
 
         param.Add("@amount", amount);
         await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` - @amount where id = @charId", param);
+      }
+    }
+
+    [EventHandler("ofw_inventory:WithdrawOrganizationBankBalance")]
+    private async void WithdrawOrganizationBankBalance([FromSource] Player source, int amount)
+    {
+      if (source == null)
+      {
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(source);
+      if (character == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      if (amount <= 0)
+      {
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná částka");
+        return;
+      }
+
+      if (character.OrganizationId == null || !OrganizationServer.Organizations.Any(org => org.Id == character.OrganizationId && (org.Owner == character.Id || org.Managers.Any(c => c.CharId == character.Id))))
+      {
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Nemáš organizaci nebo nejsi manažer");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@orgId", character.OrganizationId);
+        var bankResult = await VSql.FetchScalarAsync("select `bank_money` from `organization` where id = @orgId", param);
+        int bankMoney = Convert.ToInt32(bankResult);
+        if (bankMoney < amount)
+        {
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Na účtě není tolik peněz");
+          return;
+        }
+
+        string result = await GiveItem($"char_{character.Id}", 17, amount);
+        if (result != null)
+        {
+          source.TriggerEvent("ofw:ValidationErrorNotification", result);
+          return;
+        }
+
+        param.Add("@amount", amount);
+        await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` - @amount where id = @orgId", param);
       }
     }
   }

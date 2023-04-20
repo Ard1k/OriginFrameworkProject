@@ -521,14 +521,23 @@ namespace OriginFramework
         {
           if (CurrentMenu == null)
             CurrentMenu = getMenu();
-          IsHidden = false;
-          return;
+
+          if (CurrentMenu != null)
+          {
+            IsHidden = false;
+            return;
+          }
         }
       }
 
-      CurrentMenu = getMenu();
-      CurrentMenuName = menuName;
-      IsHidden = false;
+      var menu = getMenu();
+
+      if (menu != null)
+      {
+        CurrentMenu = getMenu();
+        CurrentMenuName = menuName;
+        IsHidden = false;
+      }
     }
 
     public static void OpenNewMenu(string menuName, Func<NativeMenu> getMenu)
@@ -536,9 +545,17 @@ namespace OriginFramework
       if (LockedInMenuName != null && LockedInMenuName != menuName)
         return;
 
-      CurrentMenu = getMenu();
-      CurrentMenuName = menuName;
-      IsHidden = false;
+      if (getMenu == null)
+        return;
+
+      var menu = getMenu();
+
+      if (menu != null)
+      {
+        CurrentMenu = getMenu();
+        CurrentMenuName = menuName;
+        IsHidden = false;
+      }
     }
 
     public static void EnsureMenuOpen(string menuName, Func<NativeMenu> getMenu)
@@ -552,13 +569,22 @@ namespace OriginFramework
         return;
       }
 
-      CurrentMenu = getMenu();
-      CurrentMenuName = menuName;
-      IsHidden = false;
+      if (getMenu == null)
+        return;
+
+      var menu = getMenu();
+
+      if (menu != null)
+      {
+        CurrentMenu = getMenu();
+        CurrentMenuName = menuName;
+        IsHidden = false;
+      }
     }
 
     public static bool IsMenuOpen(string menuName)
     {
+      Debug.WriteLine($"{menuName == null} {CurrentMenuName}{menuName == CurrentMenuName} {!IsHidden}");
       if ((menuName == null || menuName == CurrentMenuName) && !IsHidden)
         return true;
       else

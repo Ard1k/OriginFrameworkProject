@@ -62,6 +62,28 @@ namespace OriginFrameworkServer
         sourcePlayer.TriggerEvent("ofw_misc:CopyStringToClipboard", sb.ToString());
       }), false);
 
+      RegisterCommand("cleararea", new Action<int, List<object>, string>((source, args, raw) =>
+      {
+        var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
+        if (sourcePlayer == null)
+          return;
+
+        if (!CharacterCaretakerServer.HasPlayerAdminLevel(sourcePlayer, 10))
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Nedostatecne opravneni");
+          return;
+        }
+
+        float dist = 28f;
+        if (args != null && args.Count > 1)
+        {
+          if (!float.TryParse(args[0].ToString(), out dist))
+            dist = 28f;
+        }
+
+        TriggerClientEvent("ofw_misc:ClearArea", sourcePlayer.Character.Position, dist);
+      }), false);
+
       while (!VSql.IsReadyToUse)
         await Delay(0);
 

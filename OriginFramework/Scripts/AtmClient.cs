@@ -60,7 +60,7 @@ namespace OriginFramework.Scripts
 
       Tick += OnTick;
       Tick += OnSlowTick250;
-      AddTextEntry("ATMCLIENT_OPEN_ATM", FontsManager.FiraSansString + "~INPUT_PICKUP~ Použít bankomat");
+      AddTextEntry("ATMCLIENT_OPEN_ATM", $"~INPUT_PICKUP~ {FontsManager.FiraSansString}Použít bankomat");
 
       InternalDependencyManager.Started(eScriptArea.AtmClient);
     }
@@ -149,6 +149,9 @@ namespace OriginFramework.Scripts
 
     private NativeMenu getAtmMenu()
     {
+      if (NearestAtm == null)
+        return null;
+
       return new NativeMenu
       {
         MenuTitle = $"ATM ID: {NearestAtm.Id}",
@@ -159,7 +162,8 @@ namespace OriginFramework.Scripts
             GetSubMenuAsync = getCharAtmMenu
           },
           new NativeMenuItem {
-            Name = "Firemní účet"
+            Name = "Firemní účet",
+            GetSubMenuAsync = getOrgAtmMenu
           },
           new NativeMenuItem { 
             Name = "Zavřít",
@@ -213,7 +217,7 @@ namespace OriginFramework.Scripts
                   return;
                 }
 
-                TriggerServerEvent("ofw_inventory:WithdrawBankBalance", money);
+                TriggerServerEvent("ofw_inventory:WithdrawCharBankBalance", money);
               }
               else
                 Notify.Error("Neplatná částka");
@@ -237,7 +241,85 @@ namespace OriginFramework.Scripts
             Name = $"{ItemsDefinitions.Items[17].FormatAmount(v)}",
             OnSelected = (item) =>
             {
-              TriggerServerEvent("ofw_inventory:WithdrawBankBalance", v);
+              TriggerServerEvent("ofw_inventory:WithdrawCharBankBalance", v);
+            },
+            IsClose = true
+          });
+        }
+        else
+          break;
+      }
+
+      return menu;
+    }
+
+    private async Task<NativeMenu> getOrgAtmMenu()
+    {
+      var res = await Callbacks.ServerAsyncCallbackToSyncNumberWithSuccessBool("ofw_inventory:GetOrganizationBankBalance");
+
+      if (res.Item1 == false)
+      {
+        return atmAccessDeniedMenu();
+      }
+
+      var menu = new NativeMenu
+      {
+        MenuTitle = $"Výběr z firemního účtu",
+        SelectedIndex = 2,
+        SelectedIndexVisible = 2,
+        Items = new List<NativeMenuItem>()
+        {
+          new NativeMenuItem {
+            Name = $"Stav účtu: {ItemsDefinitions.Items[17].FormatAmount(res.Item2)}",
+            IsUnselectable = true
+          },
+          new NativeMenuItem {
+            IsUnselectable = true
+          },
+
+          new NativeMenuItem {
+            Name = "Zadat částku...",
+            IsTextInput = true,
+            TextInputMaxLength = 10,
+            TextInputRequest = "Vybrat částku",
+            OnTextInput = (item, input) =>
+            {
+              decimal val;
+              if (Decimal.TryParse(input, out val))
+              {
+                int money = (int)val * 100;
+
+                if (money <= 0)
+                {
+                  Notify.Error("Neplatná částka");
+                  return;
+                }
+
+                TriggerServerEvent("ofw_inventory:WithdrawOrganizationBankBalance", money);
+              }
+              else
+                Notify.Error("Neplatná částka");
+            },
+            IsClose = true
+          },
+
+          new NativeMenuItem {
+            Name = "Zpět",
+            IsBack = true
+          }
+        }
+      };
+
+      foreach (var v in widthdrawAmounts)
+      {
+        if (v <= res.Item2)
+        {
+          menu.Items.Insert(menu.Items.Count - 1, new NativeMenuItem
+          {
+            Name = $"{ItemsDefinitions.Items[17].FormatAmount(v)}",
+            OnSelected = (item) =>
+            {
+              TriggerServerEvent("ofw_inventory:WithdrawOrganizationBankBalance", v);
             },
             IsClose = true
           });
