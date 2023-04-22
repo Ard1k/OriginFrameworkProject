@@ -42,6 +42,14 @@ namespace OriginFramework
         {
           int veh = Game.PlayerPed.CurrentVehicle.Handle;
           DeleteEntity(ref veh);
+          return;
+        }
+
+        int vehFront = Vehicles.GetVehicleInFront();
+        if (vehFront > 0)
+        {
+          DeleteEntity(ref vehFront);
+          return;
         }
       }), false);
 

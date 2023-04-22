@@ -19,6 +19,7 @@ namespace OriginFrameworkServer
   {
     private static List<PersistentVehicleBag> persistentVehicles = new List<PersistentVehicleBag>();
     private static Dictionary<int, Tuple<int, string>> requestedTunings = new Dictionary<int, Tuple<int, string>>();
+    private static List<int> failedSpawns = new List<int>();
     private JsonSerializerSettings jsonSettings = new JsonSerializerSettings
     {
       Error = (obj, args) =>
@@ -155,6 +156,7 @@ namespace OriginFrameworkServer
         await Delay(0);
 
       Tick += VehicleManagerTick;
+      Tick += CleanupTick;
 
       InternalDependencyManager.Started(eScriptArea.PersistentVehiclesServer);
     }
@@ -515,7 +517,7 @@ namespace OriginFrameworkServer
         return;
       }
 
-      var persistVeh = persistentVehicles.FirstOrDefault(x => x.Plate == plate);
+      var persistVeh = persistentVehicles.FirstOrDefault(x => x.Plate.ToLower().Trim() == plate);
 
       var sProps = (string)result[0]["properties"];
 
@@ -740,6 +742,19 @@ namespace OriginFrameworkServer
     private async void OnResourceStop(string resourceName)
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
+
+      for (int i = persistentVehicles.Count - 1; i >= 0; i--)
+      {
+        try
+        {
+          if (persistentVehicles[i].NetID <= 0)
+            continue;
+
+          var vehId = NetworkGetEntityFromNetworkId(persistentVehicles[i].NetID);
+          DeleteEntity(vehId);
+        }
+        catch { }
+      }
     }
 
     public static bool IsVehicleKnown(int netID)
@@ -759,6 +774,44 @@ namespace OriginFrameworkServer
         return true;
 
       return false;
+    }
+
+    private async Task CleanupTick()
+    {
+      for (int i = failedSpawns.Count - 1; i >= 0; i--)
+      {
+        var ent = failedSpawns[i];
+
+        if (DoesEntityExist(ent))
+        {
+          DeleteEntity(ent);
+          await Delay(0);
+          failedSpawns.Remove(ent);
+          Debug.WriteLine("Removed failed type A");
+        }
+      }
+
+      //var vehicles = GetAllVehicles();
+
+      //if (vehicles == null)
+      //  return;
+
+      //foreach (int veh in vehicles)
+      //{
+      //  Console.WriteLine($"owner: {NetworkGetFirstEntityOwner(veh)}, loc:{veh} net: {NetworkGetNetworkIdFromEntity(veh)}");
+
+      //  if (NetworkGetFirstEntityOwner(veh) != -1)
+      //    continue;
+
+      //  int netId = NetworkGetNetworkIdFromEntity(veh);
+      //  if (!IsVehicleKnown(netId))
+      //  {
+      //    DeleteEntity(veh);
+      //    Debug.WriteLine($"OFW_VEH: Removed unknown vehicle {netId}");
+      //  }
+      //}
+
+      await Delay(100);
     }
 
     private async Task VehicleManagerTick()
@@ -795,14 +848,24 @@ namespace OriginFrameworkServer
             if (frameCounter >= 5)
             {
               Debug.WriteLine("PersistentVehicles: Vehicle server respawn timeout!");
+              failedSpawns.Add(respVehID);
+              //Debug.WriteLine($"{JsonConvert.SerializeObject(iveh, Formatting.Indented)}");
               iveh.IsServerRespawning = false;
-              continue;
+              break;
             }
           }
+
+          if (!DoesEntityExist(respVehID))
+            continue;
 
           var veh = new Vehicle(respVehID);
           iveh.NetID = veh.NetworkId;
           iveh.IsServerRespawning = false;
+
+          if (iveh.VehicleVendorSlot != null)
+          {
+            VehicleVendorServer.SlotNetIdUpdated(iveh.VehicleVendorSlot.Value, iveh.NetID);
+          }
 
           string syncProperties = null;
           if (iveh.GarageId != null)
@@ -850,6 +913,104 @@ namespace OriginFrameworkServer
       }
 
       await Delay(1000);
+    }
+
+    public static void VendorSlotVehRemoveAndDepsawn(int vendorSlot)
+    {
+      var found = persistentVehicles.Where(p => p.VehicleVendorSlot == vendorSlot).FirstOrDefault();
+
+      if (found == null)
+        return;
+
+      persistentVehicles.Remove(found);
+
+      if (found.NetID <= 0)
+        return;
+
+      var vehId = NetworkGetEntityFromNetworkId(found.NetID);
+      DeleteEntity(vehId);
+    }
+
+    public static async void PopulateVendorSlot(int vendorSlot, PosBag pos, string plate, int modelHash, string properties)
+    {
+      VendorSlotVehRemoveAndDepsawn(vendorSlot); //pro jistotu zkusime smazat
+
+      await Delay(0);
+
+      persistentVehicles.Add(new PersistentVehicleBag { VehicleVendorSlot = vendorSlot, LastKnownPos = pos, Plate = plate, ModelHash = modelHash, Properties = properties });
+    }
+
+    public static async Task<bool> MigrateVendorSlotVehToGarageVeh(int slotId, string newPlate, int? ownerChar, int? ownerOrg)
+    {
+      newPlate = newPlate.ToLower().Trim();
+      var persistVeh = persistentVehicles.Where(p => p.VehicleVendorSlot == slotId).FirstOrDefault();
+      if (persistVeh == null)
+      {
+        Debug.WriteLine("MigrateVendorSlotVehToGarageVeh: VendorVehicle not found!");
+        return false;
+      }
+
+      string propsString = persistVeh.Properties;
+      VehiclePropertiesBag properties = null;
+      if (propsString != null)
+        properties = JsonConvert.DeserializeObject<VehiclePropertiesBag>(propsString);
+      
+      if (properties == null)
+        properties = new VehiclePropertiesBag { model = persistVeh.ModelHash, plate = newPlate };
+      else
+        properties.plate = newPlate;
+
+      string newProperties = JsonConvert.SerializeObject(properties);
+
+      var param = new Dictionary<string, object>();
+      param.Add("@ownerChar", ownerChar);
+      param.Add("@ownerOrg", ownerOrg);
+      param.Add("@properties", newProperties);
+      param.Add("@modelHash", persistVeh.ModelHash);
+      param.Add("@plate", newPlate);
+
+      var res = await VSql.ExecuteAsync("insert into `vehicle` (`model`, `plate`, `place`, `properties`, `owner_char`, `owner_organization`) values (@modelHash, @plate, 'main', @properties, @ownerChar, @ownerOrg)", param);
+      if (res != 1)
+      {
+        Debug.WriteLine("MigrateVendorSlotVehToGarageVeh: Error saving VendorVehicle");
+        return false;
+      }
+
+      var garageIdRes = await VSql.FetchScalarAsync("select `id` from `vehicle` where `plate` = @plate ", param);
+      if (garageIdRes == null || garageIdRes == DBNull.Value)
+      {
+        Debug.WriteLine("MigrateVendorSlotVehToGarageVeh: New garage id not found, persistent vehicles can't be updated");
+        persistentVehicles.Remove(persistVeh);
+        return true;
+      }
+
+      persistVeh.GarageId = Convert.ToInt32(garageIdRes);
+      persistVeh.VehicleVendorSlot = null;
+      persistVeh.Properties = newProperties;
+      persistVeh.Plate = newPlate;
+
+      await Delay(0);
+      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistVeh.NetID, persistVeh.Plate, persistVeh.Properties);
+      persistVeh.IsInPropertiesSync = true;
+      persistVeh.LastPropertiesSync = GetGameTimer();
+
+      return true;
+    }
+
+    public static async Task<bool> DoesPlateExist(string plate, bool searchDB)
+    {
+      if (searchDB)
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@plate", plate);
+        var result = await VSql.FetchAllAsync("SELECT `id` FROM `vehicle` WHERE `plate` = @plate", param);
+        if (result != null && result.Count > 0)
+          return true;
+      }
+      if (persistentVehicles.Any(p => p.Plate == plate))
+        return true;
+
+      return false;
     }
 
     /// <summary>

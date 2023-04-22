@@ -69,6 +69,7 @@
     <Compile Include="Scripts\AtmClient.cs" />
     <Compile Include="Scripts\MMenu.cs" />
     <Compile Include="Scripts\OrganizationClient.cs" />
+    <Compile Include="Scripts\VehicleVendorClient.cs" />
     <Compile Include="Scripts\TuningInstallClient.cs" />
     <Compile Include="Scripts\TuningCatalogClient.cs" />
     <Compile Include="Scripts\SkinEditor.cs" />

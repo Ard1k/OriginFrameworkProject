@@ -14,6 +14,7 @@ namespace OriginFramework
   public class PolyzoneManager : BaseScript
   {
     private static List<PolyzoneBag> knownPolyzones = new List<PolyzoneBag>();
+    private static List<Tuple<PosBag, PosBag>> knownCubes = new List<Tuple<PosBag, PosBag>>();
     private static bool testsFrozen = false;
 
     public PolyzoneManager()
@@ -48,11 +49,26 @@ namespace OriginFramework
 
         testsFrozen = false;
       }), false);
+
+      RegisterCommand("tcube", new Action<int, List<object>, string>(async (source, args, raw) =>
+      {
+        testsFrozen = true;
+
+        if (args?.Count == 6)
+          knownCubes.Add(new Tuple<PosBag, PosBag>(
+            new PosBag { X = float.Parse(args[0].ToString()), Y = float.Parse(args[1].ToString()), Z = float.Parse(args[2].ToString()) }, 
+            new PosBag { X = float.Parse(args[3].ToString()), Y = float.Parse(args[4].ToString()), Z = float.Parse(args[5].ToString()) }
+          ));
+        else
+          knownCubes.Clear();
+
+        testsFrozen = false;
+      }), false);
     }
 
     private async Task OnTick()
     {
-      if (knownPolyzones.Count <= 0)
+      if (knownPolyzones.Count <= 0 && knownCubes.Count <= 0)
       {
         await Delay(1000);
         return;
@@ -65,6 +81,11 @@ namespace OriginFramework
 
         var blocked = GetBoxMarkerBlockingVehicle(i.Center, i.Dimensions) != 0;
         BoxMarkerSolidDraw(i.Center, i.Dimensions, blocked);
+      }
+
+      foreach (var i in knownCubes)
+      {
+        DrawBox(i.Item1.X, i.Item1.Y, i.Item1.Z, i.Item2.X, i.Item2.Y, i.Item2.Z, 100, 100, 255, 80);
       }
     }
 

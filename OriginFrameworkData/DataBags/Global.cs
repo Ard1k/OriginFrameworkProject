@@ -21,7 +21,12 @@ namespace OriginFrameworkData.DataBags
       Z = z;
       Heading = heading;
     }
-	}
+
+		public PosBag GetInstanceCopy()
+		{
+			return new PosBag(this.X, this.Y, this.Z, this.Heading);
+		}
+  }
 
 	public class DimensionsBag
 	{

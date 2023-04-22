@@ -145,7 +145,7 @@ namespace OriginFramework
       if (CurrentMenu?.Items == null || CurrentMenu.Items.Count <= 0)
         return; //nic nemam, nema smysl dal resit
 
-      if (IsControlJustPressed(0, control_nav_down))
+      if (IsControlJustPressed(0, control_nav_down) || CurrentMenu.Items[CurrentMenu.SelectedIndex].IsUnselectable == true)
       {
         PlaySound(-1, "NAV_UP_DOWN", "HUD_MINI_GAME_SOUNDSET", false, 0, true);
         do

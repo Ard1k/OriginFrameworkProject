@@ -64,6 +64,7 @@ namespace OriginFrameworkServer
     PersistentVehiclesServer = 7,
     MapServer = 8,
     InventoryServer = 9,
-    OrganizationServer = 10
+    OrganizationServer = 10,
+    VehicleVendorServer = 11
   }
 }

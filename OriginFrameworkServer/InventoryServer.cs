@@ -18,7 +18,7 @@ namespace OriginFrameworkServer
 {
   public class InventoryServer : BaseScript
   {
-    private LockObj syncLock = new LockObj("InventoryServer");
+    private static LockObj syncLock = new LockObj("InventoryServer");
     private List<Vector3> groundMarkersCache = new List<Vector3>();
     public InventoryServer()
     {
@@ -1079,5 +1079,39 @@ namespace OriginFrameworkServer
         await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` - @amount where id = @orgId", param);
       }
     }
+
+    #region public
+    public static async void PayBankOrganization(Player player, int organizationId, int amount, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
+    {
+      if (amount <= 0)
+      {
+        OnError(player, "Neplatná částka");
+        return;
+      }
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@orgId", organizationId);
+        var bankResult = await VSql.FetchScalarAsync("select `bank_money` from `organization` where id = @orgId", param);
+        int bankMoney = Convert.ToInt32(bankResult);
+        if (bankMoney < amount)
+        {
+          await Delay(0);
+          OnError(player, "Na účtě není tolik peněz");
+          return;
+        }
+        param.Add("@amount", amount);
+        await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` - @amount where id = @orgId", param);
+        await Delay(0);
+        
+        var wasSuccess = await OnSuccess(player);
+
+        if (!wasSuccess)
+        {
+          await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` + @amount where id = @orgId", param);
+        }
+      }
+    }
+    #endregion
   }
 }

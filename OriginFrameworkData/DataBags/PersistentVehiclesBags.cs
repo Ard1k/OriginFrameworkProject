@@ -10,6 +10,7 @@ namespace OriginFrameworkData.DataBags
 	{
 		public Guid UniqueId { get; set; }
 		public int? GarageId { get; set; }
+		public int? VehicleVendorSlot { get; set; }
 		public bool IsServerRespawning { get; set; }
     public int NetID { get; set; }
 		public int ModelHash { get; set; }
