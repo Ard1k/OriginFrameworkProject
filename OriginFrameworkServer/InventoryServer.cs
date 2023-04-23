@@ -20,6 +20,9 @@ namespace OriginFrameworkServer
   {
     private static LockObj syncLock = new LockObj("InventoryServer");
     private List<Vector3> groundMarkersCache = new List<Vector3>();
+
+    //Tohle neni idealni, ale resi to spoustu problemu :D
+    private static InventoryServer _scriptInstance;
     public InventoryServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
@@ -259,6 +262,7 @@ namespace OriginFrameworkServer
 
       ReloadGroundMarkers();
 
+      _scriptInstance = this;
       InternalDependencyManager.Started(eScriptArea.InventoryServer);
     }
 
@@ -1109,6 +1113,70 @@ namespace OriginFrameworkServer
         if (!wasSuccess)
         {
           await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` + @amount where id = @orgId", param);
+        }
+      }
+    }
+    public static async void PayBankCharacter(Player player, int characterId, int amount, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
+    {
+      if (amount <= 0)
+      {
+        OnError(player, "Neplatná částka");
+        return;
+      }
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@charId", characterId);
+        var bankResult = await VSql.FetchScalarAsync("select `bank_money` from `character` where id = @charId", param);
+        int bankMoney = Convert.ToInt32(bankResult);
+        if (bankMoney < amount)
+        {
+          await Delay(0);
+          OnError(player, "Na účtě není tolik peněz");
+          return;
+        }
+        param.Add("@amount", amount);
+        await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` - @amount where id = @charId", param);
+        await Delay(0);
+
+        var wasSuccess = await OnSuccess(player);
+
+        if (!wasSuccess)
+        {
+          await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` + @amount where id = @charId", param);
+        }
+      }
+    }
+
+    public static async void PayItem(Player player, string fromPlace, int itemId, int amount, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
+    {
+      if (amount <= 0)
+      {
+        OnError(player, "Neplatný počet");
+        return;
+      }
+      if (_scriptInstance == null)
+      {
+        OnError(player, "Server instance error");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var resRemove = await _scriptInstance.RemoveItem(fromPlace, itemId, amount);
+        if (resRemove != null)
+        { 
+          await Delay(0);
+          OnError(player, resRemove);
+          return;
+        }
+
+        var wasSuccess = await OnSuccess(player);
+
+        if (!wasSuccess)
+        {
+          await Delay(0);
+          await _scriptInstance.GiveItem(fromPlace, itemId, amount);
         }
       }
     }

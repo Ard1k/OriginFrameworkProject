@@ -156,7 +156,7 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = "Platnost nabídky do",
-          NameRight = $"{slot.RepopulateAt?.ToString("dd.M hh:mm") ?? "Neučeno"}",
+          NameRight = $"{slot.RepopulateAt?.ToString("dd.M HH:mm") ?? "Neučeno"}",
           IsUnselectable = true
         });
 

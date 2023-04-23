@@ -19,10 +19,17 @@ namespace OriginFrameworkServer
   {
     public static List<VehicleVendorSlot> Slots = new List<VehicleVendorSlot>
     {
-      new VehicleVendorSlot(new PosBag { X = -47.8788f, Y = -1101.3853f, Z = 25.5363f, Heading = 298.1843f }),
-      new VehicleVendorSlot(new PosBag { X = -47.7329f, Y = -1093.4386f, Z = 25.5138f, Heading = 193.0413f }),
-      new VehicleVendorSlot(new PosBag { X = -42.8384f, Y = -1095.5881f, Z = 25.4759f, Heading = 203.153f }),
-      new VehicleVendorSlot(new PosBag { X = -39.1138f, Y = -1097.2368f, Z = 25.4835f, Heading = 201.3729f }),
+      //PDM u okna
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -48.9077f, Y = -1100.5353f, Z = 25.5363f, Heading = 300f }),
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -46.3535f, Y = -1102.3384f, Z = 25.5363f, Heading = 300f }),
+
+      //PDM naproti oknu
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -47.7329f, Y = -1093.4386f, Z = 25.5138f, Heading = 200f }),
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -43.8934f, Y = -1094.8088f, Z = 25.4759f, Heading = 200f }),
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -40.7237f, Y = -1095.4818f, Z = 25.4835f, Heading = 200f }),
+
+      //PDM v cele
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -51.2714f, Y = -1095.1326f, Z = 25.4835f, Heading = 200f }),
     };
     
     private Random rand = new Random();
@@ -185,8 +192,32 @@ namespace OriginFrameworkServer
         }
       }
 
-      if (isOrganization && isBankTransaction)
-        InventoryServer.PayBankOrganization(sourcePlayer, character.OrganizationId.Value, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, slot.SlotId, null, character.OrganizationId); }, OnError);
+      if (isBankTransaction)
+      {
+        if (slot?.CurrentVehicle?.BankMoneyPrice == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná definice slotu na serveru");
+          return;
+        }
+
+        if (isOrganization)
+          InventoryServer.PayBankOrganization(sourcePlayer, character.OrganizationId.Value, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, slot.SlotId, null, character.OrganizationId); }, OnError);
+        else
+          InventoryServer.PayBankCharacter(sourcePlayer, character.Id, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, slot.SlotId, character.Id, null); }, OnError);
+      }
+      else
+      {
+        if (slot?.CurrentVehicle?.PriceItemId == null || slot?.CurrentVehicle?.Price == null)
+        {
+          sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná definice slotu na serveru");
+          return;
+        }
+
+        if (isOrganization)
+          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, slot.SlotId, null, character.OrganizationId); }, OnError);
+        else
+          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, slot.SlotId, character.Id, null); }, OnError);
+      }
     }
 
     private async Task<bool> CarPurchased(Player player, int slotId, int? ownerChar, int? ownerOrg)
