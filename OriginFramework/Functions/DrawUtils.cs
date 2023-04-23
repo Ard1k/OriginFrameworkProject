@@ -90,5 +90,27 @@ namespace OriginFramework
         return X2 > x1 && X1 < x2 && Y2 > y1 && Y1 < y2;
       }
     }
+
+    public class InventoryBounds : RectBounds
+    {
+      public double ExpX1 { get; protected set; }
+      public double ExpY1 { get; protected set; }
+      public double ExpX2 { get; protected set; }
+      public double ExpY2 { get; protected set; }
+
+      public void RecomputeExpandedBounds(int xCells, int yCells)
+      {
+        double wExpByPerc = ((5 / xCells) * 0.01d);
+        double hExpByPerc = ((5 / yCells) * 0.01d);
+
+        double wExp = ((X2 - X1) * wExpByPerc);
+        double hExp = ((Y2 - Y1) * hExpByPerc);
+
+        ExpX1 = X1 - wExp;
+        ExpY1 = Y1 - hExp;
+        ExpX2 = X2 + wExp;
+        ExpY2 = Y2 + hExp;
+      }
+    }
   }
 }

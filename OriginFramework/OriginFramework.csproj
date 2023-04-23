@@ -67,6 +67,7 @@
     <Compile Include="Scripts\CharacterCaretaker.cs" />
     <Compile Include="Scripts\GarageClient.cs" />
     <Compile Include="Scripts\AtmClient.cs" />
+    <Compile Include="Scripts\CarryClient.cs" />
     <Compile Include="Scripts\MMenu.cs" />
     <Compile Include="Scripts\OrganizationClient.cs" />
     <Compile Include="Scripts\VehicleVendorClient.cs" />

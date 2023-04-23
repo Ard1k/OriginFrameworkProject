@@ -694,7 +694,7 @@ namespace OriginFrameworkServer
       if (srcItem.Place == targetPlace && srcItem.X == target_x && srcItem.Y == target_y)
         return "Nelze přesunout sám na sebe";
 
-      if (target_x == -1 && (ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType == null || target_y != (int)ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType))
+      if (target_x == -1 && target_y < 100 && (ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType == null || target_y != (int)ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType))
         return "Sem to nepatří";
 
       if (targetItem == null) //move

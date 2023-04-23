@@ -19,7 +19,7 @@ namespace OriginFrameworkData.DataBags
         return PlaceToRowCount(Place);
       } 
     }
-    public List<InventoryItemBag> Items { get; set; }
+    public List<InventoryItemBag> Items { get; set; } = new List<InventoryItemBag>();
 
     [JsonIgnore]
     public int ScrollOffset { get; set; } = 0;
@@ -27,7 +27,6 @@ namespace OriginFrameworkData.DataBags
     public InventoryBag(string place)
     {
       Place = place;
-      Items = new List<InventoryItemBag>();
     }
 
     public bool IsDisableMoveControls()
@@ -192,6 +191,9 @@ namespace OriginFrameworkData.DataBags
     public AnimationBag UseAnim { get; set; }
     public AnimationBag PutAwayAnim { get; set; }
     public bool IsMoney { get; set; }
+    public eItemCarryType CarryType { get; set; }
+    public string ItemProp { get; set; }
+    public string ItemPropDict { get; set; }
 
     public ItemDefinition GetInstanceCopy()
     {
@@ -209,7 +211,11 @@ namespace OriginFrameworkData.DataBags
         WeaponHash = this.WeaponHash,
         AmmoItemId = this.AmmoItemId,
         UseAnim = this.UseAnim?.GetInstanceCopy(),
-        PutAwayAnim = this.PutAwayAnim?.GetInstanceCopy()
+        PutAwayAnim = this.PutAwayAnim?.GetInstanceCopy(),
+        IsMoney = this.IsMoney,
+        CarryType = this.CarryType,
+        ItemProp = this.ItemProp,
+        ItemPropDict = this.ItemPropDict,
       };
     }
 
