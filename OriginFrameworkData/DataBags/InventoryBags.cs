@@ -12,12 +12,41 @@ namespace OriginFrameworkData.DataBags
   public class InventoryBag
   {
     public string Place { get; set; }
+    private int? _rowCountNormal = null;
+    private int? _rowCountHands = null;
+    private int? _rowCountForklift = null;
+    [JsonIgnore]
     public int RowCount 
     { 
       get 
       {
-        return PlaceToRowCount(Place);
+        if (_rowCountNormal == null)
+         _rowCountNormal = PlaceToRowCount(Place, eItemCarryType.Inventory);
+        
+        return _rowCountNormal.Value;
       } 
+    }
+    [JsonIgnore]
+    public int RowCountHands
+    {
+      get
+      {
+        if (_rowCountHands == null)
+          _rowCountHands = PlaceToRowCount(Place, eItemCarryType.Hands);
+
+        return _rowCountHands.Value;
+      }
+    }
+    [JsonIgnore]
+    public int RowCountForklift
+    {
+      get
+      {
+        if (_rowCountForklift == null)
+          _rowCountForklift = PlaceToRowCount(Place, eItemCarryType.Forklift);
+
+        return _rowCountForklift.Value;
+      }
     }
     public List<InventoryItemBag> Items { get; set; } = new List<InventoryItemBag>();
 
@@ -37,8 +66,11 @@ namespace OriginFrameworkData.DataBags
       return true;
     }
 
-    public static int PlaceToRowCount(string place)
+    public static int PlaceToRowCount(string place, eItemCarryType carryType)
     {
+      if (carryType != eItemCarryType.Inventory && !place.StartsWith("trunk_"))
+        return 0;
+
       if (string.IsNullOrEmpty(place))
         return 0;
       if (place.StartsWith("char_"))
@@ -49,12 +81,12 @@ namespace OriginFrameworkData.DataBags
       {
         var splits = place.Split('_');
         int category = 0;
-        if (splits.Length < 3 || !Int32.TryParse(splits[2], out category))
+        int model = 0;
+        if (splits.Length < 4 || !Int32.TryParse(splits[2], out category))
           return 0;
-        switch (category)
-        {
-          default: return 3;
-        }
+        if (splits.Length < 4 || !Int32.TryParse(splits[3], out model))
+          return 0;
+        return VehicleTrunkSize.GetTrunkRowcount(category, model, carryType);
       }
       if (place.StartsWith("glovebox_"))
         return 1;
@@ -81,15 +113,15 @@ namespace OriginFrameworkData.DataBags
       return "---";
     }
 
-    public int GetEmptySlotCount()
-    {
-      int rows = PlaceToRowCount(Place);
-      if (rows < 0)
-        return rows;
+    //public int GetEmptySlotCount()
+    //{
+    //  int rows = PlaceToRowCount(Place);
+    //  if (rows < 0)
+    //    return rows;
 
-      int itemCount = Items.Where(it => it.Y >= 0).Count();
-      return (rows * 5) - itemCount;
-    }
+    //  int itemCount = Items.Where(it => it.Y >= 0).Count();
+    //  return (rows * 5) - itemCount;
+    //}
 
     public bool GetNextPossibleSlot(out int x, out int y, int item_id, out InventoryItemBag slot)
     {
@@ -192,8 +224,7 @@ namespace OriginFrameworkData.DataBags
     public AnimationBag PutAwayAnim { get; set; }
     public bool IsMoney { get; set; }
     public eItemCarryType CarryType { get; set; }
-    public string ItemProp { get; set; }
-    public string ItemPropDict { get; set; }
+    public InventoryCarryInfo CarryInfo { get; set; }
 
     public ItemDefinition GetInstanceCopy()
     {
@@ -214,8 +245,7 @@ namespace OriginFrameworkData.DataBags
         PutAwayAnim = this.PutAwayAnim?.GetInstanceCopy(),
         IsMoney = this.IsMoney,
         CarryType = this.CarryType,
-        ItemProp = this.ItemProp,
-        ItemPropDict = this.ItemPropDict,
+        CarryInfo = this.CarryInfo,
       };
     }
 
@@ -266,6 +296,19 @@ namespace OriginFrameworkData.DataBags
       G = g;
       B = b;
     }
+  }
+
+  public class InventoryCarryInfo
+  {
+    public string PropName { get; set; }
+    public string CarryAnim { get; set; }
+    public int PedBoneId { get; set; }
+    public float XPos { get; set; }
+    public float YPos { get; set; }
+    public float ZPos { get; set; }
+    public float XRot { get; set; }
+    public float YRot { get; set; }
+    public float ZRot { get; set; }
   }
 
   public enum eItemCarryType : int
@@ -605,6 +648,36 @@ namespace OriginFrameworkData.DataBags
         Texture = "money1",
         StackSize = 100000,
         IsMoney = true
+      };
+      _items[18] = new ItemDefinition
+      {
+        ItemId = 18,
+        Name = "Krabice do ruky",
+        Texture = "crate",
+        StackSize = 1,
+        Color = new InventoryColor(0, 0, 0, 150),
+        CarryType = eItemCarryType.Hands,
+        CarryInfo = new InventoryCarryInfo
+        {
+          PropName = "ng_proc_box_01a",
+          CarryAnim = "anim@heists@box_carry@",
+          PedBoneId = 60309,
+          XPos = 0.135f,
+          YPos = -0.1f,
+          ZPos = 0.22f,
+          XRot = -125.0f,
+          YRot = 100.0f,
+          ZRot = 0.0f
+        }
+      };
+      _items[19] = new ItemDefinition
+      {
+        ItemId = 19,
+        Name = "Krabice do na ještěrku",
+        Texture = "crate",
+        StackSize = 1,
+        Color = new InventoryColor(0, 150, 0, 0),
+        CarryType = eItemCarryType.Forklift,
       };
       #endregion
 

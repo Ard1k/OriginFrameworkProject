@@ -649,6 +649,18 @@ namespace OriginFrameworkServer
       if (count <= 0)
         return "Neplatný počet";
 
+      if (target_x == -1 && target_y < 100 && (ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType == null || target_y != (int)ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType))
+        return "Sem to nepatří";
+
+      if (ItemsDefinitions.Items[srcItem.ItemId].CarryType != eItemCarryType.Inventory)
+      {
+        if (target_x == -1 && target_y == 100 && ItemsDefinitions.Items[srcItem.ItemId].CarryType == eItemCarryType.Forklift)
+          return "Sem se předmět nevejde";
+
+        if (target_x >= 0 && target_y >= InventoryBag.PlaceToRowCount(targetPlace, ItemsDefinitions.Items[srcItem.ItemId].CarryType))
+          return "Sem se předmět nevejde";
+      }
+
       if (count > srcItem.Count)
         count = srcItem.Count;
 
@@ -696,6 +708,15 @@ namespace OriginFrameworkServer
 
       if (target_x == -1 && target_y < 100 && (ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType == null || target_y != (int)ItemsDefinitions.Items[srcItem.ItemId].SpecialSlotType))
         return "Sem to nepatří";
+
+      if (ItemsDefinitions.Items[srcItem.ItemId].CarryType != eItemCarryType.Inventory)
+      {
+        if (target_x == -1 && target_y == 100 && ItemsDefinitions.Items[srcItem.ItemId].CarryType == eItemCarryType.Forklift)
+          return "Sem se předmět nevejde";
+
+        if (target_x >= 0 && target_y >= InventoryBag.PlaceToRowCount(targetPlace, ItemsDefinitions.Items[srcItem.ItemId].CarryType))
+          return "Sem se předmět nevejde";
+      }
 
       if (targetItem == null) //move
       {

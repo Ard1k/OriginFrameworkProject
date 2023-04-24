@@ -134,8 +134,9 @@ namespace OriginFramework
               //otevrit kufr
               var lp = GetVehicleNumberPlateText(vehFront);
               var vehClass = GetVehicleClass(vehFront);
+              var model = GetEntityModel(vehFront);
 
-              TriggerServerEvent("ofw_inventory:ReloadInventory", $"trunk_{lp}_{vehClass}");
+              TriggerServerEvent("ofw_inventory:ReloadInventory", $"trunk_{lp}_{vehClass}_{model}");
             }
             else
             {
@@ -725,12 +726,15 @@ namespace OriginFramework
           for (int x = 0; x < 5; x++)
           {
             var it = RightInv.Items.Where(a => a.Y == y + RightInv.ScrollOffset && a.X == x).FirstOrDefault();
-            RenderItem(x, y, rightInvBounds, it, false, eItemCarryType.Inventory);
+            eItemCarryType carryType = eItemCarryType.Inventory;
+            if (y + RightInv.ScrollOffset < RightInv.RowCountForklift)
+              carryType = eItemCarryType.Forklift;
+            else if (y + RightInv.ScrollOffset < RightInv.RowCountHands)
+              carryType = eItemCarryType.Hands;
+            RenderItem(x, y, rightInvBounds, it, false, carryType);
           }
         }
       }
-
-      //TextUtils.DrawTextOnScreen
 
       RenderDragged(); //Kreslim na sebe, takze to s cim hybu budu malovat uplne nahoru
     }
@@ -743,10 +747,10 @@ namespace OriginFramework
         case eItemCarryType.Hands:
           slotColors[0] = 0;
           slotColors[1] = 0;
-          slotColors[2] = 30;
+          slotColors[2] = 50;
           break;
         case eItemCarryType.Forklift:
-          slotColors[0] = 30;
+          slotColors[0] = 50;
           slotColors[1] = 0;
           slotColors[2] = 0;
           break;
