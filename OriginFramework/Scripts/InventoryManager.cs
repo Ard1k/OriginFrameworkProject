@@ -909,6 +909,7 @@ namespace OriginFramework
       private List<object> _rows = null;
       private float _x = 0;
       private float _y = 0;
+      private string _bgcolor = null;
 
       public void SetAndComputeData(float x, float y, InventoryItemBag item)
       {
@@ -934,6 +935,20 @@ namespace OriginFramework
             _rows.Add(new { s1 = "Střih", s2 = "Dámský" });
         }
 
+        switch (itDef.CarryType)
+        {
+          default:
+          case eItemCarryType.Inventory: _bgcolor = "black"; break;
+          case eItemCarryType.Hands: 
+            _bgcolor = "blue";
+            _rows.Add(new { s1 = "Těžký", s2 = "Tohle si do kapsy rozhodně nenacpeš, budeš potřebovat svoje silný pracky." });
+            break;
+          case eItemCarryType.Forklift: 
+            _bgcolor = "red";
+            _rows.Add(new { s1 = "Extra těžký", s2 = "Na ruce zapomeň, ty s timhle rozhodně nehnou." });
+            break;
+        }
+
         _x = x;
         _y = y - vertical_offset;
       }
@@ -946,7 +961,8 @@ namespace OriginFramework
           x = _x,
           y = _y,
           header = _header,
-          rows = _rows
+          rows = _rows,
+          bgcolor = _bgcolor
         };
         SendNuiMessage(JsonConvert.SerializeObject(message));
       }

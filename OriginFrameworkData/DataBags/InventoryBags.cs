@@ -198,7 +198,7 @@ namespace OriginFrameworkData.DataBags
       };
 
       if (row.ContainsKey("metadata") && row["metadata"] != null)
-        it.Metadata = Convert.ToString(row["pos"])?.Split('|');
+        it.Metadata = Convert.ToString(row["metadata"])?.Split('|');
 
       return it;
     }

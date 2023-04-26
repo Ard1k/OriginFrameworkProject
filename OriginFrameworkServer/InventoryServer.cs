@@ -682,8 +682,9 @@ namespace OriginFrameworkServer
         param.Add("@place", targetPlace);
         param.Add("@target_x", target_x);
         param.Add("@target_y", target_y);
+        param.Add("@metadata", srcItem.Metadata);
         await VSql.ExecuteAsync($" update `inventory_item` set `count` = '{srcItem.Count - count}' where `id` = @id_source; " +
-                                $" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`) VALUES (@place, '{srcItem.ItemId}', @target_x, @target_y, '{count}');", param);
+                                $" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`, `metadata`) VALUES (@place, '{srcItem.ItemId}', @target_x, @target_y, '{count}', @metadata);", param);
         BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
 
         if (sourcePlace.StartsWith("world_") || targetPlace.StartsWith("world_"))
@@ -1199,6 +1200,87 @@ namespace OriginFrameworkServer
           await Delay(0);
           await _scriptInstance.GiveItem(fromPlace, itemId, amount);
         }
+      }
+    }
+
+    public static async void CarriablePutDown(Player player, int invItemId, string place, PosBag posBag, Action<Player, string> OnError)
+    {
+      if (_scriptInstance == null)
+      {
+        OnError(player, "Server instance error");
+        return;
+      }
+
+      var posBagString = JsonConvert.SerializeObject(posBag);
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var srcItem = await _scriptInstance.FetchItem(invItemId, place);
+
+        if (srcItem == null || srcItem.X != -1 || srcItem.Y != 100)
+        {
+          OnError(player, "Tenhle předmět nemáš v ruce");
+        }
+
+        var metadata = new List<string>();
+        if (srcItem.Metadata != null && srcItem.Metadata.Length > 0)
+          metadata.AddRange(srcItem.Metadata);
+
+        if (metadata.Any(m => m != null && m.StartsWith("_posbag:")))
+          metadata.Remove(metadata.Where(m => m != null && m.StartsWith("_posbag:")).First());
+        
+        metadata.Add("_posbag:" + posBagString);
+        var metadataString = string.Join("|", metadata);
+
+        var param = new Dictionary<string, object>();
+        param.Add("@id", invItemId);
+        param.Add("@metadata", metadataString);
+        await VSql.ExecuteAsync($" update `inventory_item` set `place` = 'freeobject', `metadata` = @metadata where `id` = @id; ", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place);
+        CarryServer.AddCarriableToCache(srcItem.Id, srcItem.ItemId, posBag);
+      }
+    }
+
+    public static async void CarriablePickUp(Player player, int invItemId, string targetPlace, Action<Player, string> OnError)
+    {
+      if (_scriptInstance == null)
+      {
+        OnError(player, "Server instance error");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var srcItem = await _scriptInstance.FetchItem(invItemId, "freeobject");
+
+        if (srcItem == null)
+        {
+          OnError(player, "Neznámý předmět");
+        }
+
+        var targetItem = await _scriptInstance.FetchItem(targetPlace, -1, 100);
+
+        if (targetItem != null)
+        {
+          OnError(player, "Máš plné ruce");
+        }
+
+        var metadata = new List<string>();
+        if (srcItem.Metadata != null && srcItem.Metadata.Length > 0)
+          metadata.AddRange(srcItem.Metadata);
+
+        if (metadata.Any(m => m != null && m.StartsWith("_posbag:")))
+          metadata.Remove(metadata.Where(m => m != null && m.StartsWith("_posbag:")).First());
+
+        var metadataString = string.Join("|", metadata);
+
+        var param = new Dictionary<string, object>();
+        param.Add("@id", invItemId);
+        param.Add("@metadata", metadataString);
+        param.Add("@targetPlace", targetPlace);
+        await VSql.ExecuteAsync($" update `inventory_item` set `place` = @targetPlace, `x` = -1, `y` = 100, `metadata` = @metadata where `id` = @id; ", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", targetPlace);
+        CarryServer.RemoveCarriableFromCache(srcItem.Id);
       }
     }
     #endregion

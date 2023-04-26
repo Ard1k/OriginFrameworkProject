@@ -59,6 +59,17 @@ $(document).ready(function () {
       var headerDiv = tooltip.querySelector('.tooltipHeader');
       headerDiv.innerHTML = header;
 
+      if (event.data.bgcolor === 'red')
+      {
+        headerDiv.style.backgroundColor = '#ff0000aa';
+      }
+      else if (event.data.bgcolor === 'blue') {
+        headerDiv.style.backgroundColor = '#0000ffaa';
+      }
+      else if (event.data.bgcolor === 'black') {
+        headerDiv.style.backgroundColor = '#000000aa';
+      }
+
       var rowsDiv = tooltip.querySelector('.tooltipRows');
       rowsDiv.innerHTML = '';
 

@@ -68,7 +68,7 @@ body {
 .inventoryTooltip {
   font-family: FiraSans;
   position: absolute;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   border: solid thin;
   border-color: rgba(200, 200, 200, 0.6);
   color: rgb(200, 200, 200);
@@ -86,7 +86,7 @@ body {
   vertical-align: top;
   text-align :center;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: transparent /*rgba(0, 0, 0, 0.8)*/;
 }
 
 .tooltipRows {
@@ -101,7 +101,7 @@ body {
   vertical-align: top;
   text-align: left;
   width: 100%;
-  background-color: rgba(30, 30, 30, 0.8);
+  background-color: transparent /*rgba(30, 30, 30, 0.8)*/;
 }
 
 .tooltipRows span {
