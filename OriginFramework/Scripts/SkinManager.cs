@@ -44,6 +44,20 @@ namespace OriginFramework
       "ears_1", "ears_2", //nausnice
     };
 
+    public static string[] AppearanceAll { get; private set; } = new string[] {
+      "face", "skin", 
+      "hair_1", "hair_2", "hair_color_1", "hair_color_2", 
+      "eye_color", "eyebrows_1", "eyebrows_2", "eyebrows_3", "eyebrows_4",
+      "makeup_1", "makeup_2", "makeup_3", "makeup_4",
+      "lipstick_1", "lipstick_2", "lipstick_3", "lipstick_4",
+      "chest_1", "chest_2", "chest_3",
+      "bodyb_1", "bodyb_2", "age_1", "age_2", "blemishes_1", "blemishes_2",
+      "blush_1", "blush_2", "blush_3",
+      "complexion_1", "complexion_2", "sun_1", "sun_2",
+      "moles_1", "moles_2", 
+      "beard_1", "beard_2", "beard_3", "beard_4"
+    };
+
     public static string[] GetClothesForSlot(eSpecialSlotType slotType)
     {
       switch (slotType)
@@ -115,8 +129,8 @@ namespace OriginFramework
       _components.Add("hair_color_2", new SkinComponent { Label = "Barva vlasů 2", Name = "hair_color_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
       _components.Add("tshirt_1", new SkinComponent { Label = "Tričko", Name = "tshirt_1", DefaultValue = 15, DefaultFemale = 14, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "tshirt_2" });
       _components.Add("tshirt_2", new SkinComponent { Label = "Varianta trička", Name = "tshirt_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "tshirt_1" });
-      _components.Add("torso_1", new SkinComponent { Label = "Torzo", Name = "torso_1", DefaultValue = 15, DefaultFemale = 82, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "torso_2" });
-      _components.Add("torso_2", new SkinComponent { Label = "Varianta torza", Name = "torso_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "torso_1" });
+      _components.Add("torso_1", new SkinComponent { Label = "Torzo", Name = "torso_1", DefaultValue = 15, DefaultFemale = 101/*82*/, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "torso_2" });
+      _components.Add("torso_2", new SkinComponent { Label = "Varianta torza", Name = "torso_2", DefaultValue = 0, DefaultFemale = 5, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "torso_1" });
       _components.Add("decals_1", new SkinComponent { Label = "Decals", Name = "decals_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "decals_2" });
       _components.Add("decals_2", new SkinComponent { Label = "Varianta decals", Name = "decals_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "decals_1" });
       _components.Add("arms_1", new SkinComponent { Label = "Ruce", Name = "arms_1", DefaultValue = 15, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "arms_2" });

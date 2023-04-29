@@ -517,7 +517,7 @@ namespace OriginFrameworkServer
         return;
       }
 
-      var persistVeh = persistentVehicles.FirstOrDefault(x => x.Plate.ToLower().Trim() == plate);
+      var persistVeh = persistentVehicles.FirstOrDefault(x => x.Plate?.ToLower().Trim() == plate);
 
       var sProps = (string)result[0]["properties"];
 
@@ -910,6 +910,35 @@ namespace OriginFrameworkServer
         iveh.LastKnownPos.Y = vehEnt.Position.Y;
         iveh.LastKnownPos.Z = vehEnt.Position.Z;
         iveh.LastKnownPos.Heading = vehEnt.Heading;
+
+        if (GetEntityRoutingBucket(vehID) != 0)
+        {
+          SetEntityRoutingBucket(vehID, 0);
+
+          string syncProperties = null;
+          if (iveh.GarageId != null)
+          {
+            var param = new Dictionary<string, object>();
+            param.Add("@id", iveh.GarageId);
+            var result = await VSql.FetchAllAsync("SELECT `properties` FROM `vehicle` WHERE `id` = @id", param);
+
+            if (result != null && result.Count > 0)
+            {
+              syncProperties = (string)result[0]["properties"];
+            }
+
+            if (syncProperties != null)
+              iveh.Properties = syncProperties;
+            await Delay(0);
+          }
+
+          if (iveh.Properties != null && iveh.Plate != null)
+          {
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
+            iveh.IsInPropertiesSync = true;
+            iveh.LastPropertiesSync = GetGameTimer();
+          }
+        }
       }
 
       await Delay(1000);

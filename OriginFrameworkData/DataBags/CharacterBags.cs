@@ -20,6 +20,7 @@ namespace OriginFrameworkData.DataBags
 		public int? DiedGameTime { get; set; }
 		public DateTime? DiedServerTime { get; set; }
 		public int? OrganizationId { get; set; }
+		public Dictionary<string,int> Skin { get; set; }
 
 		private CharacterBag()
 		{ 
@@ -47,6 +48,9 @@ namespace OriginFrameworkData.DataBags
 			
 			if (row.ContainsKey("model") && row["model"] != null && row["model"] != DBNull.Value)
 				it.Model = Convert.ToInt32(row["model"]);
+
+			if (row.ContainsKey("skin") && row["skin"] != null && row["skin"] != DBNull.Value)
+				it.Skin = JsonConvert.DeserializeObject<Dictionary<string, int>>(Convert.ToString(row["skin"]));
 
 			return it;
     }

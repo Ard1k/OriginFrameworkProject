@@ -1,4 +1,5 @@
 ﻿using CitizenFX.Core;
+using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,18 +11,6 @@ namespace OriginFramework.Menus
 {
   public static class SkinMenu
   {
-    private class MinMaxBag
-    {
-      public int Min { get; set; }
-      public int Max { get; set; }
-
-      public MinMaxBag(int min, int max)
-      {
-        Min = min;
-        Max = max;
-      }
-    }
-
     public static NativeMenu GenerateMenu(string[] components, Dictionary<string, int> values)
     {
       if (values == null)

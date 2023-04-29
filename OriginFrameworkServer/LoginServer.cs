@@ -112,7 +112,8 @@ namespace OriginFrameworkServer
       param.Add("@user_identifier", oid.PrimaryIdentifier);
       param.Add("@name", charData.Name);
       param.Add("@model", charData.Model);
-      await VSql.ExecuteAsync("insert into `character` (`user_identifier`, `name`, `model`) VALUES (@user_identifier, @name, @model)", param);
+      param.Add("@skin", charData.Skin == null ? null : JsonConvert.SerializeObject(charData.Skin));
+      await VSql.ExecuteAsync("insert into `character` (`user_identifier`, `name`, `model`, `skin`) VALUES (@user_identifier, @name, @model, @skin)", param);
 
       _ = callback(true, "ok");
     }

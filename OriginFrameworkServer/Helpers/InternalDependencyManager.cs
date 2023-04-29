@@ -66,6 +66,7 @@ namespace OriginFrameworkServer
     InventoryServer = 9,
     OrganizationServer = 10,
     VehicleVendorServer = 11,
-    CarryServer = 12
+    CarryServer = 12,
+    InstanceServer = 13
   }
 }

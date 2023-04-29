@@ -19,6 +19,7 @@ namespace OriginFramework
     private static bool spawnLock = false;
     public static CharacterBag LoggedCharacter { get; private set; } = null;
     private static float[] LoginPedPos = { -241f, -855f, 750f };
+    public static CharacterCaretaker Instance { get; private set; } = null;
 
     public CharacterCaretaker()
     {
@@ -36,6 +37,7 @@ namespace OriginFramework
       Tick += ServerSync;
 
       InternalDependencyManager.Started(eScriptArea.CharacterCaretaker);
+      Instance = this;
 
       await Delay(2000);
 
@@ -43,7 +45,7 @@ namespace OriginFramework
       if (!Login.IsInLoginScreen && !CharacterCreator.IsInCharacterCreator && LoggedCharacter == null)
       {
         Debug.WriteLine("force relogin client");
-        FirstSpawn();
+        LoginSpawn();
         Login.ReturnToLogin();
         return;
       }
@@ -111,7 +113,7 @@ namespace OriginFramework
     [EventHandler("onClientMapStart")]
     private async void OnMapStart()
     {
-      FirstSpawn();
+      LoginSpawn();
     }
 
 
@@ -136,7 +138,7 @@ namespace OriginFramework
     {
       Notify.Error("Chyba synchronizace se serverem!");
 
-      FirstSpawn();
+      LoginSpawn();
       Login.ReturnToLogin();
       return;
     }
@@ -165,12 +167,14 @@ namespace OriginFramework
       }
     }
 
-    private async void FirstSpawn()
+    public async void LoginSpawn()
     {
       if (spawnLock == true)
         return;
 
       spawnLock = true;
+
+      TriggerServerEvent("ofw_instance:TransferToPrivateInstance");
 
       uint defaultModel = (uint)GetHashKey("player_two");
 
@@ -244,6 +248,7 @@ namespace OriginFramework
       }
 
       SkinManager.SetDefaultSkin(SkinManager.ClothesAll);
+      SkinManager.ApplySkin(LoggedCharacter?.Skin);
       TriggerServerEvent("ofw_inventory:ReloadInventory", null);
       DoScreenFadeOut(500);
       while (!IsScreenFadedOut())
@@ -296,6 +301,7 @@ namespace OriginFramework
     public static void LoggedIn(CharacterBag character)
     {
       LoggedCharacter = character;
+      TriggerServerEvent("ofw_instance:TransferToPublicInstance");
       SpawnLoggedCharacter();
       TriggerServerEvent("ofw_org:RequestOrganizationData");
     }

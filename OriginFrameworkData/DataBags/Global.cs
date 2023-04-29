@@ -49,4 +49,16 @@ namespace OriginFrameworkData.DataBags
 		public float RotationY { get; set; }
 		public float RotationZ { get; set; }
 	}
+
+  public class MinMaxBag
+  {
+    public int Min { get; set; }
+    public int Max { get; set; }
+
+    public MinMaxBag(int min, int max)
+    {
+      Min = min;
+      Max = max;
+    }
+  }
 }

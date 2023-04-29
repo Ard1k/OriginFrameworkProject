@@ -331,6 +331,11 @@ namespace OriginFramework
       if (!HasStreamedTextureDictLoaded("menu_textures"))
         RequestStreamedTextureDict("menu_textures", true);
 
+      if (CurrentMenu.Sprite == null)
+      {
+        CurrentMenu.Sprite = new NativeMenuSprite { TextureName = "origin_basic", TextureDict = "menu_textures", X = 1200, Y = 400 };
+      }
+
       if (CurrentMenu.Sprite != null)
       {
         if (!HasStreamedTextureDictLoaded(CurrentMenu.Sprite.TextureDict))
