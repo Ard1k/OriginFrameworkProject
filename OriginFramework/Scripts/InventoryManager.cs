@@ -295,7 +295,7 @@ namespace OriginFramework
             (place2 != null && (LeftInv?.Place == place2 || RightInv?.Place == place2)))
         {
           IsWaiting = true;
-          TriggerServerEvent("ofw_inventory:ReloadInventory", RightInv.Place ?? null);
+          TriggerServerEvent("ofw_inventory:ReloadInventory", RightInv?.Place ?? null);
         }
       }
       else if (place1 == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}" || place2 == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}")

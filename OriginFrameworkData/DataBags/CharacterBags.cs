@@ -21,6 +21,7 @@ namespace OriginFrameworkData.DataBags
 		public DateTime? DiedServerTime { get; set; }
 		public int? OrganizationId { get; set; }
 		public Dictionary<string,int> Skin { get; set; }
+		public bool IsNew { get; set; }
 
 		private CharacterBag()
 		{ 
@@ -37,7 +38,8 @@ namespace OriginFrameworkData.DataBags
 				Id = Convert.ToInt32(row["id"]),
 				UserIdentifier = Convert.ToString(row["user_identifier"]),
 				Name = Convert.ToString(row["name"]),
-				AdminLevel = Convert.ToInt32(row["admin_level"])
+				AdminLevel = Convert.ToInt32(row["admin_level"]),
+				IsNew = Convert.ToBoolean(row["is_new"])
 			};
 
 			if (row.ContainsKey("organization_id") && row["organization_id"] != null && row["organization_id"] != DBNull.Value)

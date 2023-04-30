@@ -77,7 +77,25 @@ namespace OriginFrameworkServer
       if (!LoggedPlayers.ContainsKey(oid.OID))
         LoggedPlayers.Add(oid.OID, null);
 
-      LoggedPlayers[oid.OID] = CharacterBag.ParseFromSql(result[0]);
+      var character = CharacterBag.ParseFromSql(result[0]);
+      if (character.IsNew)
+      {
+        await VehicleVendorServer.GiveFirstCar(character.Id);
+        var startingItems = new Dictionary<int, int>();
+        var random = new Random();
+        var torso = ItemsDefinitions.Items.Where(x => x?.SpecialSlotType != null && x.SpecialSlotType == eSpecialSlotType.Torso).OrderBy(x => random.Next()).FirstOrDefault();
+        if (torso != null)
+          startingItems.Add(torso.ItemId, 1);
+        var legs = ItemsDefinitions.Items.Where(x => x?.SpecialSlotType != null && x.SpecialSlotType == eSpecialSlotType.Legs).OrderBy(x => random.Next()).FirstOrDefault();
+        if (legs != null)
+          startingItems.Add(legs.ItemId, 1);
+        var boots = ItemsDefinitions.Items.Where(x => x?.SpecialSlotType != null && x.SpecialSlotType == eSpecialSlotType.Boots).OrderBy(x => random.Next()).FirstOrDefault();
+        if (boots != null)
+          startingItems.Add(boots.ItemId, 1);
+        await InventoryServer.GiveCharStartingItems(character.Id, startingItems);
+        await VSql.ExecuteAsync("update `character` set `is_new` = 0 where `id` = @charId", new Dictionary<string, object>() { { "@charId", character.Id } });
+      }
+      LoggedPlayers[oid.OID] = character;
       return true;
     }
 
@@ -137,10 +155,12 @@ namespace OriginFrameworkServer
 
     public static int GetCharLoggedServerId(int charId)
     {
-      var oid = LoggedPlayers.FirstOrDefault(x => x.Value.Id == charId).Key;
-      if (oid <= 0) return -1;
+      if (LoggedPlayers == null)
+        return -1;
+      var oid = LoggedPlayers.FirstOrDefault(x => x.Value?.Id == charId);
+      if (EqualityComparer<KeyValuePair<int, CharacterBag>>.Default.Equals(oid, default(KeyValuePair<int, CharacterBag>)) || oid.Key <= 0) return -1;
 
-      return OIDServer.GetLastKnownServerID(oid);
+      return OIDServer.GetLastKnownServerID(oid.Key);
     }
 
     public static bool HasPlayerAdminLevel(Player source, int level)

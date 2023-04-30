@@ -255,7 +255,8 @@ namespace OriginFramework
         NativeMenuManager.UnlockMenu(charCreatorMenuName);
         IsInCharacterCreator = false;
         PedCam.EndCam();
-        CharacterCaretaker.Instance.LoginSpawn();
+        await CharacterCaretaker.Instance.LoginSpawn(false);
+        NativeMenuManager.CloseAndUnlockMenu(charCreatorMenuName);
         Login.ReturnToLogin();
       }
     }

@@ -1203,6 +1203,28 @@ namespace OriginFrameworkServer
       }
     }
 
+    /// <summary>
+    /// V žádném případě nepoužít jinde. Jdeme bez lockeru a operace na DB nejsou serializovane. U nove postavy si to muzeme dovolit
+    /// </summary>
+    /// <param name="charId"></param>
+    /// <param name="itemsAndCounts"></param>
+    /// <returns></returns>
+    public static async Task<bool> GiveCharStartingItems(int charId, Dictionary<int, int> itemsAndCounts)
+    {
+      if (itemsAndCounts == null || itemsAndCounts.Count <= 0)
+        return true;
+
+      if (_scriptInstance == null)
+        return false;
+
+      foreach (var item in itemsAndCounts)
+      {
+        string result = await _scriptInstance.GiveItem($"char_{charId}", item.Key, item.Value);
+      }
+
+      return true;
+    }
+
     public static async void CarriablePutDown(Player player, int invItemId, string place, PosBag posBag, Action<Player, string> OnError)
     {
       if (_scriptInstance == null)

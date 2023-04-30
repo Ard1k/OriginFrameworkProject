@@ -224,7 +224,7 @@ namespace OriginFramework
 
       if (Game.PlayerPed.Model.Hash != GetHashKey("mp_m_freemode_01") && Game.PlayerPed.Model.Hash != GetHashKey("mp_f_freemode_01"))
       {
-        Notify.Alert("Nepodporovaný model postavy");
+        //Notify.Alert("Nepodporovaný model postavy");
         return;
       }
 

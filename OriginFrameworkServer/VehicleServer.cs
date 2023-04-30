@@ -406,6 +406,106 @@ namespace OriginFrameworkServer
       _ = callback(veh.NetworkId);
     }
 
+    [EventHandler("ofw_garage:TakeOutFirstVehicle")]
+    private async void TakeOutFirstVehicle([FromSource] Player source, Vector3 pos, float heading, NetworkCallbackDelegate callback)
+    {
+      if (source == null)
+      {
+        _ = callback(-1);
+        return;
+      }
+
+      var sourcePlayer = Players.Where(p => p.Handle == source.Handle).FirstOrDefault();
+      if (sourcePlayer == null)
+      {
+        _ = callback(-1);
+        return;
+      }
+
+      var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(sourcePlayer);
+      if (character == null)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", "Neplatná postava");
+        _ = callback(-1);
+        return;
+      }
+
+      var param = new Dictionary<string, object>();
+      param.Add("@charId", character.Id);
+      param.Add("@orgId", character.OrganizationId);
+      var result = await VSql.FetchAllAsync("SELECT `id`, `properties`, `plate` FROM `vehicle` WHERE `owner_char` = @charId", param);
+
+      if (result == null || result.Count <= 0)
+      {
+        Debug.WriteLine("ofw_garage:TakeOutFirstVehicle: Car not found ");
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto není v seznamu vlastněných");
+        _ = callback(-1);
+        return;
+      }
+      int garageId = (int)result[0]["id"];
+      if (IsOwnedVehicleOut(garageId))
+      {
+        Debug.WriteLine("ofw_garage:TakeOutFirstVehicle: Car is not stored");
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto není v garáži");
+        _ = callback(-1);
+        return;
+      }
+
+      var sProps = (string)result[0]["properties"];
+
+      if (sProps == null)
+      {
+        Debug.WriteLine("ofw_garage:TakeOutFirstVehicle: Invalid car properties ");
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Auto není správně uloženo v DB!");
+        _ = callback(-1);
+        return;
+      }
+
+      VehiclePropertiesBag vehData = JsonConvert.DeserializeObject<VehiclePropertiesBag>(sProps, jsonSettings);
+
+      var modelHash = (int)vehData.model;
+
+      await Delay(0);
+
+      int vehID = -1;
+      try
+      {
+        vehID = SpawnPersistentVehicle(modelHash, pos, heading);
+      }
+      catch
+      {
+        Debug.WriteLine("OFW_VEH: Vehicle from garage server spawn error!");
+        source.TriggerEvent("ofw:ValidationErrorNotification", "Chyba při spawnu auta, zkus to prosím znovu!");
+        _ = callback(-1);
+        return;
+      }
+
+      await Delay(200);
+
+      int frameCounter = 0;
+      while (!DoesEntityExist(vehID))
+      {
+        await Delay(100);
+        frameCounter++;
+        if (frameCounter >= 50)
+        {
+
+          Debug.WriteLine("OFW_VEH: Vehicle from garage server spawn timeout!");
+          source.TriggerEvent("ofw:ValidationErrorNotification", "Timeout pro spawn auta, zkus to prosím znovu!");
+          _ = callback(-1);
+          return;
+        }
+      }
+
+      var veh = new Vehicle(vehID);
+      var persistBag = new PersistentVehicleBag { NetID = veh.NetworkId, Plate = (string)result[0]["plate"], LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, GarageId = garageId, Properties = sProps };
+      persistentVehicles.Add(persistBag);
+      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.Properties);
+      persistBag.IsInPropertiesSync = true;
+      persistBag.LastPropertiesSync = GetGameTimer();
+      _ = callback(veh.NetworkId);
+    }
+
     [EventHandler("ofw_garage:GetVehiclesInGarage")]
     private async void GetVehiclesInGarage([FromSource] Player source, string garage, NetworkCallbackDelegate callback)
     {

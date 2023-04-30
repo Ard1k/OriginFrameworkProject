@@ -1,4 +1,6 @@
 ﻿using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using CitizenFX.Core.UI;
 using Newtonsoft.Json;
 using OriginFramework.Menus;
 using OriginFrameworkData;
@@ -20,6 +22,39 @@ namespace OriginFramework
     public static CharacterBag LoggedCharacter { get; private set; } = null;
     private static float[] LoginPedPos = { -241f, -855f, 750f };
     public static CharacterCaretaker Instance { get; private set; } = null;
+    public static List<Tuple<Vector3, float>> FirstSpawns = new List<Tuple<Vector3, float>>
+    {
+      new Tuple<Vector3, float>(new Vector3(473.85f, -1154.63f, 28.68f), 89.5f),
+      new Tuple<Vector3, float>(new Vector3(180.11f, -1014.34f, 28.45f), 28.5f),
+      new Tuple<Vector3, float>(new Vector3(28.8f, -1029.4f, 28.59f), 252.5f),
+      new Tuple<Vector3, float>(new Vector3(-20.68f, -225.76f, 45.32f), 150.5f),
+      new Tuple<Vector3, float>(new Vector3(-163.34f, -31.13f, 51.87f), 158.5f),
+      new Tuple<Vector3, float>(new Vector3(-70.14f, 91.46f, 72.28f), 246.5f),
+      new Tuple<Vector3, float>(new Vector3(-310.07f, -1363.99f, 30.44f), 261.5f),
+      new Tuple<Vector3, float>(new Vector3(-333.55f, -1401.13f, 29.78f), 192.5f),
+      new Tuple<Vector3, float>(new Vector3(28.13f, -1585.35f, 28.34f), 230.5f),
+      new Tuple<Vector3, float>(new Vector3(234.68f, -1773.89f, 27.82f), 203.5f),
+      new Tuple<Vector3, float>(new Vector3(213.79f, -1870.22f, 25.74f), 231.5f),
+      new Tuple<Vector3, float>(new Vector3(506.96f, -1498.2f, 28.44f), 156.5f),
+      new Tuple<Vector3, float>(new Vector3(408.97f, -644.14f, 27.65f), 266.5f),
+      new Tuple<Vector3, float>(new Vector3(-487.73f, -608.48f, 31.16f), 179.0f),
+      new Tuple<Vector3, float>(new Vector3(-487.62f, -614.41f, 31.17f), 1.5f),
+      new Tuple<Vector3, float>(new Vector3(-470.98f, -613.06f, 31.17f), 181.5f),
+      new Tuple<Vector3, float>(new Vector3(-464.04f, -623.69f, 31.17f), 179.0f),
+      new Tuple<Vector3, float>(new Vector3(-759.7f, -905.78f, 19.74f), 91.0f),
+      new Tuple<Vector3, float>(new Vector3(-759.34f, -897.24f, 20.26f), 93.5f),
+      new Tuple<Vector3, float>(new Vector3(-751.55f, -1041.05f, 12.65f), 118.0f),
+      new Tuple<Vector3, float>(new Vector3(-738.22f, -1033.17f, 12.73f), 120.5f),
+      new Tuple<Vector3, float>(new Vector3(-727.66f, -1060.62f, 12.35f), 29.5f),
+      new Tuple<Vector3, float>(new Vector3(-754.53f, -1061.9f, 11.94f), 208.5f),
+      new Tuple<Vector3, float>(new Vector3(-754.74f, -1077.93f, 11.79f), 26.5f),
+      new Tuple<Vector3, float>(new Vector3(-812.54f, -1100.98f, 10.83f), 297.5f),
+      new Tuple<Vector3, float>(new Vector3(-817.36f, -1094.71f, 10.91f), 304.5f),
+      new Tuple<Vector3, float>(new Vector3(-239.62f, -1165.85f, 23.0f), 273.0f),
+      new Tuple<Vector3, float>(new Vector3(-237.98f, -1178.47f, 22.99f), 325.0f),
+      new Tuple<Vector3, float>(new Vector3(139.81f, -1080.72f, 29.19f), 0.5f),
+      new Tuple<Vector3, float>(new Vector3(151.07f, -1082.04f, 29.19f), 357.5f)
+    };
 
     public CharacterCaretaker()
     {
@@ -114,6 +149,7 @@ namespace OriginFramework
     private async void OnMapStart()
     {
       LoginSpawn();
+      Login.ReturnToLogin();
     }
 
 
@@ -167,12 +203,16 @@ namespace OriginFramework
       }
     }
 
-    public async void LoginSpawn()
+    public async Task LoginSpawn(bool fadeOut = true)
     {
       if (spawnLock == true)
         return;
 
       spawnLock = true;
+
+      DoScreenFadeOut(500);
+      while (!IsScreenFadedOut())
+        await Delay(0);
 
       TriggerServerEvent("ofw_instance:TransferToPrivateInstance");
 
@@ -189,10 +229,6 @@ namespace OriginFramework
 
       SetPlayerModel(Game.Player.Handle, defaultModel);
       SetModelAsNoLongerNeeded(defaultModel);
-
-      DoScreenFadeOut(500);
-      while (!IsScreenFadedOut())
-        await Delay(0);
 
       FreezePlayer(true);
 
@@ -212,20 +248,22 @@ namespace OriginFramework
 
       ShutdownLoadingScreen();
 
-      if (IsScreenFadedOut())
-        DoScreenFadeIn(500);
+      if (fadeOut)
+      {
+        if (IsScreenFadedOut())
+          DoScreenFadeIn(500);
 
-      while (!IsScreenFadedIn())
-        await Delay(0);
+        while (!IsScreenFadedIn())
+          await Delay(0);
+      }
 
-      Login.ReturnToLogin();
       spawnLock = false;
     }
 
-    private static async void SpawnLoggedCharacter()
+    private static async Task<bool> SpawnLoggedCharacter(bool isFirstSpawn)
     {
       if (spawnLock == true)
-        return;
+        return false;
 
       spawnLock = true;
       TheBugger.DebugLog(LoggedCharacter?.Model.ToString() ?? "null char");
@@ -265,6 +303,16 @@ namespace OriginFramework
         z = LoggedCharacter.LastKnownPos.Z;
         h = LoggedCharacter.LastKnownPos.H;
       }
+      else
+      {
+        var rand = new Random();
+        var spawn = FirstSpawns[rand.Next(FirstSpawns.Count)];
+
+        x = spawn.Item1.X;
+        y = spawn.Item1.Y;
+        z = spawn.Item1.Z;
+        h = spawn.Item2;
+      }
 
       SetEntityCoordsNoOffset(Game.PlayerPed.Handle, x, y, z, false, false, false);
       await Delay(0);
@@ -289,20 +337,77 @@ namespace OriginFramework
 
       FreezePlayer(false);
 
-      if (IsScreenFadedOut())
-        DoScreenFadeIn(500);
+      if (!isFirstSpawn)
+      {
+        if (IsScreenFadedOut())
+          DoScreenFadeIn(500);
 
-      while (!IsScreenFadedIn())
-        await Delay(0);
+        while (!IsScreenFadedIn())
+          await Delay(0);
+      }
 
       spawnLock = false;
+      return true;
     }
 
-    public static void LoggedIn(CharacterBag character)
+    public static async void LoggedIn(CharacterBag character)
     {
       LoggedCharacter = character;
       TriggerServerEvent("ofw_instance:TransferToPublicInstance");
-      SpawnLoggedCharacter();
+      if (LoggedCharacter.IsNew)
+      {
+        await SpawnLoggedCharacter(true);
+
+        await Delay(1000);
+        await GarageClient.TakeOutFirstVehicle(Game.PlayerPed.Position, Game.PlayerPed.Heading);
+
+        if (IsScreenFadedOut())
+          DoScreenFadeIn(500);
+
+        TransitionToBlurred(1);
+
+        ShakeGameplayCam("DRUNK_SHAKE", 2.0f);
+
+        SetEntityInvincible(Game.Player.Character.Handle, true);
+
+        await Delay(1000);
+
+        int time = Game.GameTime;
+
+        while (Game.PlayerPed.CurrentVehicle == null && (Game.GameTime - time) < 10000)
+        {
+          await Delay(100);
+        }
+
+        if (Game.PlayerPed.CurrentVehicle != null)
+        {
+          TaskSequence taskSequence = new TaskSequence();
+          RequestAnimDict("rcmnigel2");
+          while (!HasAnimDictLoaded("rcmnigel2"))
+          {
+            await Delay(50);
+          }
+          TaskPlayAnim(Game.PlayerPed.Handle, "rcmnigel2", "die_horn", 1.0f, 1.0f, 5000, 0, 1f, false, false, false);
+        }
+
+        await Delay(3000);
+
+        StopGameplayCamShaking(false);
+
+        await Delay(2000);
+
+        Notify.Alert("Vzbudil ses v autě... už zase.");
+        TransitionFromBlurred(1000f);
+
+        await Delay(3000);
+        Notify.Alert("Jen ty víš, co se dělo včera.");
+
+        SetEntityInvincible(Game.Player.Character.Handle, false);
+      }
+      else
+      {
+        SpawnLoggedCharacter(false);
+      }
       TriggerServerEvent("ofw_org:RequestOrganizationData");
     }
   }

@@ -183,6 +183,17 @@ namespace OriginFramework
       SetPedIntoVehicle(Game.PlayerPed.Handle, vehId, -1);
     }
 
+    public static async Task<bool> TakeOutFirstVehicle(Vector3 pos, float heading)
+    {
+      var vehNetId = await Callbacks.ServerAsyncCallbackToSync<int>("ofw_garage:TakeOutFirstVehicle", pos, heading);
+      if (vehNetId == -1 || vehNetId == 0 || !NetworkDoesEntityExistWithNetworkId(vehNetId))
+        return false;
+
+      var vehId = NetToVeh(vehNetId);
+      SetPedIntoVehicle(Game.PlayerPed.Handle, vehId, -1);
+      return true;
+    }
+
     private static void OpenReturnMenu(GarageBag g, GarageBag.ParkingSpot p)
     {
       var plate = GetVehicleNumberPlateText(Game.PlayerPed.CurrentVehicle.Handle);

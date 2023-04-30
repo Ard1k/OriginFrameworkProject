@@ -32,8 +32,9 @@ namespace OriginFrameworkServer
       new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -51.2714f, Y = -1095.1326f, Z = 25.4835f, Heading = 200f }),
     };
     
-    private Random rand = new Random();
-    private List<VehColor> cachedColors = null;
+    private static Random rand = new Random();
+    private static List<VehColor> cachedColors = null;
+    private static string[] firstCars = { "blista", "ingot", "asea", "emperor2", "primo", "stanier", "regina", "rhapsody", "kanjo", "dynasty", "asbo" };
     bool isFirstTick = true;
 
     public VehicleVendorServer()
@@ -223,7 +224,7 @@ namespace OriginFrameworkServer
     private async Task<bool> CarPurchased(Player player, int slotId, int? ownerChar, int? ownerOrg)
     {
       var newPlate = GenerateNewPlate();
-      while (await VehicleServer.DoesPlateExist(newPlate, true))
+      while (newPlate.StartsWith("PDM") || await VehicleServer.DoesPlateExist(newPlate, true))
       {
         newPlate = GenerateNewPlate();
       }
@@ -243,6 +244,41 @@ namespace OriginFrameworkServer
       }
 
       return ret;
+    }
+
+    public static async Task<bool> GiveFirstCar(int charId)
+    {
+      var newPlate = GenerateNewPlate();
+      while (newPlate.StartsWith("PDM") || await VehicleServer.DoesPlateExist(newPlate, true))
+      {
+        newPlate = GenerateNewPlate();
+      }
+
+      Random random = new Random();
+      random.Next();
+      random.Next();
+      var modelHash = GetHashKey(firstCars[random.Next(firstCars.Length)]);
+      int color1 = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+      int color2 = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+      int colorp = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+      int colorw = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+
+      var props = JsonConvert.SerializeObject(new VehiclePropertiesBag { plate = newPlate, model = modelHash, color1 = color1, color2 = color2, pearlescentColor = colorp, wheelColor = colorw });
+
+      var param = new Dictionary<string, object>();
+      param.Add("@ownerChar", charId);
+      param.Add("@properties", props);
+      param.Add("@modelHash", modelHash);
+      param.Add("@plate", newPlate);
+
+      var res = await VSql.ExecuteAsync("insert into `vehicle` (`model`, `plate`, `place`, `properties`, `owner_char`) values (@modelHash, @plate, 'main', @properties, @ownerChar)", param);
+      if (res != 1)
+      {
+        Debug.WriteLine("GiveFirstCar: Error saving VendorVehicle");
+        return false;
+      }
+
+      return true;
     }
 
     private void OnError(Player player, string error)

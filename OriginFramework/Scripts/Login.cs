@@ -98,6 +98,13 @@ namespace OriginFramework
       if (ExistingCaracters != null)
         ExistingCaracters = ExistingCaracters.OrderByDescending(c => c.Name).ToList();
 
+      var firstNew = ExistingCaracters.Where(c => c.IsNew == true).FirstOrDefault();
+      if (firstNew != null)
+      {
+        LoginCharacter(firstNew);
+        return;
+      }
+
       IsInLoginScreen = true;
     }
 
