@@ -157,8 +157,6 @@ namespace OriginFramework.Scripts
         _angleRadZ = newAngleRadZ;
       }
 
-      Debug.WriteLine($"_angleZ {_angleRadZ}, _fwdHeading {_fwdHeadingRad}, fwd {fwd}");
-
       // limit up / down angle to 90°
       if (_angleRadY > 50.0f * (float)(Math.PI / 180f))
       {

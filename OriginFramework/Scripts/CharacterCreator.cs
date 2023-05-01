@@ -27,9 +27,9 @@ namespace OriginFramework
     {
       new Tuple<string, string>("mp_m_freemode_01", "Muž"),
       new Tuple<string, string>("mp_f_freemode_01", "Žena"),
-      new Tuple<string, string>("a_c_retriever", "Peso more"),
-      new Tuple<string, string>("player_two", "Trevor"),
-      new Tuple<string, string>("player_one", "Misa"),
+      //new Tuple<string, string>("a_c_retriever", "Peso more"),
+      //new Tuple<string, string>("player_two", "Trevor"),
+      //new Tuple<string, string>("player_one", "Misa"),
     };
 
     public CharacterCreator()
@@ -105,21 +105,20 @@ namespace OriginFramework
             new NativeMenuItem
             {
               Name = "Jméno",
-              ExtraLeft = NewCharacter.Name ?? "---",
+              NameRight = NewCharacter.Name ?? "---",
               IsTextInput = true,
               TextInputMaxLength = 50,
               TextInputRequest = "Zadejte jméno postavy",
               OnTextInput = (item, input) =>
                 {
                   NewCharacter.Name = input;
-                  item.ExtraLeft = NewCharacter.Name;
+                  item.NameRight = NewCharacter.Name;
                 }
             },
             new NativeMenuItem
             {
               Name = "Pohlaví",
-              NameRight = "←→",
-              ExtraLeft = availablePedModels[selectedModelIndex].Item2 ?? "---",
+              NameRight = $"←{availablePedModels[selectedModelIndex].Item2 ?? "---"}→",
               OnLeft = (item) =>
               {
                 if (selectedModelIndex <= 0)
@@ -136,7 +135,7 @@ namespace OriginFramework
               },
               OnRefresh = (item) =>
               {
-                item.ExtraLeft = availablePedModels[selectedModelIndex].Item2 ?? "---";
+                item.NameRight = $"←{availablePedModels[selectedModelIndex].Item2 ?? "---"}→";
                 NewCharacter.Model = GetHashKey(availablePedModels[selectedModelIndex].Item1);
                 UpdateModel();
               }

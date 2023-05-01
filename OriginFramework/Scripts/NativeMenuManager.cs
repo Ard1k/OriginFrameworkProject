@@ -21,7 +21,7 @@ namespace OriginFramework
     private static bool IsInputtingText { get; set; }
     private static bool IsSubMenuLoading { get; set; }
 
-    private static float xOffset = 0.65f;
+    private static float xOffset = 0.75f;
     private static float xLenght = 0.20f;
     private static float xExtraLenght = 0.11f;
 

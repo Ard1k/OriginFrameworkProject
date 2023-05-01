@@ -49,13 +49,14 @@ namespace OriginFramework
       "hair_1", "hair_2", "hair_color_1", "hair_color_2", 
       "eye_color", "eyebrows_1", "eyebrows_2", "eyebrows_3", "eyebrows_4",
       "makeup_1", "makeup_2", "makeup_3", "makeup_4",
-      "lipstick_1", "lipstick_2", "lipstick_3", "lipstick_4",
-      "chest_1", "chest_2", "chest_3",
-      "bodyb_1", "bodyb_2", "age_1", "age_2", "blemishes_1", "blemishes_2",
+      "lipstick_1", "lipstick_2", /* "lipstick_3", "lipstick_4",*/
+      "age_1", "age_2", /*"blemishes_1", "blemishes_2",*/
       "blush_1", "blush_2", "blush_3",
       "complexion_1", "complexion_2", "sun_1", "sun_2",
-      "moles_1", "moles_2", 
-      "beard_1", "beard_2", "beard_3", "beard_4"
+      "moles_1", "moles_2",
+      "beard_1", "beard_2", "beard_3", "beard_4",
+      "chest_1", "chest_2", "chest_3",
+      "bodyb_1", "bodyb_2",
     };
 
     public static string[] GetClothesForSlot(eSpecialSlotType slotType)
@@ -123,10 +124,10 @@ namespace OriginFramework
       _components = new Dictionary<string, SkinComponent>();
       _components.Add("face", new SkinComponent { Label = "Obličej", Name = "face", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
       _components.Add("skin", new SkinComponent { Label = "Kůže", Name = "skin", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
-      _components.Add("hair_1", new SkinComponent { Label = "Vlasy 1", Name = "hair_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f, TextureFrom = "hair_2" });
-      _components.Add("hair_2", new SkinComponent { Label = "Vlasy 2", Name = "hair_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f, TextureOf = "hair_1" });
-      _components.Add("hair_color_1", new SkinComponent { Label = "Barva vlasů 1", Name = "hair_color_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
-      _components.Add("hair_color_2", new SkinComponent { Label = "Barva vlasů 2", Name = "hair_color_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
+      _components.Add("hair_1", new SkinComponent { Label = "Vlasy - střih", Name = "hair_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f, TextureFrom = "hair_2" });
+      _components.Add("hair_2", new SkinComponent { Label = "Vlasy - styl barvy", Name = "hair_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f, TextureOf = "hair_1" });
+      _components.Add("hair_color_1", new SkinComponent { Label = "Vlasy - primární barva", Name = "hair_color_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
+      _components.Add("hair_color_2", new SkinComponent { Label = "Vlasy - sekundární barva", Name = "hair_color_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.6f, CamOffset = 0.65f });
       _components.Add("tshirt_1", new SkinComponent { Label = "Tričko", Name = "tshirt_1", DefaultValue = 15, DefaultFemale = 14, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "tshirt_2" });
       _components.Add("tshirt_2", new SkinComponent { Label = "Varianta trička", Name = "tshirt_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "tshirt_1" });
       _components.Add("torso_1", new SkinComponent { Label = "Torzo", Name = "torso_1", DefaultValue = 15, DefaultFemale = 101/*82*/, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "torso_2" });
@@ -155,43 +156,43 @@ namespace OriginFramework
       _components.Add("bracelets_2", new SkinComponent { Label = "Varianta náramku", Name = "bracelets_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "bracelets_1" });
       _components.Add("bags_1", new SkinComponent { Label = "Batoh", Name = "bags_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureFrom = "bags_2" });
       _components.Add("bags_2", new SkinComponent { Label = "Varianta batohu", Name = "bags_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f, TextureOf = "bags_1" });
-      _components.Add("eye_color", new SkinComponent { Label = "Barva očí", Name = "eye_color", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("eyebrows_1", new SkinComponent { Label = "Obočí", Name = "eyebrows_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("eyebrows_2", new SkinComponent { Label = "Velikost obočí", Name = "eyebrows_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("eyebrows_3", new SkinComponent { Label = "Barva obočí 1", Name = "eyebrows_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("eyebrows_4", new SkinComponent { Label = "Barva obočí 2", Name = "eyebrows_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("makeup_1", new SkinComponent { Label = "Makeup", Name = "makeup_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("makeup_2", new SkinComponent { Label = "Síla makeupu", Name = "makeup_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("makeup_3", new SkinComponent { Label = "Barva makeupu 1", Name = "makeup_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("makeup_4", new SkinComponent { Label = "Barva makeupu 2", Name = "makeup_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("lipstick_1", new SkinComponent { Label = "Rtěnka", Name = "lipstick_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("lipstick_2", new SkinComponent { Label = "Výraznost rtěnky", Name = "lipstick_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("eye_color", new SkinComponent { Label = "Oči - barva", Name = "eye_color", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("eyebrows_1", new SkinComponent { Label = "Obočí - typ", Name = "eyebrows_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("eyebrows_2", new SkinComponent { Label = "Obočí - výraznost", Name = "eyebrows_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("eyebrows_3", new SkinComponent { Label = "Obočí - primární barva", Name = "eyebrows_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("eyebrows_4", new SkinComponent { Label = "Obočí - sekundární barva 2", Name = "eyebrows_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("makeup_1", new SkinComponent { Label = "Makeup - typ", Name = "makeup_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("makeup_2", new SkinComponent { Label = "Makeup - výraznost", Name = "makeup_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("makeup_3", new SkinComponent { Label = "Makeup - primární barva", Name = "makeup_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("makeup_4", new SkinComponent { Label = "Makeup - sekundární barva", Name = "makeup_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("lipstick_1", new SkinComponent { Label = "Rtěnka - typ", Name = "lipstick_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("lipstick_2", new SkinComponent { Label = "Rtěnka - výraznost", Name = "lipstick_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
       _components.Add("lipstick_3", new SkinComponent { Label = "Barva rtěnky 1", Name = "lipstick_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
       _components.Add("lipstick_4", new SkinComponent { Label = "Barva rtěnky 2", Name = "lipstick_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
       _components.Add("ears_1", new SkinComponent { Label = "Náušnice", Name = "ears_1", DefaultValue = -1, MinValue = -1, ZoomOffset = 0.4f, CamOffset = 0.65f, TextureFrom = "ears_2" });
       _components.Add("ears_2", new SkinComponent { Label = "Varianta náušnic", Name = "ears_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f, TextureOf = "ears_1" });
-      _components.Add("chest_1", new SkinComponent { Label = "Chlupy", Name = "chest_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
-      _components.Add("chest_2", new SkinComponent { Label = "Výraznost chlupů", Name = "chest_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
-      _components.Add("chest_3", new SkinComponent { Label = "Barcha chlupů", Name = "chest_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
-      _components.Add("bodyb_1", new SkinComponent { Label = "Tělo", Name = "bodyb_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
-      _components.Add("bodyb_2", new SkinComponent { Label = "Velikost těla", Name = "bodyb_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
-      _components.Add("age_1", new SkinComponent { Label = "Vrásky", Name = "age_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("age_2", new SkinComponent { Label = "Výraznost vrásek", Name = "age_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("chest_1", new SkinComponent { Label = "Chlupy - typ", Name = "chest_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
+      _components.Add("chest_2", new SkinComponent { Label = "Chlypy - výraznost", Name = "chest_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
+      _components.Add("chest_3", new SkinComponent { Label = "Chlupy - barva", Name = "chest_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
+      _components.Add("bodyb_1", new SkinComponent { Label = "Pokožka - typ", Name = "bodyb_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
+      _components.Add("bodyb_2", new SkinComponent { Label = "Pokožka - výraznost", Name = "bodyb_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.75f, CamOffset = 0.15f });
+      _components.Add("age_1", new SkinComponent { Label = "Vrásky - typ", Name = "age_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("age_2", new SkinComponent { Label = "Vrásky - výraznost", Name = "age_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
       _components.Add("blemishes_1", new SkinComponent { Label = "Blemishes 1", Name = "blemishes_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
       _components.Add("blemishes_2", new SkinComponent { Label = "Blemishes 2", Name = "blemishes_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("blush_1", new SkinComponent { Label = "Blush 1", Name = "blush_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("blush_2", new SkinComponent { Label = "Blush 2", Name = "blush_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("blush_3", new SkinComponent { Label = "Blush 3", Name = "blush_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("complexion_1", new SkinComponent { Label = "Complexion 1", Name = "complexion_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("complexion_2", new SkinComponent { Label = "Complexion 2", Name = "complexion_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("sun_1", new SkinComponent { Label = "Sun 1", Name = "sun_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("sun_2", new SkinComponent { Label = "Sun 2", Name = "sun_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("moles_1", new SkinComponent { Label = "Moles 1", Name = "moles_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("moles_2", new SkinComponent { Label = "Moles 2", Name = "moles_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("beard_1", new SkinComponent { Label = "Vousy", Name = "beard_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("beard_2", new SkinComponent { Label = "Délka vousů", Name = "beard_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("beard_3", new SkinComponent { Label = "Barva vousů 1", Name = "beard_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
-      _components.Add("beard_4", new SkinComponent { Label = "Barva vousů 2", Name = "beard_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("blush_1", new SkinComponent { Label = "Pudr - typ", Name = "blush_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("blush_2", new SkinComponent { Label = "Pudr - výraznost", Name = "blush_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("blush_3", new SkinComponent { Label = "Pudr - barva", Name = "blush_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("complexion_1", new SkinComponent { Label = "Zarudnutí - typ", Name = "complexion_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("complexion_2", new SkinComponent { Label = "Zarudnutí - výraznost", Name = "complexion_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("sun_1", new SkinComponent { Label = "Poničení pleti - typ", Name = "sun_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("sun_2", new SkinComponent { Label = "Poničení pleti - výraznost", Name = "sun_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("moles_1", new SkinComponent { Label = "Pihy - typ", Name = "moles_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("moles_2", new SkinComponent { Label = "Pihy - výraznost", Name = "moles_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("beard_1", new SkinComponent { Label = "Vousy - typ", Name = "beard_1", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("beard_2", new SkinComponent { Label = "Vousy - výraznost", Name = "beard_2", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("beard_3", new SkinComponent { Label = "Vousy - primární barva", Name = "beard_3", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
+      _components.Add("beard_4", new SkinComponent { Label = "Vousy - sekundární barva", Name = "beard_4", DefaultValue = 0, MinValue = 0, ZoomOffset = 0.4f, CamOffset = 0.65f });
     }
 
     public SkinManager()
