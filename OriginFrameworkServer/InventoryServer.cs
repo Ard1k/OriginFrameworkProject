@@ -408,7 +408,7 @@ namespace OriginFrameworkServer
       return null;
     }
 
-    private async Task<string> GiveItem(string place, int item_id, int count)
+    private async Task<string> GiveItem(string place, int item_id, int count, string[] metadata = null)
     {
       int resultCount = count;
 
@@ -456,7 +456,7 @@ namespace OriginFrameworkServer
             amt = count;
           count -= amt;
 
-          sql.AppendLine($" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`) VALUES ('{place}', '{item_id}', '{x}', '{y}', '{amt}'); ");
+          sql.AppendLine($" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`, `metadata`) VALUES ('{place}', '{item_id}', '{x}', '{y}', '{amt}', '{(metadata == null ? "null" : string.Join("|", metadata))}'); ");
         }
       }
 
@@ -1223,6 +1223,26 @@ namespace OriginFrameworkServer
       }
 
       return true;
+    }
+
+    public static async Task<string> GiveCharIdentityCard(int charId, int itemId, uint model, Dictionary<string, int> skin)
+    {
+      if (skin == null)
+        return "Neplatné parametry";
+
+      if (_scriptInstance == null)
+        return "Chyba serveru";
+
+      string[] metadata = new string[]
+        {
+          $"_charid:{charId}",
+          $"_model:{model}",
+          $"_skin:{JsonConvert.SerializeObject(skin)}"
+        };
+
+      string result = await _scriptInstance.GiveItem($"char_{charId}", itemId, 1, metadata);
+
+      return result;
     }
 
     public static async void CarriablePutDown(Player player, int invItemId, string place, PosBag posBag, Action<Player, string> OnError)

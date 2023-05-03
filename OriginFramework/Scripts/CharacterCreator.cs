@@ -97,6 +97,20 @@ namespace OriginFramework
         NewCharacter = new CharacterBag(GetHashKey(availablePedModels[selectedModelIndex].Item1));
       }
 
+      if (NewCharacter.Skin == null)
+        NewCharacter.Skin = new Dictionary<string, int>();
+
+      string[] values = SkinManager.AppearanceAll;
+
+      Dictionary<string, MinMaxBag> minMax = new Dictionary<string, MinMaxBag>();
+      bool isFemale = Game.PlayerPed.Model.Hash == GetHashKey("mp_f_freemode_01");
+
+      foreach (var c in values)
+      {
+        if (!NewCharacter.Skin.ContainsKey(c))
+          NewCharacter.Skin.Add(c, (isFemale && SkinManager.Components[c].DefaultFemale != null) ? SkinManager.Components[c].DefaultFemale.Value : SkinManager.Components[c].DefaultValue);
+      }
+
       var menu = new NativeMenu
       {
         MenuTitle = "Character creator",

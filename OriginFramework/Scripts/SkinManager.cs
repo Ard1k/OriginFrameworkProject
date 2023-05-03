@@ -216,111 +216,114 @@ namespace OriginFramework
       ApplySkin(values);
     }
 
-    public static void ApplySkin(Dictionary<string, int> features)
+    public static void ApplySkin(Dictionary<string, int> features, int pedId = 0)
     {
       if (features == null)
         return;
 
       //TheBugger.DebugLog($"PED HASH:{Game.PlayerPed.Model.Hash} MALE HASH:{GetHashKey("mp_m_freemode_01")}");
 
-      if (Game.PlayerPed.Model.Hash != GetHashKey("mp_m_freemode_01") && Game.PlayerPed.Model.Hash != GetHashKey("mp_f_freemode_01"))
+      if (pedId == 0 && Game.PlayerPed.Model.Hash != GetHashKey("mp_m_freemode_01") && Game.PlayerPed.Model.Hash != GetHashKey("mp_f_freemode_01"))
       {
         //Notify.Alert("Nepodporovaný model postavy");
         return;
       }
 
+      if (pedId == 0)
+        pedId = Game.PlayerPed.Handle;
+
       if (features.ContainsKey("face") && features.ContainsKey("skin"))
-        SetPedHeadBlendData(Game.PlayerPed.Handle, features["face"], features["face"], features["face"], features["skin"], features["skin"], features["skin"], 1f, 1f, 1f, true);
+        SetPedHeadBlendData(pedId, features["face"], features["face"], features["face"], features["skin"], features["skin"], features["skin"], 1f, 1f, 1f, true);
 
       if (features.ContainsKey("beard_1") && features.ContainsKey("beard_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 1, features["beard_1"], (float)features["beard_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 1, features["beard_1"], (float)features["beard_2"] / (float)10);
       if (features.ContainsKey("eyebrows_1") && features.ContainsKey("eyebrows_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 2, features["eyebrows_1"], (float)features["eyebrows_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 2, features["eyebrows_1"], (float)features["eyebrows_2"] / (float)10);
       if (features.ContainsKey("age_1") && features.ContainsKey("age_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 3, features["age_1"], (float)features["age_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 3, features["age_1"], (float)features["age_2"] / (float)10);
       if (features.ContainsKey("makeup_1") && features.ContainsKey("makeup_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 4, features["makeup_1"], (float)features["makeup_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 4, features["makeup_1"], (float)features["makeup_2"] / (float)10);
       if (features.ContainsKey("blush_1") && features.ContainsKey("blush_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 5, features["blush_1"], (float)features["blush_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 5, features["blush_1"], (float)features["blush_2"] / (float)10);
       if (features.ContainsKey("complexion_1") && features.ContainsKey("complexion_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 6, features["complexion_1"], (float)features["complexion_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 6, features["complexion_1"], (float)features["complexion_2"] / (float)10);
       if (features.ContainsKey("sun_1") && features.ContainsKey("sun_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 7, features["sun_1"], (float)features["sun_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 7, features["sun_1"], (float)features["sun_2"] / (float)10);
       if (features.ContainsKey("lipstick_1") && features.ContainsKey("lipstick_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 8, features["lipstick_1"], (float)features["lipstick_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 8, features["lipstick_1"], (float)features["lipstick_2"] / (float)10);
       if (features.ContainsKey("moles_1") && features.ContainsKey("moles_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 9, features["moles_1"], (float)features["moles_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 9, features["moles_1"], (float)features["moles_2"] / (float)10);
       if (features.ContainsKey("chest_1") && features.ContainsKey("chest_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 10, features["chest_1"], (float)features["chest_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 10, features["chest_1"], (float)features["chest_2"] / (float)10);
       if (features.ContainsKey("bodyb_1") && features.ContainsKey("bodyb_2"))
-        SetPedHeadOverlay(Game.PlayerPed.Handle, 11, features["bodyb_1"], (float)features["bodyb_2"] / (float)10);
+        SetPedHeadOverlay(pedId, 11, features["bodyb_1"], (float)features["bodyb_2"] / (float)10);
 
       if (features.ContainsKey("eye_color"))
-        SetPedEyeColor(Game.PlayerPed.Handle, features["eye_color"]);
+        SetPedEyeColor(pedId, features["eye_color"]);
 
       if (features.ContainsKey("hair_color_1") && features.ContainsKey("hair_color_2"))
-        SetPedHairColor(Game.PlayerPed.Handle, features["hair_color_1"], features["hair_color_2"]);
+        SetPedHairColor(pedId, features["hair_color_1"], features["hair_color_2"]);
 
       if (features.ContainsKey("beard_3") && features.ContainsKey("beard_4"))
-        SetPedHeadOverlayColor(Game.PlayerPed.Handle, 1, 1, features["beard_3"], features["beard_3"]);
+        SetPedHeadOverlayColor(pedId, 1, 1, features["beard_3"], features["beard_3"]);
       if (features.ContainsKey("eyebrows_3") && features.ContainsKey("eyebrows_4"))
-        SetPedHeadOverlayColor(Game.PlayerPed.Handle, 2, 1, features["eyebrows_3"], features["eyebrows_4"]);
+        SetPedHeadOverlayColor(pedId, 2, 1, features["eyebrows_3"], features["eyebrows_4"]);
       if (features.ContainsKey("makeup_3") && features.ContainsKey("makeup_4"))
-        SetPedHeadOverlayColor(Game.PlayerPed.Handle, 4, 1, features["makeup_3"], features["makeup_4"]);
+        SetPedHeadOverlayColor(pedId, 4, 1, features["makeup_3"], features["makeup_4"]);
       if (features.ContainsKey("blush_3"))
-        SetPedHeadOverlayColor(Game.PlayerPed.Handle, 5, 2, features["blush_3"], 0);
+        SetPedHeadOverlayColor(pedId, 5, 2, features["blush_3"], 0);
       if (features.ContainsKey("lipstick_1") && features.ContainsKey("lipstick_2"))
-        SetPedHeadOverlayColor(Game.PlayerPed.Handle, 8, 2, features["lipstick_1"], features["lipstick_2"]);
+        SetPedHeadOverlayColor(pedId, 8, 2, features["lipstick_1"], features["lipstick_2"]);
       if (features.ContainsKey("chest_3"))
-        SetPedHeadOverlayColor(Game.PlayerPed.Handle, 10, 1, features["chest_3"], 0);
+        SetPedHeadOverlayColor(pedId, 10, 1, features["chest_3"], 0);
 
       if (features.ContainsKey("mask_1") && features.ContainsKey("mask_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 1, features["mask_1"], features["mask_2"], 2);
+        SetPedComponentVariation(pedId, 1, features["mask_1"], features["mask_2"], 2);
       if (features.ContainsKey("hair_1") && features.ContainsKey("hair_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 2, features["hair_1"], features["hair_2"], 2);
+        SetPedComponentVariation(pedId, 2, features["hair_1"], features["hair_2"], 2);
       if (features.ContainsKey("arms_1") && features.ContainsKey("arms_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 3, features["arms_1"], features["arms_2"], 2);
+        SetPedComponentVariation(pedId, 3, features["arms_1"], features["arms_2"], 2);
       if (features.ContainsKey("pants_1") && features.ContainsKey("pants_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 4, features["pants_1"], features["pants_2"], 2);
+        SetPedComponentVariation(pedId, 4, features["pants_1"], features["pants_2"], 2);
       if (features.ContainsKey("bags_1") && features.ContainsKey("bags_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 5, features["bags_1"], features["bags_2"], 2);
+        SetPedComponentVariation(pedId, 5, features["bags_1"], features["bags_2"], 2);
       if (features.ContainsKey("shoes_1") && features.ContainsKey("shoes_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 6, features["shoes_1"], features["shoes_2"], 2);
+        SetPedComponentVariation(pedId, 6, features["shoes_1"], features["shoes_2"], 2);
       if (features.ContainsKey("chain_1") && features.ContainsKey("chain_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 7, features["chain_1"], features["chain_2"], 2);
+        SetPedComponentVariation(pedId, 7, features["chain_1"], features["chain_2"], 2);
       if (features.ContainsKey("tshirt_1") && features.ContainsKey("tshirt_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 8, features["tshirt_1"], features["tshirt_2"], 2);
+        SetPedComponentVariation(pedId, 8, features["tshirt_1"], features["tshirt_2"], 2);
       if (features.ContainsKey("bproof_1") && features.ContainsKey("bproof_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 9, features["bproof_1"], features["bproof_2"], 2);
+        SetPedComponentVariation(pedId, 9, features["bproof_1"], features["bproof_2"], 2);
       if (features.ContainsKey("decals_1") && features.ContainsKey("decals_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 10, features["decals_1"], features["decals_2"], 2);
+        SetPedComponentVariation(pedId, 10, features["decals_1"], features["decals_2"], 2);
       if (features.ContainsKey("torso_1") && features.ContainsKey("torso_2"))
-        SetPedComponentVariation(Game.PlayerPed.Handle, 11, features["torso_1"], features["torso_2"], 2);
+        SetPedComponentVariation(pedId, 11, features["torso_1"], features["torso_2"], 2);
 
       if (features.ContainsKey("ears_1") && features["ears_1"] == -1)
-        ClearPedProp(Game.PlayerPed.Handle, 2);
+        ClearPedProp(pedId, 2);
       else if (features.ContainsKey("ears_1") && features.ContainsKey("ears_2"))
-        SetPedPropIndex(Game.PlayerPed.Handle, 2, features["ears_1"], features["ears_2"], true);
+        SetPedPropIndex(pedId, 2, features["ears_1"], features["ears_2"], true);
 
       if (features.ContainsKey("helmet_1") && features["helmet_1"] == -1)
-        ClearPedProp(Game.PlayerPed.Handle, 0);
+        ClearPedProp(pedId, 0);
       else if (features.ContainsKey("helmet_1") && features.ContainsKey("helmet_2"))
-        SetPedPropIndex(Game.PlayerPed.Handle, 0, features["helmet_1"], features["helmet_2"], true);
+        SetPedPropIndex(pedId, 0, features["helmet_1"], features["helmet_2"], true);
 
       if (features.ContainsKey("glasses_1") && features["glasses_1"] == -1)
-        ClearPedProp(Game.PlayerPed.Handle, 1);
+        ClearPedProp(pedId, 1);
       else if (features.ContainsKey("glasses_1") && features.ContainsKey("glasses_2"))
-        SetPedPropIndex(Game.PlayerPed.Handle, 1, features["glasses_1"], features["glasses_2"], true);
+        SetPedPropIndex(pedId, 1, features["glasses_1"], features["glasses_2"], true);
 
       if (features.ContainsKey("watches_1") && features["watches_1"] == -1)
-        ClearPedProp(Game.PlayerPed.Handle, 6);
+        ClearPedProp(pedId, 6);
       else if (features.ContainsKey("watches_1") && features.ContainsKey("watches_2"))
-        SetPedPropIndex(Game.PlayerPed.Handle, 6, features["watches_1"], features["watches_2"], true);
+        SetPedPropIndex(pedId, 6, features["watches_1"], features["watches_2"], true);
 
       if (features.ContainsKey("bracelets_1") && features["bracelets_1"] == -1)
-        ClearPedProp(Game.PlayerPed.Handle, 7);
+        ClearPedProp(pedId, 7);
       else if (features.ContainsKey("bracelets_1") && features.ContainsKey("bracelets_2"))
-        SetPedPropIndex(Game.PlayerPed.Handle, 7, features["bracelets_1"], features["bracelets_2"], true);
+        SetPedPropIndex(pedId, 7, features["bracelets_1"], features["bracelets_2"], true);
     }
 
     public static int GetComponentMaxValue(string componentName, int parentComponentValue)

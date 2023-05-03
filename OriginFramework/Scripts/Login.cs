@@ -30,7 +30,7 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
-      if (!await InternalDependencyManager.CanStart(eScriptArea.Login))
+      if (!await InternalDependencyManager.CanStart(eScriptArea.Login, eScriptArea.FontsManager))
         return;
 
       Tick += OnTick;

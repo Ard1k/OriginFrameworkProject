@@ -132,7 +132,7 @@ namespace OriginFrameworkData.DataBags
 
       if (item_id > 0)
       {
-        slot = Items.Where(it => it.ItemId == item_id && it.Count < ItemsDefinitions.Items[item_id].StackSize && (it.Metadata == null || it.Metadata.Count() <= 0)).FirstOrDefault();
+        slot = Items.Where(it => it.ItemId == item_id && (it.Metadata == null || it.Metadata.Length == 0) && it.Count < ItemsDefinitions.Items[item_id].StackSize && (it.Metadata == null || it.Metadata.Count() <= 0)).FirstOrDefault();
         if (slot != null)
           return true;
       }
@@ -198,7 +198,12 @@ namespace OriginFrameworkData.DataBags
       };
 
       if (row.ContainsKey("metadata") && row["metadata"] != null)
-        it.Metadata = Convert.ToString(row["metadata"])?.Split('|');
+        it.Metadata = Convert.ToString(row["metadata"])?.Split('|')?.Where(m => 
+          m != null &&
+          !m.StartsWith("_charid") &&
+          !m.StartsWith("_model") &&
+          !m.StartsWith("_skin")
+          )?.ToArray();
 
       return it;
     }
@@ -340,6 +345,7 @@ namespace OriginFrameworkData.DataBags
   {
     None = 0,
     Weapon = 1,
+    IdentityCard = 2
   }
 
   public static class ItemsDefinitions
@@ -678,6 +684,15 @@ namespace OriginFrameworkData.DataBags
         StackSize = 1,
         Color = new InventoryColor(0, 150, 0, 0),
         CarryType = eItemCarryType.Forklift,
+      };
+      _items[20] = new ItemDefinition
+      {
+        ItemId = 20,
+        Name = "Id karta",
+        Texture = "crate",
+        StackSize = 1,
+        Color = new InventoryColor(0, 150, 150, 0),
+        UsableType = eUsableType.IdentityCard
       };
       #endregion
 

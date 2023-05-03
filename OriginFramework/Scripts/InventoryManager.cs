@@ -841,6 +841,8 @@ namespace OriginFramework
 
       if (definition.UsableType == eUsableType.Weapon)
         TriggerServerEvent("ofw_inventory:UseItem", it.Id, it.Place, it.ItemId);
+      else if (definition.UsableType == eUsableType.IdentityCard)
+        TriggerServerEvent("ofw_identity:ShowCard", it.Id);
     }
 
     private void CloseTooltip()
