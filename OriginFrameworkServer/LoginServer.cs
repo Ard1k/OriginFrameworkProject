@@ -10,6 +10,7 @@ using static CitizenFX.Core.Native.API;
 using OriginFrameworkData.DataBags;
 using CitizenFX.Core.Native;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
 
 namespace OriginFrameworkServer
 {
@@ -108,12 +109,20 @@ namespace OriginFrameworkServer
         return;
       }
 
+      Regex regex = new Regex(@"^[A-Z][a-z]+(\s[A-Z][a-z]+){1,2}$");
+      if (!regex.IsMatch(charData.Name))
+      { 
+        _ = callback(false, "Jméno musí být dvě nebo tři slova která začínají velkým písmenem");
+        return;
+      }
+
       var param = new Dictionary<string, object>();
       param.Add("@user_identifier", oid.PrimaryIdentifier);
       param.Add("@name", charData.Name);
       param.Add("@model", charData.Model);
       param.Add("@skin", charData.Skin == null ? null : JsonConvert.SerializeObject(charData.Skin));
-      await VSql.ExecuteAsync("insert into `character` (`user_identifier`, `name`, `model`, `skin`) VALUES (@user_identifier, @name, @model, @skin)", param);
+      param.Add("@born", charData.Born);
+      await VSql.ExecuteAsync("insert into `character` (`user_identifier`, `name`, `model`, `skin`, `born`) VALUES (@user_identifier, @name, @model, @skin, @born)", param);
 
       _ = callback(true, "ok");
     }

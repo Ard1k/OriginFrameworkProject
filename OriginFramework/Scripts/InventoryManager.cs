@@ -22,7 +22,7 @@ namespace OriginFramework
     private static int ScaleForm { get; set; } = -1;
     public bool IsWaiting { get; private set; } = false;
     public bool IsWaitingInput { get; set; } = false;
-    public bool IsInventoryOpen { get; private set; } = false;
+    public static bool IsInventoryOpen { get; private set; } = false;
     public bool IsDrawingTooltip { get { return dragData?.SrcItem == null && cursorData?.HoverItem != null; } }
     private double invSizeOverHeight = 0.45d;
     private double invBorderOverHeight = 0.00d;
@@ -198,6 +198,7 @@ namespace OriginFramework
       {
         IsInventoryOpen = false;
         CloseTooltip();
+        OfwFunctions.BlockEsc(500);
         return;
       }
 
@@ -827,7 +828,7 @@ namespace OriginFramework
       DrawText((float)(cursorData.xRelative - cellWidth / 2f), (float)(cursorData.yRelative + cellHeight / 2f - itemCountYOffset - cellHeight / 10));
     }
 
-    private void UseItem(InventoryItemBag it, InventoryBag inv)
+    private async void UseItem(InventoryItemBag it, InventoryBag inv)
     {
       if (it == null || inv == null)
         return;
@@ -842,7 +843,12 @@ namespace OriginFramework
       if (definition.UsableType == eUsableType.Weapon)
         TriggerServerEvent("ofw_inventory:UseItem", it.Id, it.Place, it.ItemId);
       else if (definition.UsableType == eUsableType.IdentityCard)
+      {
+        IsInventoryOpen = false;
+        await Delay(0);
+        CloseTooltip();
         TriggerServerEvent("ofw_identity:ShowCard", it.Id);
+      }
     }
 
     private void CloseTooltip()
@@ -935,6 +941,20 @@ namespace OriginFramework
             _rows.Add(new { s1 = "Střih", s2 = "Pánský" });
           else if (itDef.FemaleSkin != null)
             _rows.Add(new { s1 = "Střih", s2 = "Dámský" });
+        }
+
+        if (item.Metadata != null)
+        {
+          if (item.Metadata.Any(m => m.StartsWith("_charname:")))
+            _rows.Add(new { s1 = "Jméno", s2 = item.Metadata.First(m => m.StartsWith("_charname:")).Substring(10) });
+          if (item.Metadata.Any(m => m.StartsWith("_born:")))
+            _rows.Add(new { s1 = "Datum narození", s2 = item.Metadata.First(m => m.StartsWith("_born:")).Substring(6) });
+          if (item.Metadata.Any(m => m.StartsWith("_created:")))
+            _rows.Add(new { s1 = "Vystaveno", s2 = item.Metadata.First(m => m.StartsWith("_created:")).Substring(9) });
+          if (item.Metadata.Any(m => m.StartsWith("_valid:")))
+            _rows.Add(new { s1 = "Platnost do", s2 = item.Metadata.First(m => m.StartsWith("_valid:")).Substring(7) });
+          if (item.Metadata.Any(m => m.StartsWith("_sn:")))
+            _rows.Add(new { s1 = "S/N", s2 = item.Metadata.First(m => m.StartsWith("_sn:")).Substring(4) });
         }
 
         switch (itDef.CarryType)

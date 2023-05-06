@@ -110,8 +110,13 @@ namespace OriginFrameworkServer
         CardId = id,
         ItemId = itemId,
         Model = model,
-        CardSkin = cardSkin
-      };
+        CardSkin = cardSkin,
+        CharName = metadata.FirstOrDefault(m => m.StartsWith("_charname:"))?.Substring(10),
+        Born = metadata.FirstOrDefault(m => m.StartsWith("_born:"))?.Substring(6),
+        ValidTo = metadata.FirstOrDefault(m => m.StartsWith("_valid:"))?.Substring(7),
+        Created = metadata.FirstOrDefault(m => m.StartsWith("_created:"))?.Substring(9),
+        Sn = metadata.FirstOrDefault(m => m.StartsWith("_sn:"))?.Substring(4),
+    };
 
       if (!CardsCache.ContainsKey(id))
         CardsCache.Add(id, cardData);
@@ -121,19 +126,19 @@ namespace OriginFrameworkServer
 
       PlayerShowingCard.Add(sourceIntHandle, id);
 
-      var param2 = new Dictionary<string, object>();
-      param.Add("@idChar", charId);
-      var charResult = await VSql.FetchAllAsync("select `name` from `character` where `id` = @idChar", param);
-      if (charResult == null || charResult.Count <= 0)
-      {
-        source.TriggerEvent("ofw:ValidationErrorNotification", "Nelze data postavy");
-        return;
-      }
+      //var param2 = new Dictionary<string, object>();
+      //param.Add("@idChar", charId);
+      //var charResult = await VSql.FetchAllAsync("select `name` from `character` where `id` = @idChar", param);
+      //if (charResult == null || charResult.Count <= 0)
+      //{
+      //  source.TriggerEvent("ofw:ValidationErrorNotification", "Nelze data postavy");
+      //  return;
+      //}
 
-      if (charResult[0].ContainsKey("name") && charResult[0]["name"] != null && charResult[0]["name"] != DBNull.Value)
-      {
-        cardData.CharName = (string)charResult[0]["name"];
-      }
+      //if (charResult[0].ContainsKey("name") && charResult[0]["name"] != null && charResult[0]["name"] != DBNull.Value)
+      //{
+      //  cardData.CharName = (string)charResult[0]["name"];
+      //}
 
       TriggerClientEvent("ofw_identity:ShowingCard", sourceIntHandle, JsonConvert.SerializeObject(cardData));
     }

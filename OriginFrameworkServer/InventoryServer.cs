@@ -1225,7 +1225,7 @@ namespace OriginFrameworkServer
       return true;
     }
 
-    public static async Task<string> GiveCharIdentityCard(int charId, int itemId, uint model, Dictionary<string, int> skin)
+    public static async Task<string> GiveCharIdentityCard(CharacterBag character, int itemId, uint model, Dictionary<string, int> skin)
     {
       if (skin == null)
         return "Neplatné parametry";
@@ -1235,12 +1235,17 @@ namespace OriginFrameworkServer
 
       string[] metadata = new string[]
         {
-          $"_charid:{charId}",
+          $"_charid:{character.Id}",
           $"_model:{model}",
-          $"_skin:{JsonConvert.SerializeObject(skin)}"
+          $"_skin:{JsonConvert.SerializeObject(skin)}",
+          $"_charname:{character.Name}",
+          $"_born:{character.Born.ToString("dd.MM.yyyy")}",
+          $"_created:{DateTime.Now.ToString("dd.MM.yyyy")}",
+          $"_valid:{DateTime.Now.AddYears(4).ToString("dd.MM.yyyy")}",
+          $"_sn:D{character.Id.ToString("D8")}"
         };
 
-      string result = await _scriptInstance.GiveItem($"char_{charId}", itemId, 1, metadata);
+      string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata);
 
       return result;
     }

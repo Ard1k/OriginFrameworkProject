@@ -255,5 +255,19 @@ namespace OriginFramework
     {
       return new Vector3(posBag.X, posBag.Y, posBag.Z);
     }
+
+    public static async void BlockEsc(int ms)
+    {
+      var timer = GetGameTimer();
+
+      while (GetGameTimer() - timer < ms)
+      {
+        Game.DisableControlThisFrame(0, Control.FrontendCancel); //ESC
+        Game.DisableControlThisFrame(0, Control.FrontendPauseAlternate); //ESC
+        Game.DisableControlThisFrame(0, Control.ReplayToggleTimeline); //ESC
+        Game.DisableControlThisFrame(0, Control.PhoneCancel); //ESC
+        await BaseScript.Delay(0);
+      }
+    }
   }
 }

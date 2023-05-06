@@ -93,7 +93,7 @@ namespace OriginFrameworkServer
         if (boots != null)
           startingItems.Add(boots.ItemId, 1);
         await InventoryServer.GiveCharStartingItems(character.Id, startingItems);
-        await InventoryServer.GiveCharIdentityCard(character.Id, 20, (uint)character.Model, character.Skin);
+        await InventoryServer.GiveCharIdentityCard(character, 20, (uint)character.Model, character.Skin);
         await VSql.ExecuteAsync("update `character` set `is_new` = 0 where `id` = @charId", new Dictionary<string, object>() { { "@charId", character.Id } });
       }
       LoggedPlayers[oid.OID] = character;

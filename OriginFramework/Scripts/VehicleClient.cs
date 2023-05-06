@@ -115,19 +115,19 @@ namespace OriginFramework
 
       if (string.IsNullOrEmpty(properties))
       {
-        Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: no properties sent");
+        //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: no properties sent");
         return;
       }
 
       if (vehNetId == 0 || !NetworkDoesEntityExistWithNetworkId(vehNetId))
       {
-        Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: invalid vehicle network id");
+        //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: invalid vehicle network id");
         return;
       }
 
       if (Game.Player.Handle != NetworkGetEntityOwner(NetToVeh(vehNetId)))
       {
-        Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: Iam not entity owner");
+        //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: Iam not entity owner");
         return;
       }
 

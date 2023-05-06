@@ -12,6 +12,10 @@ namespace OriginFrameworkData.DataBags
 		public int Id { get; set; }
 		public string UserIdentifier { get; set; }
 		public string Name { get; set; }
+		public DateTime Born { get; set; } = new DateTime(2000, 1, 1);
+		public int JobId { get; set; } = 0;
+		public int JobGrade { get; set; } = 0;
+		public int LoreId { get; set; } = 0;
 		public int Model { get; set; }
 		public int AdminLevel { get; set; }
 		public PlayerPosBag LastKnownPos { get; set; }
@@ -39,7 +43,11 @@ namespace OriginFrameworkData.DataBags
 				UserIdentifier = Convert.ToString(row["user_identifier"]),
 				Name = Convert.ToString(row["name"]),
 				AdminLevel = Convert.ToInt32(row["admin_level"]),
-				IsNew = Convert.ToBoolean(row["is_new"])
+				IsNew = Convert.ToBoolean(row["is_new"]),
+				Born = Convert.ToDateTime(row["born"]),
+				JobId = Convert.ToInt32(row["job_id"]),
+				JobGrade = Convert.ToInt32(row["job_grade"]),
+				LoreId = Convert.ToInt32(row["lore_id"]),
 			};
 
 			if (row.ContainsKey("organization_id") && row["organization_id"] != null && row["organization_id"] != DBNull.Value)

@@ -688,10 +688,28 @@ namespace OriginFrameworkData.DataBags
       _items[20] = new ItemDefinition
       {
         ItemId = 20,
-        Name = "Id karta",
-        Texture = "crate",
+        Name = "Řidičský průkaz",
+        Texture = "item_card_driver",
         StackSize = 1,
-        Color = new InventoryColor(0, 150, 150, 0),
+        Color = new InventoryColor(0, 255, 255, 255),
+        UsableType = eUsableType.IdentityCard
+      };
+      _items[21] = new ItemDefinition
+      {
+        ItemId = 21,
+        Name = "Průkaz policisty",
+        Texture = "item_card_police",
+        StackSize = 1,
+        Color = new InventoryColor(0, 255, 255, 255),
+        UsableType = eUsableType.IdentityCard
+      };
+      _items[22] = new ItemDefinition
+      {
+        ItemId = 22,
+        Name = "Zbrojní průkaz",
+        Texture = "item_card_weapon",
+        StackSize = 1,
+        Color = new InventoryColor(0, 255, 255, 255),
         UsableType = eUsableType.IdentityCard
       };
       #endregion

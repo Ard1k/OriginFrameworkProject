@@ -80,7 +80,7 @@ namespace OriginFramework
       if (!Login.IsInLoginScreen && !CharacterCreator.IsInCharacterCreator && LoggedCharacter == null)
       {
         Debug.WriteLine("force relogin client");
-        LoginSpawn();
+        await LoginSpawn();
         Login.ReturnToLogin();
         return;
       }
@@ -148,7 +148,8 @@ namespace OriginFramework
     [EventHandler("onClientMapStart")]
     private async void OnMapStart()
     {
-      LoginSpawn();
+      await LoginSpawn();
+      await Delay(1000);
       Login.ReturnToLogin();
     }
 
@@ -174,7 +175,7 @@ namespace OriginFramework
     {
       Notify.Error("Chyba synchronizace se serverem!");
 
-      LoginSpawn();
+      await LoginSpawn();
       Login.ReturnToLogin();
       return;
     }
@@ -203,7 +204,7 @@ namespace OriginFramework
       }
     }
 
-    public async Task LoginSpawn(bool fadeOut = true)
+    public async Task LoginSpawn(bool fadeOut = true, bool returnToLogin = false)
     {
       if (spawnLock == true)
         return;
@@ -258,6 +259,9 @@ namespace OriginFramework
       }
 
       spawnLock = false;
+
+      if (returnToLogin)
+        Login.ReturnToLogin();
     }
 
     private static async Task<bool> SpawnLoggedCharacter(bool isFirstSpawn)

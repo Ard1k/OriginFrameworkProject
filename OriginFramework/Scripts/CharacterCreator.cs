@@ -7,6 +7,7 @@ using OriginFrameworkData;
 using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
@@ -122,11 +123,32 @@ namespace OriginFramework
               NameRight = NewCharacter.Name ?? "---",
               IsTextInput = true,
               TextInputMaxLength = 50,
-              TextInputRequest = "Zadejte jméno postavy",
+              TextInputRequest = "Zadejte jméno postavy - 2 nebo 3 slova začínající velkým písmenem",
               OnTextInput = (item, input) =>
                 {
                   NewCharacter.Name = input;
                   item.NameRight = NewCharacter.Name;
+                }
+            },
+            new NativeMenuItem
+            {
+              Name = "Datum narození",
+              NameRight = NewCharacter.Born.ToString("dd.MM.yyyy"),
+              IsTextInput = true,
+              TextInputMaxLength = 50,
+              TextInputRequest = "Zadejte datum narození",
+              OnTextInput = (item, input) =>
+                {
+                  DateTime dt;
+                  if (DateTime.TryParseExact(input, "d.M.yyyy", CultureInfo.InvariantCulture , DateTimeStyles.None, out dt))
+                  {
+                    NewCharacter.Born = dt;
+                    item.NameRight = NewCharacter.Born.ToString("dd.MM.yyyy");
+                  }
+                  else
+                  {
+                    Notify.Error("Neplatný formát");
+                  }
                 }
             },
             new NativeMenuItem
@@ -168,8 +190,7 @@ namespace OriginFramework
                 NativeMenuManager.UnlockMenu(charCreatorMenuName);
                 IsInCharacterCreator = false;
                 PedCam.EndCam();
-                CharacterCaretaker.Instance.LoginSpawn();
-                Login.ReturnToLogin();
+                CharacterCaretaker.Instance.LoginSpawn(true, true);
               }
             },
             new NativeMenuItem
