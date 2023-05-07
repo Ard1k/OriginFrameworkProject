@@ -14,6 +14,7 @@ namespace OriginFramework
   {
     public bool IsHudEnabled { get; protected set; }
     public int speed = 0;
+    public float rpm = 0f;
 
     private int calcX = 0, calcY = 0;
     private float x1 = 0f, y1 = 0f, x2 = 0f, y2 = 0f;
@@ -28,7 +29,6 @@ namespace OriginFramework
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
       Tick += OnTick;
-      Tick += OnMidTick;
       Tick += OnSlowTick;
     }
 
@@ -44,24 +44,20 @@ namespace OriginFramework
       await Delay(500);
     }
 
-    private async Task OnMidTick()
+    private async Task OnTick()
     {
       if (IsHudEnabled)
       {
         int veh = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
         if (veh > 0)
+        {
           speed = (int)Math.Floor(GetEntitySpeed(veh) * 3.6f / 1.609344f);
-      }
+          rpm = GetVehicleCurrentRpm(veh);
+        }
 
-      await Delay(100);
-    }
-
-    private async Task OnTick()
-    {
-      if (IsHudEnabled)
-      {
         DrawUtils.DrawRect2(x2 - 0.025f, y2 - 0.06f, x2, y2 - 0.03f, 0, 0, 0, 150);
-        TextUtils.DrawTextOnScreen(speed.ToString(), x2 - 0.002f, ((y2 - 0.03f) - 0.015f) - 0.35f / TextUtils.TextHalfHConst, 0.35f, CitizenFX.Core.UI.Alignment.Right);
+        DrawUtils.DrawRect2(x2 - 0.0025f, y2 - 0.03f - (0.03f * rpm), x2, y2 - 0.03f, 255, 255, 255, 150);
+        TextUtils.DrawTextOnScreen(speed.ToString(), x2 - 0.005f, ((y2 - 0.03f) - 0.015f) - 0.35f / TextUtils.TextHalfHConst, 0.35f, CitizenFX.Core.UI.Alignment.Right);
       }
     }
 
