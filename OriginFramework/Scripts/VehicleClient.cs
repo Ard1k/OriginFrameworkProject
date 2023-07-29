@@ -45,7 +45,7 @@ namespace OriginFramework
           return;
         }
 
-        int vehFront = Vehicles.GetVehicleInFront();
+        int vehFront = Vehicles.GetVehicleInFront(null);
         if (vehFront > 0)
         {
           DeleteEntity(ref vehFront);

@@ -121,6 +121,14 @@ namespace OriginFramework
                  false, false, 2, false, null, null, false);
     }
 
+    public static void DrawBoxMarker(Vector3 pos, Vector3 dim, float heading, int r, int g, int b, int a)
+    {
+      DrawMarker(43, pos.X, pos.Y, pos.Z - 0.2f, 0f, 0f, 0f, 0f, 0f, heading,
+                 dim.X, dim.Y, dim.Z / 3f, //jen tretinova vyska
+                 r, g, b, a,
+                 false, false, 2, false, null, null, false);
+    }
+
     public static bool IsInBoxMarkerFast(Vector3 playerPos, PosBag targetPos, DimensionsBag targetDim)
     {
       var targetVec = PosBagToVector3(targetPos);

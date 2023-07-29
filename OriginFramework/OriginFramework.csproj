@@ -149,6 +149,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>del "$(TargetDir)CitizenFX.Core.Client.dll" /q
-xcopy /s/y "$(TargetDir)*" "d:\@Server_data\ArdyDEV2\resources\[local]\ofw"</PostBuildEvent>
+xcopy /s/y "$(TargetDir)*" "d:\@Server_data\ArdyDEV2\resources\[local]\ofw"
+call "$(SolutionDir)startofw.bat"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>call "$(SolutionDir)stopofw.bat"</PreBuildEvent>
   </PropertyGroup>
 </Project>

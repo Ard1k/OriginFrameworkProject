@@ -10,6 +10,7 @@ using OriginFramework.Helpers;
 using OriginFramework.Menus;
 using OriginFrameworkData.DataBags;
 using static CitizenFX.Core.Native.API;
+using static OriginFramework.OfwFunctions;
 
 namespace OriginFramework.Scripts
 {
@@ -22,8 +23,10 @@ namespace OriginFramework.Scripts
     }
 
     public static int carryEntityNet = 0;
+    public static int forkliftEntityNet = 0;
     public static Dictionary<int, CarriableClientWorldItem> CarriableCache = new Dictionary<int, CarriableClientWorldItem>();
     public static CarriableClientWorldItem PickableCarryItem = null;
+    public static Vector3 forkliftRange = new Vector3(0.5f, 0.5f, 2f);
     private static bool _collectionChanging = false;
     private const float _renderDistSq = 2500f;
     private const float _pickupDistSq = 1.2f;
@@ -42,6 +45,7 @@ namespace OriginFramework.Scripts
 
       AddTextEntry("OFW_CARRYEX_PICK", $"~INPUT_PICKUP~ {FontsManager.FiraSansString}Zvednout předmět");
       AddTextEntry("OFW_CARRYEX_PUT", $"~INPUT_PICKUP~ {FontsManager.FiraSansString}Položit");
+      AddTextEntry("OFW_CARRYEX_CARTRUNKFORK", $"~INPUT_PICKUP~ {FontsManager.FiraSansString}Interakce s kufrem auta");
 
       Tick += OnSlowTick;
       Tick += OnTick;
@@ -61,7 +65,9 @@ namespace OriginFramework.Scripts
         return;
       }
 
-      var playerPos = Game.PlayerPed.Position;
+      bool isDrivingAnyVeh = Game.PlayerPed.CurrentVehicle != null;
+      bool isDrivinkForklift = Vehicles.IsPlayerDrivingForklift();
+      var pickCurrentPos = isDrivinkForklift ? GetForkliftLoadingPos(Game.PlayerPed.CurrentVehicle.Position, Game.PlayerPed.CurrentVehicle.ForwardVector) : Game.PlayerPed.Position;
       bool anyInRange = false;
       float closestDistSq = 99999f;
       bool pickableSet = false;
@@ -71,10 +77,12 @@ namespace OriginFramework.Scripts
         if (it.Value.entityId != null && !DoesEntityExist(it.Value.entityId.Value))
           it.Value.entityId = null;
 
-        float distSq = it.Value.Position.DistanceToSquared2D(playerPos);
+        float distSq = it.Value.Position.DistanceToSquared2D(pickCurrentPos);
         bool isInRange = distSq <= _renderDistSq;
         if (isInRange)
           anyInRange = true;
+
+        var itemDef = ItemsDefinitions.Items[it.Value.ItemId];
 
         if (!isInRange && it.Value.entityId != null)
         {
@@ -84,7 +92,6 @@ namespace OriginFramework.Scripts
         }
         else if (isInRange && it.Value.entityId == null)
         {
-          var itemDef = ItemsDefinitions.Items[it.Value.ItemId];
           int entityId = CreateObject(GetHashKey(itemDef.CarryInfo.PropName),
                                       it.Value.Position.X,
                                       it.Value.Position.Y,
@@ -98,10 +105,13 @@ namespace OriginFramework.Scripts
 
         if (distSq < _pickupDistSq)
         {
-          if (PickableCarryItem == null || distSq < closestDistSq)
+          if ((itemDef.CarryType == eItemCarryType.Forklift && isDrivinkForklift) || (itemDef.CarryType == eItemCarryType.Hands && !isDrivingAnyVeh))
           {
-            PickableCarryItem = it.Value;
-            pickableSet = true;
+            if (PickableCarryItem == null || distSq < closestDistSq)
+            {
+              PickableCarryItem = it.Value;
+              pickableSet = true;
+            }
           }
         }
 
@@ -123,34 +133,65 @@ namespace OriginFramework.Scripts
         TaskLeaveVehicle(Game.PlayerPed.Handle, Game.PlayerPed.CurrentVehicle.Handle, 0);
       }
 
-      if (carryEntityNet != 0)
+      bool isDrivinkForklift = Vehicles.IsPlayerDrivingForklift();
+
+      if (isDrivinkForklift)
+      {
+        var fork = Game.PlayerPed.CurrentVehicle;
+        //var targetPos = GetForkliftLoadingPos(fork.Position, fork.ForwardVector);
+        //DrawBoxMarker(targetPos, forkliftRange, fork.Heading, 255, 255, 0, 100);
+
+        int vehFront = Vehicles.GetVehicleInFront(fork.Handle);
+        bool isCarLocked = GetVehicleDoorsLockedForPlayer(vehFront, Game.PlayerPed.Handle);
+        bool isNearTrunk = Vehicles.IsEntityCloseToTrunk(fork.Handle, vehFront);
+
+        if (vehFront > 0 && !isCarLocked && !InventoryManager.IsInventoryOpen)
+        {
+          if (isNearTrunk)
+          {
+            DisplayHelpTextThisFrame("OFW_CARRYEX_CARTRUNKFORK", true);
+
+            if (IsControlJustPressed(0, 38) || IsDisabledControlJustPressed(0, 38))
+            {
+              InventoryManager.OpenForkliftInventory(vehFront, fork.Handle);
+            }
+
+            return; //Jsem u kufru, chci prebit moznost polozit/zvedat
+          }
+        }
+      }
+
+      if (carryEntityNet != 0 || forkliftEntityNet != 0)
       {
         DisplayHelpTextThisFrame("OFW_CARRYEX_PUT", true);
 
-        DisableControlAction(0, 68, true); //disable sprint
-        DisableControlAction(0, 70, true); //disable sprint
-        DisableControlAction(0, 91, true); //disable sprint
-        DisableControlAction(0, 114, true); // disable sprint
-        DisableControlAction(0, 347, true); //disable sprint
+        if (!isDrivinkForklift)
+        {
+          DisableControlAction(0, 68, true); //disable sprint
+          DisableControlAction(0, 70, true); //disable sprint
+          DisableControlAction(0, 91, true); //disable sprint
+          DisableControlAction(0, 114, true); // disable sprint
+          DisableControlAction(0, 347, true); //disable sprint
 
-        DisableControlAction(0, 21, true); //disable sprint
-        DisableControlAction(0, 24, true); //disable attack
-        DisableControlAction(0, 25, true); //disable aim
-        DisableControlAction(0, 47, true); //disable weapon
-        DisableControlAction(0, 58, true); //disable weapon
-        DisableControlAction(0, 263, true); //disable melee
-        DisableControlAction(0, 264, true); //disable melee
-        DisableControlAction(0, 257, true); //disable melee
-        DisableControlAction(0, 140, true); //disable melee
-        DisableControlAction(0, 141, true); //disable melee
-        DisableControlAction(0, 142, true); //disable melee
-        DisableControlAction(0, 143, true); //disable melee
+          DisableControlAction(0, 21, true); //disable sprint
+          DisableControlAction(0, 24, true); //disable attack
+          DisableControlAction(0, 25, true); //disable aim
+          DisableControlAction(0, 47, true); //disable weapon
+          DisableControlAction(0, 58, true); //disable weapon
+          DisableControlAction(0, 263, true); //disable melee
+          DisableControlAction(0, 264, true); //disable melee
+          DisableControlAction(0, 257, true); //disable melee
+          DisableControlAction(0, 140, true); //disable melee
+          DisableControlAction(0, 141, true); //disable melee
+          DisableControlAction(0, 142, true); //disable melee
+          DisableControlAction(0, 143, true); //disable melee
 
-        DisableControlAction(0, 22, true); //disable jump
+          DisableControlAction(0, 22, true); //disable jump
+        }
 
         if (IsControlJustPressed(0, 38) || IsDisabledControlJustPressed(0, 38))
         {
-          PutDownItem();
+          PutDownItem(isDrivinkForklift);
         }
       }
 
@@ -160,7 +201,7 @@ namespace OriginFramework.Scripts
 
         if (IsControlJustPressed(0, 38) || IsDisabledControlJustPressed(0, 38))
         {
-          PickUpItem();
+          PickUpItem(isDrivinkForklift);
         }
       }
     }
@@ -169,46 +210,115 @@ namespace OriginFramework.Scripts
     {
       await Delay(200);
       var handsIt = InventoryManager.PlayerInventoryCache?.Items?.Where(it => it.X == -1 && it.Y == 100).FirstOrDefault();
-      if (handsIt != null && carryEntityNet == 0)
+      
+      if (handsIt != null && carryEntityNet != 0 && (!NetworkDoesNetworkIdExist(carryEntityNet) || !NetworkDoesEntityExistWithNetworkId(carryEntityNet)))
       {
-        await SetItemCarry(ItemsDefinitions.Items[handsIt.ItemId]);
+        carryEntityNet = 0;
+      }
+      else if (handsIt != null && carryEntityNet == 0)
+      {
+        await SetItemCarry(ItemsDefinitions.Items[handsIt.ItemId], false);
       }
       else if (handsIt == null && carryEntityNet != 0)
       {
         if (!NetworkDoesNetworkIdExist(carryEntityNet) || !NetworkDoesEntityExistWithNetworkId(carryEntityNet))
         {
           carryEntityNet = 0;
-          return;
         }
-        var carryEntity = NetworkGetEntityFromNetworkId(carryEntityNet);
+        else
+        {
+          var carryEntity = NetworkGetEntityFromNetworkId(carryEntityNet);
 
-        DeleteObject(ref carryEntity);
-        carryEntityNet = 0;
-        ClearPedTasksImmediately(Game.PlayerPed.Handle);
+          DeleteObject(ref carryEntity);
+          carryEntityNet = 0;
+          ClearPedTasksImmediately(Game.PlayerPed.Handle);
+        }
       }
       else if (handsIt != null && carryEntityNet != 0)
       {
         if (!IsEntityPlayingAnim(Game.PlayerPed.Handle, ItemsDefinitions.Items[handsIt.ItemId].CarryInfo.CarryAnim, "idle", 3))
           TaskPlayAnim(Game.PlayerPed.Handle, ItemsDefinitions.Items[handsIt.ItemId].CarryInfo.CarryAnim, "idle", 4.0f, 1.0f, -1, 49, 0f, false, false, false);
       }
+
+      bool isDrivinkForklift = Vehicles.IsPlayerDrivingForklift();
+      if (isDrivinkForklift && InventoryManager.ForkliftInventoryCache == null)
+      {
+        //sem v jesterce, ale nemam cache
+        TriggerServerEvent("ofw_inventory:ReloadForkliftCacheInventory", GetVehicleNumberPlateText(Game.PlayerPed.CurrentVehicle.Handle));
+        return;
+      }
+      else if (!isDrivinkForklift && InventoryManager.ForkliftInventoryCache != null)
+      {
+        if (forkliftEntityNet != 0)
+          PutDownItem(true); //zkusime polozit, je tezky sledovat entitu kdyz v tom nesedim tak, aby se to nedojebalo
+        //nesedim v jesterce a je cache, tak to smaznu
+        InventoryManager.ForkliftInventoryCache = null;
+        return;
+      }
+      
+      //ridim jesterku a i vim, jestli tam neco je
+      var forkIt = InventoryManager.ForkliftInventoryCache?.Items?.Where(it => it.X == 0 && it.Y == 0).FirstOrDefault();
+
+      if (forkIt != null && forkliftEntityNet != 0 && (!NetworkDoesNetworkIdExist(forkliftEntityNet) || !NetworkDoesEntityExistWithNetworkId(forkliftEntityNet)))
+      {
+        forkliftEntityNet = 0;
+      }
+      else if (forkIt != null && forkliftEntityNet == 0)
+      {
+        await SetItemCarry(ItemsDefinitions.Items[forkIt.ItemId], true);
+      }
+      else if (forkIt == null && forkliftEntityNet != 0)
+      {
+        if (!NetworkDoesNetworkIdExist(forkliftEntityNet) || !NetworkDoesEntityExistWithNetworkId(forkliftEntityNet))
+        {
+          forkliftEntityNet = 0;
+        }
+        else
+        {
+          var forkEntity = NetworkGetEntityFromNetworkId(forkliftEntityNet);
+
+          DeleteObject(ref forkEntity);
+          forkliftEntityNet = 0;
+        }
+      }
+      
     }
 
-    private async Task SetItemCarry(ItemDefinition itDef)
+    private async Task SetItemCarry(ItemDefinition itDef, bool isForklift)
     {
-      if (itDef.CarryType != eItemCarryType.Hands || itDef.CarryInfo == null)
+      if (itDef.CarryInfo == null)
         return;
 
-      await LoadAnimDict(itDef.CarryInfo.CarryAnim);
-      TaskPlayAnim(Game.PlayerPed.Handle, itDef.CarryInfo.CarryAnim, "idle", 4.0f, 1.0f, -1, 49, 0f, false, false, false);
-      int carryEntity = CreateObject(GetHashKey(itDef.CarryInfo.PropName), 0f, 0f, 0f, true, false, false);
-      SetEntityCollision(carryEntity, false, false);
+      if (itDef.CarryType == eItemCarryType.Hands && !isForklift)
+      {
+        await LoadAnimDict(itDef.CarryInfo.CarryAnim);
+        TaskPlayAnim(Game.PlayerPed.Handle, itDef.CarryInfo.CarryAnim, "idle", 4.0f, 1.0f, -1, 49, 0f, false, false, false);
+        int carryEntity = CreateObject(GetHashKey(itDef.CarryInfo.PropName), 0f, 0f, 0f, true, false, false);
+        SetEntityCollision(carryEntity, false, false);
 
-      AttachEntityToEntity(carryEntity, Game.PlayerPed.Handle, GetPedBoneIndex(Game.PlayerPed.Handle, itDef.CarryInfo.PedBoneId),
-        itDef.CarryInfo.XPos, itDef.CarryInfo.YPos, itDef.CarryInfo.ZPos,
-        itDef.CarryInfo.XRot, itDef.CarryInfo.YRot, itDef.CarryInfo.ZRot,
-        true, true, false, true, 1, true);
+        AttachEntityToEntity(carryEntity, Game.PlayerPed.Handle, GetPedBoneIndex(Game.PlayerPed.Handle, itDef.CarryInfo.PedBoneId),
+          itDef.CarryInfo.XPos, itDef.CarryInfo.YPos, itDef.CarryInfo.ZPos,
+          itDef.CarryInfo.XRot, itDef.CarryInfo.YRot, itDef.CarryInfo.ZRot,
+          true, true, false, true, 1, true);
 
-      carryEntityNet = ObjToNet(carryEntity);
+        carryEntityNet = ObjToNet(carryEntity);
+      }
+
+      if (itDef.CarryType == eItemCarryType.Forklift && isForklift)
+      {
+        int forkEntity = CreateObject(GetHashKey(itDef.CarryInfo.PropName), 0f, 0f, 0f, true, false, false);
+        SetEntityCollision(forkEntity, false, false);
+        AttachEntityToEntity(forkEntity, Game.PlayerPed.CurrentVehicle.Handle, GetEntityBoneIndexByName(Game.PlayerPed.CurrentVehicle.Handle, itDef.CarryInfo.EntityBoneName),
+          itDef.CarryInfo.XPos, itDef.CarryInfo.YPos, itDef.CarryInfo.ZPos,
+          itDef.CarryInfo.XRot, itDef.CarryInfo.YRot, itDef.CarryInfo.ZRot,
+          true, true, false, true, 1, true);
+        forkliftEntityNet = ObjToNet(forkEntity);
+      }
+    }
+
+    public Vector3 GetForkliftLoadingPos(Vector3 forkliftPos, Vector3 fwdVect)
+    {
+      return forkliftPos + fwdVect * 2f + new Vector3(0f, 0f, -0.6f);
     }
 
     private async Task LoadAnimDict(string anim)
@@ -220,35 +330,88 @@ namespace OriginFramework.Scripts
       }
     }
 
-    public void PutDownItem()
+    public void PutDownItem(bool isForklift)
     {
-      var carryEntity = NetToObj(carryEntityNet);
-
-      Vector3 itemCoords = GetEntityCoords(carryEntity, false);
-      Vector3 itemRot = GetEntityRotation(carryEntity, 0);
-      
-      float groundZ = itemCoords.Z;
-      bool isGround = GetGroundZFor_3dCoord(itemCoords.X, itemCoords.Y, itemCoords.Z, ref groundZ, false);
-      var handsIt = InventoryManager.PlayerInventoryCache?.Items?.Where(it => it.X == -1 && it.Y == 100).FirstOrDefault();
-
-      if (isGround && handsIt != null)
+      Debug.WriteLine("fork");
+      if (isForklift)
       {
-        TriggerServerEvent("ofw_carry:PutDownItem", handsIt.Id, JsonConvert.SerializeObject(new PosBag(itemCoords.X, itemCoords.Y, groundZ + 0.01f, itemRot.Z)));
-      }
-    }
+        var forkEntity = NetToObj(forkliftEntityNet);
 
-    public void PickUpItem()
-    {
-      int? invItemId = PickableCarryItem?.InvItemId;
-      var handsIt = InventoryManager.PlayerInventoryCache?.Items?.Where(it => it.X == -1 && it.Y == 100).FirstOrDefault();
+        Vector3 itemCoords = GetEntityCoords(forkEntity, false);
+        Vector3 itemRot = GetEntityRotation(forkEntity, 0);
 
-      if (invItemId != null && handsIt == null)
-      {
-        TriggerServerEvent("ofw_carry:PickUpItem", invItemId.Value);
+        float groundZ = itemCoords.Z;
+        bool isGround = GetGroundZFor_3dCoord(itemCoords.X, itemCoords.Y, itemCoords.Z, ref groundZ, false);
+        if (!isGround)
+        {
+          //paleta se casto muze bugovat, tak ji zkusime prizvednou nez ji slamnem na zem
+          groundZ = groundZ + 1f;
+          isGround = GetGroundZFor_3dCoord(itemCoords.X, itemCoords.Y, itemCoords.Z + 1f, ref groundZ, false);
+        }
+        var forkIt = InventoryManager.ForkliftInventoryCache?.Items?.Where(it => it.X == 0 && it.Y == 0).FirstOrDefault();
+
+        if (isGround && forkIt != null)
+        {
+          TriggerServerEvent("ofw_carry:PutDownItem", forkIt.Id, JsonConvert.SerializeObject(new PosBag(itemCoords.X, itemCoords.Y, groundZ + 0.01f, itemRot.Z)), true, InventoryManager.ForkliftInventoryCache.Place);
+        }
+
+        if (!isGround)
+        {
+          Notify.Alert("Nerovná zem, nelze položit");
+        }
       }
       else
       {
-        Notify.Alert("Máš plné ruce");
+        var carryEntity = NetToObj(carryEntityNet);
+
+        Vector3 itemCoords = GetEntityCoords(carryEntity, false);
+        Vector3 itemRot = GetEntityRotation(carryEntity, 0);
+
+        float groundZ = itemCoords.Z;
+        bool isGround = GetGroundZFor_3dCoord(itemCoords.X, itemCoords.Y, itemCoords.Z, ref groundZ, false);
+        var handsIt = InventoryManager.PlayerInventoryCache?.Items?.Where(it => it.X == -1 && it.Y == 100).FirstOrDefault();
+
+        if (isGround && handsIt != null)
+        {
+          TriggerServerEvent("ofw_carry:PutDownItem", handsIt.Id, JsonConvert.SerializeObject(new PosBag(itemCoords.X, itemCoords.Y, groundZ + 0.01f, itemRot.Z)), false);
+        }
+
+        if (!isGround)
+        {
+          Notify.Alert("Nerovná zem, nelze položit");
+        }
+      }
+    }
+
+    public void PickUpItem(bool isForklift)
+    {
+      int? invItemId = PickableCarryItem?.InvItemId;
+
+      if (isForklift)
+      {
+        var forkIt = InventoryManager.ForkliftInventoryCache?.Items?.Where(it => it.X == 0 && it.Y == 0).FirstOrDefault();
+
+        if (invItemId != null && forkIt == null)
+        {
+          TriggerServerEvent("ofw_carry:PickUpItem", invItemId.Value, true, InventoryManager.ForkliftInventoryCache.Place);
+        }
+        else
+        {
+          Notify.Alert("Máš plné ruce");
+        }
+      }
+      else
+      {
+        var handsIt = InventoryManager.PlayerInventoryCache?.Items?.Where(it => it.X == -1 && it.Y == 100).FirstOrDefault();
+
+        if (invItemId != null && handsIt == null)
+        {
+          TriggerServerEvent("ofw_carry:PickUpItem", invItemId.Value, false);
+        }
+        else
+        {
+          Notify.Alert("Máš plné ruce");
+        }
       }
     }
 

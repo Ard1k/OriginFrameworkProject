@@ -12,18 +12,25 @@ namespace OriginFramework
 {
   internal class Vehicles
   {
-    public static int GetVehicleInFront()
+    public static int GetVehicleInFront(int? entity)
     {
-      Vector3 entityWorld = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0f, 4.0f, 0.0f);
-      int rayHandle = CastRayPointToPoint(Game.PlayerPed.Position.X, Game.PlayerPed.Position.Y, Game.PlayerPed.Position.Z, entityWorld.X, entityWorld.Y, entityWorld.Z, 2, Game.PlayerPed.Handle, 0);
+      Vector3 entityWorld = GetOffsetFromEntityInWorldCoords(entity ?? PlayerPedId(), 0.0f, 4.0f, 0.0f);
+      Vector3 entityCoords = GetEntityCoords(entity ?? PlayerPedId(), false);
+      int rayHandle = CastRayPointToPoint(entityCoords.X, entityCoords.Y, entityCoords.Z, entityWorld.X, entityWorld.Y, entityWorld.Z, 2, entity ?? Game.PlayerPed.Handle, 0);
       int entityHitResult = 0;
       bool wasHit = false;
       Vector3 endCoordsResult = new Vector3(), surfaceResult = new Vector3();
       int result = GetRaycastResult(rayHandle, ref wasHit, ref endCoordsResult, ref surfaceResult, ref entityHitResult);
+      //DrawLine(Game.PlayerPed.Position.X, Game.PlayerPed.Position.Y, Game.PlayerPed.Position.Z, entityWorld.X, entityWorld.Y, entityWorld.Z, wasHit ? 255 : 0, wasHit ? 0 : 255, 0, 255);
       return entityHitResult;
     }
 
     public static bool IsPedCloseToTrunk(int veh)
+    {
+      return IsEntityCloseToTrunk(null, veh);
+    }
+
+    public static bool IsEntityCloseToTrunk(int? entity, int veh)
     {
       var coords = GetEntityCoords(veh, false);
       Vector3 min = new Vector3(), max = new Vector3();
@@ -32,7 +39,7 @@ namespace OriginFramework
 
       var trunkPos = coords + new Vector3((float)Math.Cos((Math.PI / 180) * heading), (float)Math.Sin((Math.PI / 180) * heading), 0.0f) * Math.Abs(min.Y);
 
-      if (Vector3.Distance(Game.PlayerPed.Position, trunkPos) <= 1.2f)
+      if (Vector3.Distance(entity != null ? GetEntityCoords((int)entity, false) : Game.PlayerPed.Position, trunkPos) <= (entity != null ? 4f : 1.2f))
         return true;
       else
         return false;
@@ -197,6 +204,11 @@ namespace OriginFramework
       }
 
       if (props.tyreSmokeColor != null) SetVehicleTyreSmokeColor(vehicleId, props.tyreSmokeColor[0], props.tyreSmokeColor[1], props.tyreSmokeColor[2]);
+    }
+
+    public static bool IsPlayerDrivingForklift()
+    {
+      return Game.PlayerPed.CurrentVehicle != null && Game.PlayerPed.CurrentVehicle.Model.Hash == 1491375716 && GetPedInVehicleSeat(Game.PlayerPed.CurrentVehicle.Handle, -1) == Game.PlayerPed.Handle;
     }
   }
 }

@@ -661,6 +661,9 @@ namespace OriginFrameworkServer
           return "Sem se předmět nevejde";
       }
 
+      if (targetPlace.StartsWith("fork_") && ItemsDefinitions.Items[srcItem.ItemId].CarryType != eItemCarryType.Forklift)
+        return "Tohle na ještěrku nedáš";
+
       if (count > srcItem.Count)
         count = srcItem.Count;
 
@@ -719,6 +722,9 @@ namespace OriginFrameworkServer
           return "Sem se předmět nevejde";
       }
 
+      if (targetPlace.StartsWith("fork_") && ItemsDefinitions.Items[srcItem.ItemId].CarryType != eItemCarryType.Forklift)
+        return "Tohle na ještěrku nedáš";
+
       if (targetItem == null) //move
       {
         var param = new Dictionary<string, object>();
@@ -767,7 +773,7 @@ namespace OriginFrameworkServer
     #endregion
 
     [EventHandler("ofw_inventory:ReloadInventory")]
-    private async void ReloadInventory([FromSource] Player source, string rightInvPlace)
+    private async void ReloadInventory([FromSource] Player source, string rightInvPlace, string leftInvPlace)
     {
       if (source == null)
         return;
@@ -781,11 +787,59 @@ namespace OriginFrameworkServer
 
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
-        var inv = await FetchInventory(PlayerOIDToPlace(oid));
+        InventoryBag leftInv = null;
+        if (leftInvPlace != null)
+          leftInv = await FetchInventory(leftInvPlace);
+        else
+          leftInv = await FetchInventory(PlayerOIDToPlace(oid));
+
         InventoryBag rightInv = null;
         if (!string.IsNullOrEmpty(rightInvPlace))
           rightInv = await FetchInventory(rightInvPlace);
-        source.TriggerEvent("ofw_inventory:InventoryLoaded", JsonConvert.SerializeObject(inv), JsonConvert.SerializeObject(rightInv));
+
+        source.TriggerEvent("ofw_inventory:InventoryLoaded", JsonConvert.SerializeObject(leftInv), JsonConvert.SerializeObject(rightInv), false);
+      }
+    }
+
+    [EventHandler("ofw_inventory:ReloadPlayerCacheInventory")]
+    private async void ReloadPlayerCacheInventory([FromSource] Player source)
+    {
+      if (source == null)
+        return;
+
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        InventoryBag leftInv = await FetchInventory(PlayerOIDToPlace(oid));
+
+        source.TriggerEvent("ofw_inventory:InventoryLoaded", JsonConvert.SerializeObject(leftInv), null, true);
+      }
+    }
+
+    [EventHandler("ofw_inventory:ReloadForkliftCacheInventory")]
+    private async void ReloadForkliftCacheInventory([FromSource] Player source, string lp)
+    {
+      if (source == null || lp == null)
+        return;
+
+      var oid = OIDServer.GetOriginServerID(source);
+      if (oid == null)
+      {
+        source.Drop("Nepodařilo se získat identifikátory uživatele!");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        InventoryBag leftInv = await FetchInventory($"fork_{lp}");
+
+        source.TriggerEvent("ofw_inventory:InventoryLoaded", JsonConvert.SerializeObject(leftInv), null, true);
       }
     }
 
@@ -1288,6 +1342,44 @@ namespace OriginFrameworkServer
       }
     }
 
+    public static async void CarriableForkliftPutDown(Player player, int invItemId, string place, PosBag posBag, Action<Player, string> OnError)
+    {
+      if (_scriptInstance == null)
+      {
+        OnError(player, "Server instance error");
+        return;
+      }
+
+      var posBagString = JsonConvert.SerializeObject(posBag);
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var srcItem = await _scriptInstance.FetchItem(invItemId, place);
+
+        if (srcItem == null || srcItem.X != 0 || srcItem.Y != 0)
+        {
+          OnError(player, "Tenhle předmět nemáš na vidlích");
+        }
+
+        var metadata = new List<string>();
+        if (srcItem.Metadata != null && srcItem.Metadata.Length > 0)
+          metadata.AddRange(srcItem.Metadata);
+
+        if (metadata.Any(m => m != null && m.StartsWith("_posbag:")))
+          metadata.Remove(metadata.Where(m => m != null && m.StartsWith("_posbag:")).First());
+
+        metadata.Add("_posbag:" + posBagString);
+        var metadataString = string.Join("|", metadata);
+
+        var param = new Dictionary<string, object>();
+        param.Add("@id", invItemId);
+        param.Add("@metadata", metadataString);
+        await VSql.ExecuteAsync($" update `inventory_item` set `place` = 'freeobject', `metadata` = @metadata where `id` = @id; ", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place);
+        CarryServer.AddCarriableToCache(srcItem.Id, srcItem.ItemId, posBag);
+      }
+    }
+
     public static async void CarriablePickUp(Player player, int invItemId, string targetPlace, Action<Player, string> OnError)
     {
       if (_scriptInstance == null)
@@ -1326,6 +1418,49 @@ namespace OriginFrameworkServer
         param.Add("@metadata", metadataString);
         param.Add("@targetPlace", targetPlace);
         await VSql.ExecuteAsync($" update `inventory_item` set `place` = @targetPlace, `x` = -1, `y` = 100, `metadata` = @metadata where `id` = @id; ", param);
+        BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", targetPlace);
+        CarryServer.RemoveCarriableFromCache(srcItem.Id);
+      }
+    }
+
+    public static async void CarriableForkliftPickUp(Player player, int invItemId, string targetPlace, Action<Player, string> OnError)
+    {
+      if (_scriptInstance == null)
+      {
+        OnError(player, "Server instance error");
+        return;
+      }
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var srcItem = await _scriptInstance.FetchItem(invItemId, "freeobject");
+
+        if (srcItem == null)
+        {
+          OnError(player, "Neznámý předmět");
+        }
+
+        var targetItem = await _scriptInstance.FetchItem(targetPlace, 0, 0);
+
+        if (targetItem != null)
+        {
+          OnError(player, "Na vidlích už něco je");
+        }
+
+        var metadata = new List<string>();
+        if (srcItem.Metadata != null && srcItem.Metadata.Length > 0)
+          metadata.AddRange(srcItem.Metadata);
+
+        if (metadata.Any(m => m != null && m.StartsWith("_posbag:")))
+          metadata.Remove(metadata.Where(m => m != null && m.StartsWith("_posbag:")).First());
+
+        var metadataString = string.Join("|", metadata);
+
+        var param = new Dictionary<string, object>();
+        param.Add("@id", invItemId);
+        param.Add("@metadata", metadataString);
+        param.Add("@targetPlace", targetPlace);
+        await VSql.ExecuteAsync($" update `inventory_item` set `place` = @targetPlace, `x` = 0, `y` = 0, `metadata` = @metadata where `id` = @id; ", param);
         BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", targetPlace);
         CarryServer.RemoveCarriableFromCache(srcItem.Id);
       }

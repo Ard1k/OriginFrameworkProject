@@ -15,6 +15,7 @@ namespace OriginFrameworkData.DataBags
     private int? _rowCountNormal = null;
     private int? _rowCountHands = null;
     private int? _rowCountForklift = null;
+    private int? _columnCountNormal = null;
     [JsonIgnore]
     public int RowCount 
     { 
@@ -48,6 +49,17 @@ namespace OriginFrameworkData.DataBags
         return _rowCountForklift.Value;
       }
     }
+    [JsonIgnore]
+    public int ColumnCount
+    {
+      get
+      {
+        if (_columnCountNormal == null)
+          _columnCountNormal = PlaceToColumnCount(Place, eItemCarryType.Inventory);
+
+        return _columnCountNormal.Value;
+      }
+    }
     public List<InventoryItemBag> Items { get; set; } = new List<InventoryItemBag>();
 
     [JsonIgnore]
@@ -68,13 +80,16 @@ namespace OriginFrameworkData.DataBags
 
     public static int PlaceToRowCount(string place, eItemCarryType carryType)
     {
-      if (carryType != eItemCarryType.Inventory && !place.StartsWith("trunk_"))
-        return 0;
-
       if (string.IsNullOrEmpty(place))
         return 0;
+
+      if (carryType != eItemCarryType.Inventory && !place.StartsWith("trunk_") && !place.StartsWith("fork_"))
+        return 0;
+
       if (place.StartsWith("char_"))
         return 5;
+      if (place.StartsWith("fork_"))
+        return 1;
       if (place.StartsWith("world_"))
         return 10;
       if (place.StartsWith("trunk_"))
@@ -94,6 +109,17 @@ namespace OriginFrameworkData.DataBags
       return 0;
     }
 
+    public static int PlaceToColumnCount(string place, eItemCarryType carryType)
+    {
+      if (string.IsNullOrEmpty(place))
+        return 0;
+
+      if (place.StartsWith("fork_"))
+        return 1;
+
+      return 5;
+    }
+
     public static string GetPlaceName(string place)
     {
       if (string.IsNullOrEmpty(place))
@@ -109,6 +135,8 @@ namespace OriginFrameworkData.DataBags
       }
       if (place.StartsWith("glovebox_"))
         return $"Přihrádka {place.Substring(9)}";
+      if (place.StartsWith("fork_"))
+        return $"Ještěrka {place.Substring(5)}";
 
       return "---";
     }
@@ -128,6 +156,7 @@ namespace OriginFrameworkData.DataBags
       x = 0;
       y = 0;
       int rowCnt = RowCount;
+      int colCnt = ColumnCount;
       slot = null;
 
       if (item_id > 0)
@@ -139,7 +168,7 @@ namespace OriginFrameworkData.DataBags
 
       for (int j = 0; rowCnt < 0 || j < rowCnt; j++)
       {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < colCnt; i++)
         {
           if (!Items.Any(it => it.X == i && it.Y == j))
           {
@@ -308,6 +337,7 @@ namespace OriginFrameworkData.DataBags
     public string PropName { get; set; }
     public string CarryAnim { get; set; }
     public int PedBoneId { get; set; }
+    public string EntityBoneName { get; set; } //forklift only
     public float XPos { get; set; }
     public float YPos { get; set; }
     public float ZPos { get; set; }
@@ -684,6 +714,19 @@ namespace OriginFrameworkData.DataBags
         StackSize = 1,
         Color = new InventoryColor(0, 150, 0, 0),
         CarryType = eItemCarryType.Forklift,
+        CarryInfo = new InventoryCarryInfo
+        {
+          PropName = "prop_box_wood07a",
+          //CarryAnim = "anim@heists@box_carry@",
+          //PedBoneId = 60309,
+          EntityBoneName = "forks_attach",
+          XPos = 0.0f,
+          YPos = 0.0f,
+          ZPos = 0.0f,
+          XRot = 0.0f,
+          YRot = 0.0f,
+          ZRot = 0.0f
+        }
       };
       _items[20] = new ItemDefinition
       {

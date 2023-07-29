@@ -69,9 +69,9 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_carry:PutDownItem")]
-    private async void PutDownItem([FromSource] Player source, int invItemId, string posBagString)
+    private async void PutDownItem([FromSource] Player source, int invItemId, string posBagString, bool isForklift, string sourcePlace)
     {
-      if (source == null)
+      if (source == null || (isForklift && sourcePlace == null))
         return;
 
       var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(source);
@@ -89,20 +89,34 @@ namespace OriginFrameworkServer
 
       var posBag = JsonConvert.DeserializeObject<PosBag>(posBagString);
 
-      InventoryServer.CarriablePutDown(source, invItemId, $"char_{character.Id}", posBag, (player, error) =>
+      if (isForklift)
       {
-        if (error != null)
+        InventoryServer.CarriableForkliftPutDown(source, invItemId, sourcePlace, posBag, (player, error) =>
         {
-          player.TriggerEvent("ofw:ValidationErrorNotification", error);
-          return;
-        }
-      });
+          if (error != null)
+          {
+            player.TriggerEvent("ofw:ValidationErrorNotification", error);
+            return;
+          }
+        });
+      }
+      else
+      {
+        InventoryServer.CarriablePutDown(source, invItemId, $"char_{character.Id}", posBag, (player, error) =>
+        {
+          if (error != null)
+          {
+            player.TriggerEvent("ofw:ValidationErrorNotification", error);
+            return;
+          }
+        });
+      }
     }
 
     [EventHandler("ofw_carry:PickUpItem")]
-    private async void PutDownItem([FromSource] Player source, int invItemId)
+    private async void PickUpItem([FromSource] Player source, int invItemId, bool isForklift, string place)
     {
-      if (source == null)
+      if (source == null || (isForklift && place == null))
         return;
 
       var character = CharacterCaretakerServer.GetPlayerLoggedCharacter(source);
@@ -112,14 +126,28 @@ namespace OriginFrameworkServer
         return;
       }
 
-      InventoryServer.CarriablePickUp(source, invItemId, $"char_{character.Id}", (player, error) =>
+      if (isForklift)
       {
-        if (error != null)
+        InventoryServer.CarriableForkliftPickUp(source, invItemId, place, (player, error) =>
         {
-          player.TriggerEvent("ofw:ValidationErrorNotification", error);
-          return;
-        }
-      });
+          if (error != null)
+          {
+            player.TriggerEvent("ofw:ValidationErrorNotification", error);
+            return;
+          }
+        });
+      }
+      else
+      {
+        InventoryServer.CarriablePickUp(source, invItemId, $"char_{character.Id}", (player, error) =>
+        {
+          if (error != null)
+          {
+            player.TriggerEvent("ofw:ValidationErrorNotification", error);
+            return;
+          }
+        });
+      }
     }
 
     [EventHandler("ofw_carry:RequestCacheSync")]

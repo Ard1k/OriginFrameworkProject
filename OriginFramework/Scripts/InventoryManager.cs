@@ -19,6 +19,7 @@ namespace OriginFramework
   public class InventoryManager : BaseScript
   {
     public static InventoryBag PlayerInventoryCache { get; set; }
+    public static InventoryBag ForkliftInventoryCache { get; set; }
     private static int ScaleForm { get; set; } = -1;
     public bool IsWaiting { get; private set; } = false;
     public bool IsWaitingInput { get; set; } = false;
@@ -50,6 +51,7 @@ namespace OriginFramework
     InventoryBag RightInv = null;
     List<Vector3> groundMarkers = null;
     bool groundMarkersLocked = false;
+    bool isLeftInvPlayerType = false;
     float groundMarkersDistanceDraw = 10f;
 
     int rInvScrollOffset = 0;
@@ -122,7 +124,7 @@ namespace OriginFramework
 
           WeaponManager.UnequipWeapon();
 
-          int vehFront = Vehicles.GetVehicleInFront();
+          int vehFront = Vehicles.GetVehicleInFront(null);
           int pedVehicle = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
           bool isCarLocked = GetVehicleDoorsLockedForPlayer(vehFront, Game.PlayerPed.Handle);
           bool isNearTrunk = Vehicles.IsPedCloseToTrunk(vehFront);
@@ -147,7 +149,10 @@ namespace OriginFramework
           {
             //otevrit kaslik
             var lp = GetVehicleNumberPlateText(pedVehicle);
-            TriggerServerEvent("ofw_inventory:ReloadInventory", $"glovebox_{lp}");
+            if (Vehicles.IsPlayerDrivingForklift())
+              TriggerServerEvent("ofw_inventory:ReloadInventory", $"fork_{lp}");
+            else
+              TriggerServerEvent("ofw_inventory:ReloadInventory", $"glovebox_{lp}");
           }
           else
           {
@@ -242,8 +247,25 @@ namespace OriginFramework
 
     #region event handlers
     [EventHandler("ofw_inventory:InventoryLoaded")]
-    private void InventoryLoaded(string leftInventory, string rightInventory)
+    private void InventoryLoaded(string leftInventory, string rightInventory, bool isOnlyCacheUpdate)
     {
+      if (isOnlyCacheUpdate)
+      {
+        var invCache = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
+
+        if (invCache.Place == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}")
+        {
+          PlayerInventoryCache = invCache;
+          SkinManager.UpdateSkinFromInv(PlayerInventoryCache.Items);
+        }
+        else if (invCache.Place.StartsWith("fork_"))
+        {
+          ForkliftInventoryCache = invCache;
+        }
+
+        return;
+      }
+
       LeftInv = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
       RightInv = JsonConvert.DeserializeObject<InventoryBag>(rightInventory);
 
@@ -261,6 +283,12 @@ namespace OriginFramework
         PlayerInventoryCache = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
         SkinManager.UpdateSkinFromInv(PlayerInventoryCache.Items);
       }
+      else if (LeftInv.Place.StartsWith("fork_"))
+      {
+        ForkliftInventoryCache = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
+      }
+
+      isLeftInvPlayerType = LeftInv.Place.StartsWith("char") ? true : false;
       
       RecomputeMaxScrollOffsets();
       IsWaiting = false;
@@ -296,13 +324,19 @@ namespace OriginFramework
             (place2 != null && (LeftInv?.Place == place2 || RightInv?.Place == place2)))
         {
           IsWaiting = true;
-          TriggerServerEvent("ofw_inventory:ReloadInventory", RightInv?.Place ?? null);
+          TriggerServerEvent("ofw_inventory:ReloadInventory", RightInv?.Place ?? null, LeftInv?.Place);
         }
       }
       else if (place1 == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}" || place2 == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}")
       {
         //nepamatuju si kdy se to presne vola, ale kdyz se zmeni muj inv, tak si ho reloadnu
-        TriggerServerEvent("ofw_inventory:ReloadInventory", null);
+        TriggerServerEvent("ofw_inventory:ReloadPlayerCacheInventory");
+      }
+      else if (Vehicles.IsPlayerDrivingForklift())
+      {
+        var forkliftPlate = GetVehicleNumberPlateText(Game.PlayerPed.CurrentVehicle.Handle);
+        if (place1 == $"fork_{forkliftPlate}" || place2 == $"fork_{forkliftPlate}")
+          TriggerServerEvent("ofw_inventory:ReloadForkliftCacheInventory", forkliftPlate);
       }
     }
 
@@ -328,6 +362,20 @@ namespace OriginFramework
       
       IsInventoryOpen = false;
       CloseTooltip();
+    }
+    #endregion
+
+    #region public functions
+    public static void OpenForkliftInventory(int vehFront, int fork)
+    {
+      IsInventoryOpen = !IsInventoryOpen;
+      var lp = GetVehicleNumberPlateText(vehFront);
+      var vehClass = GetVehicleClass(vehFront);
+      var model = GetEntityModel(vehFront);
+
+      var lpFork = GetVehicleNumberPlateText(fork);
+
+      TriggerServerEvent("ofw_inventory:ReloadInventory", $"trunk_{lp}_{vehClass}_{model}", $"fork_{lpFork}");
     }
     #endregion
 
@@ -409,7 +457,7 @@ namespace OriginFramework
         cursorData.YGrid = yGrid;
         return;
       }
-      else if (DrawUtils.IsInBounds(leftInv2Bounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(leftInv2Bounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
+      else if (isLeftInvPlayerType && DrawUtils.IsInBounds(leftInv2Bounds, xRelative, yRelative) && DrawUtils.TryGetBoundsGridPosition(leftInv2Bounds, xRelative, yRelative, cellWidth, cellHeight, out xGrid, out yGrid))
       {
         cursorData.InvData = LeftInv;
         cursorData.HoverItem = LeftInv?.Items?.Where(it => it.X == -1 && it.Y == yGrid * 2 + xGrid).FirstOrDefault();
@@ -418,7 +466,7 @@ namespace OriginFramework
         cursorData.XGrid = -1;
         return;
       }
-      else if (DrawUtils.IsInBounds(leftInv3Bounds, xRelative, yRelative)) //Zatim je to jen jedna bunka, nepotrebuju pocitat pozici v gridu, vim ji
+      else if (isLeftInvPlayerType && DrawUtils.IsInBounds(leftInv3Bounds, xRelative, yRelative)) //Zatim je to jen jedna bunka, nepotrebuju pocitat pozici v gridu, vim ji
       {
         cursorData.InvData = LeftInv;
         cursorData.HoverItem = LeftInv?.Items?.Where(it => it.X == -1 && it.Y == 100).FirstOrDefault();
@@ -674,10 +722,13 @@ namespace OriginFramework
       DrawUtils.DrawSprite2("inventory_textures", "background5x5", leftInvBounds.ExpX1, leftInvBounds.ExpY1, leftInvBounds.ExpX2, leftInvBounds.ExpY2, 0f, 50, 50, 50, 180);
       //DrawRect2(rightInvBounds, 100, 100, 100, 180);
       DrawUtils.DrawSprite2("inventory_textures", "background5x5", rightInvBounds.ExpX1, rightInvBounds.ExpY1, rightInvBounds.ExpX2, rightInvBounds.ExpY2, 0f, 50, 50, 50, 180);
-      //DrawRect2(leftInv2Bounds, 100, 100, 100, 180);
-      DrawUtils.DrawSprite2("inventory_textures", "background2x5", leftInv2Bounds.ExpX1, leftInv2Bounds.ExpY1, leftInv2Bounds.ExpX2, leftInv2Bounds.ExpY2, 0f, 50, 50, 50, 180);
-      //DrawRect2(leftInv3Bounds, 100, 100, 100, 180);
-      DrawUtils.DrawSprite2("inventory_textures", "background1x1", leftInv3Bounds.ExpX1, leftInv3Bounds.ExpY1, leftInv3Bounds.ExpX2, leftInv3Bounds.ExpY2, 0f, 50, 50, 50, 180);
+      if (isLeftInvPlayerType)
+      {
+        //DrawRect2(leftInv2Bounds, 100, 100, 100, 180);
+        DrawUtils.DrawSprite2("inventory_textures", "background2x5", leftInv2Bounds.ExpX1, leftInv2Bounds.ExpY1, leftInv2Bounds.ExpX2, leftInv2Bounds.ExpY2, 0f, 50, 50, 50, 180);
+        //DrawRect2(leftInv3Bounds, 100, 100, 100, 180);
+        DrawUtils.DrawSprite2("inventory_textures", "background1x1", leftInv3Bounds.ExpX1, leftInv3Bounds.ExpY1, leftInv3Bounds.ExpX2, leftInv3Bounds.ExpY2, 0f, 50, 50, 50, 180);
+      }
 
       //left scrollbar
       DrawUtils.DrawSprite2("inventory_textures", "scrollbar1",
@@ -695,36 +746,45 @@ namespace OriginFramework
                 rightInvBounds.ExpY2 - (rightInvBounds.Y2 - rightInvBounds.Y1) * (rInvScrollMaxOffset > 0 ? (rInvScrollMaxOffset - rInvScrollOffset) * ((1f - rScrollBarHeight) / rInvScrollMaxOffset) : 0),
                 0f, 255, 255, 255, 200);
 
-      TextUtils.DrawTextOnScreen("Tvůj inventář", (float)leftInvBounds.ExpX1, (float)leftInvBounds.ExpY1 - (0.5f / TextUtils.TxtHConst), 0.5f, Alignment.Left);
+      TextUtils.DrawTextOnScreen(InventoryBag.GetPlaceName(LeftInv?.Place), (float)leftInvBounds.ExpX1, (float)leftInvBounds.ExpY1 - (0.5f / TextUtils.TxtHConst), 0.5f, Alignment.Left);
       TextUtils.DrawTextOnScreen(InventoryBag.GetPlaceName(RightInv?.Place), (float)rightInvBounds.ExpX2, (float)rightInvBounds.ExpY1 - 0.5f / TextUtils.TxtHConst, 0.5f, Alignment.Right);
-      TextUtils.DrawTextOnScreen("Ruce", ((float)leftInv3Bounds.ExpX1 + (float)leftInv3Bounds.ExpX2) / 2, (float)leftInv3Bounds.ExpY1 - (0.5f / TextUtils.TxtHConst), 0.5f, Alignment.Center);
+      if (isLeftInvPlayerType)
+        TextUtils.DrawTextOnScreen("Ruce", ((float)leftInv3Bounds.ExpX1 + (float)leftInv3Bounds.ExpX2) / 2, (float)leftInv3Bounds.ExpY1 - (0.5f / TextUtils.TxtHConst), 0.5f, Alignment.Center);
 
       if (LeftInv != null)
       {
         for (int y = 0; y + LeftInv.ScrollOffset < LeftInv.RowCount && y < 5; y++)
         {
-          for (int x = 0; x < 5; x++)
+          for (int x = 0; x < LeftInv.ColumnCount; x++)
           {
             var it = LeftInv.Items.Where(a => a.Y == y + LeftInv.ScrollOffset && a.X == x).FirstOrDefault();
-            RenderItem(x, y, leftInvBounds, it, false, eItemCarryType.Inventory);
+            eItemCarryType carryType = eItemCarryType.Inventory;
+            if (y + LeftInv.ScrollOffset < LeftInv.RowCountForklift)
+              carryType = eItemCarryType.Forklift;
+            else if (y + LeftInv.ScrollOffset < LeftInv.RowCountHands)
+              carryType = eItemCarryType.Hands;
+            RenderItem(x, y, leftInvBounds, it, false, carryType);
           }
         }
 
-        for (int y = 0; y < 10; y++)
+        if (isLeftInvPlayerType)
         {
-          var it = LeftInv.Items.Where(a => a.Y == y && a.X == -1).FirstOrDefault();
-          RenderItem(y % 2, y / 2, leftInv2Bounds, it, true, eItemCarryType.Inventory);
-        }
+          for (int y = 0; y < 10; y++)
+          {
+            var it = LeftInv.Items.Where(a => a.Y == y && a.X == -1).FirstOrDefault();
+            RenderItem(y % 2, y / 2, leftInv2Bounds, it, true, eItemCarryType.Inventory);
+          }
 
-        var itCarry = LeftInv.Items.Where(a => a.Y == 100 && a.X == -1).FirstOrDefault();
-        RenderItem(0, 0, leftInv3Bounds, itCarry, false, eItemCarryType.Hands);
+          var itCarry = LeftInv.Items.Where(a => a.Y == 100 && a.X == -1).FirstOrDefault();
+          RenderItem(0, 0, leftInv3Bounds, itCarry, false, eItemCarryType.Hands);
+        }
       }
 
       if (RightInv != null)
       {
         for (int y = 0; y + RightInv.ScrollOffset < RightInv.RowCount && y < 5; y++)
         {
-          for (int x = 0; x < 5; x++)
+          for (int x = 0; x < RightInv.ColumnCount; x++)
           {
             var it = RightInv.Items.Where(a => a.Y == y + RightInv.ScrollOffset && a.X == x).FirstOrDefault();
             eItemCarryType carryType = eItemCarryType.Inventory;
