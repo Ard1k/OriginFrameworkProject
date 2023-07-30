@@ -30,6 +30,8 @@ namespace OriginFramework.Scripts
 
     private static List<AtmExtendedBag> CachedAtms = new List<AtmExtendedBag>();
     private static AtmExtendedBag NearestAtm = null;
+    private static AtmExtendedBag NearestAtmForBlip = null;
+    private static int NearestAtmBlip = 0;
     private static float DistLimit = 4f;
     private static float DistSquaredLimit = DistLimit * DistLimit;
     private const string MenuName = "atm_menu";
@@ -72,6 +74,11 @@ namespace OriginFramework.Scripts
 
       var pos = Game.PlayerPed.Position;
       NearestAtm = CachedAtms.Where(atm => atm.PosVector3.DistanceToSquared2D(pos) <= DistSquaredLimit).OrderBy(atm => atm.PosVector3.DistanceToSquared2D(pos)).FirstOrDefault();
+      var nearestBlip = CachedAtms.OrderBy(atm => atm.PosVector3.DistanceToSquared2D(pos)).FirstOrDefault();
+      bool isChanging = NearestAtmForBlip != nearestBlip;
+      NearestAtmForBlip = nearestBlip;
+      if (isChanging)
+        EnsureNearestAtmBlip();
     }
 
     private async Task OnTick()
@@ -356,5 +363,30 @@ namespace OriginFramework.Scripts
       }
     }
 
+    private static void EnsureNearestAtmBlip()
+    {
+      RemoveCurrentAtmBlipIfExists();
+
+      if (NearestAtmForBlip == null)
+        return;
+
+      NearestAtmBlip = AddBlipForCoord(NearestAtmForBlip.PosVector3.X, NearestAtmForBlip.PosVector3.Y, NearestAtmForBlip.PosVector3.Z);
+      SetBlipSprite(NearestAtmBlip, 431);
+      SetBlipDisplay(NearestAtmBlip, 4);
+      SetBlipScale(NearestAtmBlip, 0.75f);
+      SetBlipColour(NearestAtmBlip, 2);
+      SetBlipAsShortRange(NearestAtmBlip, true);
+      BeginTextCommandSetBlipName("STRING");
+      AddTextComponentString("ATM");
+      EndTextCommandSetBlipName(NearestAtmBlip);
+    }
+
+    private static void RemoveCurrentAtmBlipIfExists()
+    {
+      if (NearestAtmBlip != 0 && DoesBlipExist(NearestAtmBlip))
+        RemoveBlip(ref NearestAtmBlip);
+
+      NearestAtmBlip = 0;
+    }
   }
 }

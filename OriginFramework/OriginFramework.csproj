@@ -64,6 +64,7 @@
     <Compile Include="MainMenu\MainMenu_Group.cs" />
     <Compile Include="MainMenu\MainMenu_Default.cs" />
     <Compile Include="Menus\NativeMenu.cs" />
+    <Compile Include="Scripts\BlipClient.cs" />
     <Compile Include="Scripts\CharacterCaretaker.cs" />
     <Compile Include="Scripts\GarageClient.cs" />
     <Compile Include="Scripts\AtmClient.cs" />

@@ -1,6 +1,7 @@
 ﻿using CitizenFX.Core;
 using Newtonsoft.Json;
 using OriginFramework.Menus;
+using OriginFramework.Scripts;
 using OriginFrameworkData;
 using OriginFrameworkData.DataBags;
 using System;
@@ -64,6 +65,25 @@ namespace OriginFramework
             PolyzoneManager.AddPolyZone(p.Center, p.Dimensions);
           }
         }
+      }
+
+      ReloadGarageBlips();
+    }
+
+    private async void ReloadGarageBlips()
+    {
+      foreach (var g in Garages)
+      {
+        BlipClient.AddBlip(
+          new BlipClient.BlipDef
+          {
+            PosVector3 = OfwFunctions.PosBagToVector3(g.GarageLocation),
+            Color = 29,
+            UniqueId = $"garage_{g.Place}",
+            BlipId = 289,
+            Scale = 1f,
+            Label = g.Name
+          });
       }
     }
 

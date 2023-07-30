@@ -428,7 +428,7 @@ namespace OriginFramework
             SetTextScale(textScale, textScale);
             SetTextColour(255, 255, 255, 255);
             SetTextEntry("STRING");
-            AddTextComponentString((CurrentMenu.Items[i].IsActive ? " " : String.Empty) + FontsManager.FiraSansString + (CurrentMenu.Items[i].Name ?? String.Empty));
+            AddTextComponentString((CurrentMenu.Items[i].IsActive ? "» " : String.Empty) + FontsManager.FiraSansString + (CurrentMenu.Items[i].Name ?? String.Empty));
             DrawText(xOffset - xLenght / 2.0f + iconOffset + textMarginName, (yOffset + (yHeight * (i - indexMin)) - textYOffset));
           }
 
