@@ -90,7 +90,6 @@ namespace OriginFrameworkServer
       //owner, name, tag, color
       RegisterCommand("createorg", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
-        Debug.WriteLine("test");
         var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
         if (sourcePlayer == null)
           return;

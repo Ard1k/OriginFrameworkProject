@@ -121,6 +121,12 @@ namespace OriginFramework
         new { name="item_id", help="Id itemu" },
         new { name="amount", help="kolik?" }
       });
+      TriggerEvent("chat:addSuggestion", "/weather", "Změna počasí", new[]
+      {
+        new { name = "weatherType", help = "Možnosti: extrasunny, clear, neutral, smog, foggy, overcast, clouds, clearing, rain, thunder, snow, blizzard, snowlight, xmas & halloween" } 
+      });
+      TriggerEvent("chat:addSuggestion", "/setday", "Nastaví čas na 10:00");
+      TriggerEvent("chat:addSuggestion", "/setnight", "Nastaví čas na 00:00");
       #endregion
 
       var dynamicItemsDefString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_core:GetDynamicItemDefinitions");

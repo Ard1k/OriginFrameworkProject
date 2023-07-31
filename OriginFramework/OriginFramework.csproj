@@ -70,6 +70,7 @@
     <Compile Include="Scripts\AtmClient.cs" />
     <Compile Include="Scripts\CarryClient.cs" />
     <Compile Include="Scripts\IdentityCards.cs" />
+    <Compile Include="Scripts\WeatherTimeClient.cs" />
     <Compile Include="Scripts\PedCam.cs" />
     <Compile Include="Scripts\MMenu.cs" />
     <Compile Include="Scripts\OrganizationClient.cs" />

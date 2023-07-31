@@ -74,6 +74,7 @@
     <Compile Include="InventoryServer.cs" />
     <Compile Include="CarryServer.cs" />
     <Compile Include="InstanceServer.cs" />
+    <Compile Include="WeatherTimeServer.cs" />
     <Compile Include="VehicleVendorServer.cs" />
     <Compile Include="OrganizationServer.cs" />
     <Compile Include="MapServer.cs" />

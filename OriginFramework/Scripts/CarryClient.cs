@@ -332,7 +332,6 @@ namespace OriginFramework.Scripts
 
     public void PutDownItem(bool isForklift)
     {
-      Debug.WriteLine("fork");
       if (isForklift)
       {
         var forkEntity = NetToObj(forkliftEntityNet);

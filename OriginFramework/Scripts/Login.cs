@@ -114,6 +114,7 @@ namespace OriginFramework
 
       if (result == true)
       {
+        TriggerServerEvent("ofw:RequestWeatherTimeSync");
         TakeTestScreenShot();
 
         CharacterCaretaker.LoggedIn(character);
