@@ -76,7 +76,6 @@ namespace OriginFramework
         return;
       }
 
-      SetVehicleEngineOn(vehId, false, true, true);
       EnsureVendorMenu(inSlot);
     }
 

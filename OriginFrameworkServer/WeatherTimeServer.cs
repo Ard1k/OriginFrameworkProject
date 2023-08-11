@@ -38,8 +38,8 @@ namespace OriginFrameworkServer
     private static int currentWeather = 0;
     private const int minRegularWeather = 0;
     private const int maxRegularWeather = 9;
-    private const double sunnyChange = 0.4;
-    private const double rainyChange = 0.2;
+    private const double sunnyChange = 0.2;
+    private const double rainyChange = 0.4;
     private static TimeSpan timeOffset = new TimeSpan(0);
 
     private static Random rand = new Random();

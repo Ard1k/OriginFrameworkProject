@@ -408,7 +408,7 @@ namespace OriginFrameworkServer
       return null;
     }
 
-    private async Task<string> GiveItem(string place, int item_id, int count, string[] metadata = null)
+    private async Task<string> GiveItem(string place, int item_id, int count, string[] metadata = null, string relatedTo = null)
     {
       int resultCount = count;
 
@@ -456,7 +456,7 @@ namespace OriginFrameworkServer
             amt = count;
           count -= amt;
 
-          sql.AppendLine($" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`, `metadata`) VALUES ('{place}', '{item_id}', '{x}', '{y}', '{amt}', '{(metadata == null ? "null" : string.Join("|", metadata))}'); ");
+          sql.AppendLine($" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`, `metadata`, `related_to`) VALUES ('{place}', '{item_id}', '{x}', '{y}', '{amt}', {(metadata == null ? "null" : "'" + string.Join("|", metadata) + "'")}, {(relatedTo == null ? "null" : "'" + relatedTo + "'")}); ");
         }
       }
 
@@ -685,9 +685,9 @@ namespace OriginFrameworkServer
         param.Add("@place", targetPlace);
         param.Add("@target_x", target_x);
         param.Add("@target_y", target_y);
-        param.Add("@metadata", srcItem.Metadata);
+        param.Add("@metadata", srcItem.Metadata == null ? null : string.Join("|", srcItem.Metadata));
         await VSql.ExecuteAsync($" update `inventory_item` set `count` = '{srcItem.Count - count}' where `id` = @id_source; " +
-                                $" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`, `metadata`) VALUES (@place, '{srcItem.ItemId}', @target_x, @target_y, '{count}', @metadata);", param);
+                                $" insert into `inventory_item` (`place`, `item_id`, `x`, `y`, `count`, `metadata`, `related_to`) VALUES (@place, '{srcItem.ItemId}', @target_x, @target_y, '{count}', @metadata, null);", param);
         BaseScript.TriggerClientEvent("ofw_inventory:InventoryUpdated", srcItem.Place, targetPlace);
 
         if (sourcePlace.StartsWith("world_") || targetPlace.StartsWith("world_"))
@@ -1302,6 +1302,54 @@ namespace OriginFrameworkServer
       string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata);
 
       return result;
+    }
+
+    public static async Task<string> TryGiveCarKeys(CharacterBag character, int itemId, string licencePlate, bool withoutSyncLock = false)
+    {
+      if (licencePlate == null || licencePlate.Length > 8)
+      {
+        Debug.WriteLine($"[InventoryServer]: TryGiveCarKeys invalid licence plate: {licencePlate ?? "null"}");
+        return "Nelze předat klíče";
+      }
+
+      string[] metadata = new string[]
+        {
+          $"Klíče: Vypadají jako klíče od auta",
+          $"SPZ:{licencePlate.ToUpper()}",
+        };
+
+      if (withoutSyncLock)
+      {
+        string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata, licencePlate);
+        if (result == null)
+          return null;
+        else
+          return result;
+      }
+      else
+      {
+        using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+        {
+          string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata, licencePlate);
+          if (result == null)
+            return null;
+          else
+            return result;
+        }
+      }
+    }
+
+    public static async void RemoveCarKeys(string plate)
+    {
+      if (plate == null)
+        return;
+
+      using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
+      {
+        var param = new Dictionary<string, object>();
+        param.Add("@plate", plate.ToLowerInvariant());
+        await VSql.ExecuteAsync("DELETE FROM `inventory_item` WHERE `related_to` = @plate", param);
+      }
     }
 
     public static async void CarriablePutDown(Player player, int invItemId, string place, PosBag posBag, Action<Player, string> OnError)

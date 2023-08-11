@@ -368,7 +368,16 @@ namespace OriginFrameworkServer
 
       var modelHash = (int)vehData.model;
 
+      var keysResult = await InventoryServer.TryGiveCarKeys(character, 23, plate);
+
       await Delay(0);
+
+      if (keysResult != null)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", keysResult);
+        _ = callback(-1);
+        return;
+      }
 
       int vehID = -1;
       try
@@ -465,7 +474,16 @@ namespace OriginFrameworkServer
 
       var modelHash = (int)vehData.model;
 
+      var keysResult = await InventoryServer.TryGiveCarKeys(character, 23, vehData.plate);
+
       await Delay(0);
+
+      if (keysResult != null)
+      {
+        sourcePlayer.TriggerEvent("ofw:ValidationErrorNotification", keysResult);
+        _ = callback(-1);
+        return;
+      }
 
       int vehID = -1;
       try
@@ -640,6 +658,8 @@ namespace OriginFrameworkServer
       {
         persistentVehicles.Remove(persistVeh);
       }
+
+      InventoryServer.RemoveCarKeys(plate);
 
       sourcePlayer.TriggerEvent("ofw_garage:VehicleReturned", plate);
     }

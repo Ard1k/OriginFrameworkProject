@@ -202,9 +202,9 @@ namespace OriginFrameworkServer
         }
 
         if (isOrganization)
-          InventoryServer.PayBankOrganization(sourcePlayer, character.OrganizationId.Value, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, slot.SlotId, null, character.OrganizationId); }, OnError);
+          InventoryServer.PayBankOrganization(sourcePlayer, character.OrganizationId.Value, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, character, slot.SlotId, null, character.OrganizationId); }, OnError);
         else
-          InventoryServer.PayBankCharacter(sourcePlayer, character.Id, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, slot.SlotId, character.Id, null); }, OnError);
+          InventoryServer.PayBankCharacter(sourcePlayer, character.Id, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, character, slot.SlotId, character.Id, null); }, OnError);
       }
       else
       {
@@ -215,18 +215,26 @@ namespace OriginFrameworkServer
         }
 
         if (isOrganization)
-          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, slot.SlotId, null, character.OrganizationId); }, OnError);
+          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, character, slot.SlotId, null, character.OrganizationId); }, OnError);
         else
-          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, slot.SlotId, character.Id, null); }, OnError);
+          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, character, slot.SlotId, character.Id, null); }, OnError);
       }
     }
 
-    private async Task<bool> CarPurchased(Player player, int slotId, int? ownerChar, int? ownerOrg)
+    private async Task<bool> CarPurchased(Player player, CharacterBag characterForKeys, int slotId, int? ownerChar, int? ownerOrg)
     {
       var newPlate = GenerateNewPlate();
       while (newPlate.StartsWith("PDM") || await VehicleServer.DoesPlateExist(newPlate, true))
       {
         newPlate = GenerateNewPlate();
+      }
+
+      string keysResult = await InventoryServer.TryGiveCarKeys(characterForKeys, 23, newPlate.ToLowerInvariant(), true);
+      await Delay(0);
+      if (keysResult != null)
+      {
+        player.TriggerEvent("ofw:ValidationErrorNotification", keysResult);
+        return false;
       }
 
       var ret = await VehicleServer.MigrateVendorSlotVehToGarageVeh(slotId, newPlate, ownerChar, ownerOrg);
@@ -241,6 +249,10 @@ namespace OriginFrameworkServer
           slot.SpawnedNetId = null;
           TriggerClientEvent("ofw_vehvendor:SlotUpdated", JsonConvert.SerializeObject(slot));
         }
+      }
+      else
+      {
+        InventoryServer.RemoveCarKeys(newPlate.ToLowerInvariant());
       }
 
       return ret;

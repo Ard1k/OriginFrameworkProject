@@ -256,6 +256,7 @@ namespace OriginFramework
         if (invCache.Place == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}")
         {
           PlayerInventoryCache = invCache;
+          VehicleClient.CheckCarKeysAgain();
           SkinManager.UpdateSkinFromInv(PlayerInventoryCache.Items);
         }
         else if (invCache.Place.StartsWith("fork_"))
@@ -281,6 +282,7 @@ namespace OriginFramework
       if (LeftInv.Place == $"char_{CharacterCaretaker.LoggedCharacter?.Id ?? -1}")
       {
         PlayerInventoryCache = JsonConvert.DeserializeObject<InventoryBag>(leftInventory);
+        VehicleClient.CheckCarKeysAgain();
         SkinManager.UpdateSkinFromInv(PlayerInventoryCache.Items);
       }
       else if (LeftInv.Place.StartsWith("fork_"))
@@ -1015,6 +1017,13 @@ namespace OriginFramework
             _rows.Add(new { s1 = "Platnost do", s2 = item.Metadata.First(m => m.StartsWith("_valid:")).Substring(7) });
           if (item.Metadata.Any(m => m.StartsWith("_sn:")))
             _rows.Add(new { s1 = "S/N", s2 = item.Metadata.First(m => m.StartsWith("_sn:")).Substring(4) });
+        }
+
+        foreach (var m in item.Metadata.Where(m => m != null && !m.StartsWith("_")))
+        {
+          string[] parts = m.Split(':');
+          if (parts.Length == 2)
+            _rows.Add(new { s1 = parts[0], s2 = parts[1] });
         }
 
         switch (itDef.CarryType)

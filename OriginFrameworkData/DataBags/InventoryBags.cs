@@ -208,6 +208,7 @@ namespace OriginFrameworkData.DataBags
     public int X { get; set; }
     public int Y { get; set; }
     public int Count { get; set; }
+    public string RelatedTo { get; set; } //napr. pro SPZky... potrebuju neco k cemu se rychle bez parsovani dostanu 
     public string[] Metadata { get; set; }
     [JsonIgnore]
     public bool IsDragged { get; set; }
@@ -233,6 +234,9 @@ namespace OriginFrameworkData.DataBags
           !m.StartsWith("_model") &&
           !m.StartsWith("_skin")
           )?.ToArray();
+
+      if (row.ContainsKey("related_to") && row["related_to"] != null)
+        it.RelatedTo = Convert.ToString(row["related_to"]);
 
       return it;
     }
@@ -375,7 +379,8 @@ namespace OriginFrameworkData.DataBags
   {
     None = 0,
     Weapon = 1,
-    IdentityCard = 2
+    IdentityCard = 2,
+    CarKey = 3
   }
 
   public static class ItemsDefinitions
@@ -754,6 +759,15 @@ namespace OriginFrameworkData.DataBags
         StackSize = 1,
         Color = new InventoryColor(0, 255, 255, 255),
         UsableType = eUsableType.IdentityCard
+      };
+      _items[23] = new ItemDefinition
+      {
+        ItemId = 23,
+        Name = "Klíče",
+        Texture = "carkey_basic",
+        StackSize = 1,
+        Color = new InventoryColor(0, 255, 255, 255),
+        UsableType = eUsableType.CarKey
       };
       #endregion
 

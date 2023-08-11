@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using OriginFrameworkData.DataBags;
 
 //https://github.com/warxander/vSql
 
@@ -48,6 +49,7 @@ namespace OriginFrameworkServer
       VSql.Init();
       await EnsureDB_cfw_jsondata_table();
       EnsureDB_tables();
+      CleanupDBOnStart();
 
       tablesEnsured = true;
 
@@ -84,6 +86,7 @@ namespace OriginFrameworkServer
                                 "  `y` int NOT NULL, " +
                                 "  `count` int NOT NULL, " +
                                 "  `metadata` varchar(2000) NULL, " +
+                                "  `related_to` varchar(20) NULL, " +
                                 " PRIMARY KEY (`id`), " +
                                 " INDEX (`place`) " +
                                 " );", null);
@@ -122,8 +125,39 @@ namespace OriginFrameworkServer
                           " CONSTRAINT `fk_organization_vehiclerights_character_id` FOREIGN KEY (`character_id`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT " +
                           " );", null);
     }
-    private static void PrintException(Exception ex)
-    { CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); }
+
+    private async void CleanupDBOnStart()
+    {
+      var carKeys = ItemsDefinitions.Items.Where(it => it != null && it.UsableType == eUsableType.CarKey)?.ToList();
+
+      if (carKeys != null && carKeys.Count > 0)
+      {
+        bool isFirst = true;
+        string keysParam = String.Empty;
+        foreach (var keyType in carKeys)
+        {
+          if (isFirst)
+            keysParam += $"{keyType.ItemId}";
+          else
+            keysParam += $",{keyType.ItemId}";
+
+          isFirst = false;
+        }
+
+        var param = new Dictionary<string, object>();
+        param.Add("@keys", keysParam);
+        await VSql.ExecuteAsync("DELETE FROM `inventory_item` WHERE `item_id` in (@keys)", param);
+      }
+    }
+
+    private static void PrintException(Exception ex, string query, IDictionary<string, object> parameters)
+    { 
+      CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Error] " + ex.Message + "\n"); 
+      if (query != null)
+        CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Query] " + query + "\n");
+      if (parameters != null)
+        CitizenFX.Core.Debug.Write("^4[" + DateTime.Now + "] ^2[vSql] ^1[Query] " + parameters.ToString() + "\n");
+    }
 
     public static async Task<int> ExecuteAsync(string query, IDictionary<string, object> parameters)
     {
@@ -146,7 +180,7 @@ namespace OriginFrameworkServer
         }
       }
       catch (Exception ex)
-      { PrintException(ex); }
+      { PrintException(ex, query, parameters); }
 
       return numberOfUpdatedRows;
     }
@@ -183,19 +217,19 @@ namespace OriginFrameworkServer
               }
               catch (Exception ex)
               {
-                PrintException(ex);
+                PrintException(ex, null, null);
 
                 try
                 { await transaction.RollbackAsync(); }
                 catch (Exception rollbackEx)
-                { PrintException(rollbackEx); }
+                { PrintException(rollbackEx, null, null); }
               }
             }
           }
         }
       }
       catch (Exception ex)
-      { PrintException(ex); }
+      { PrintException(ex, null, null); }
 
       return isSucceed;
     }
@@ -221,7 +255,7 @@ namespace OriginFrameworkServer
         }
       }
       catch (Exception ex)
-      { PrintException(ex); }
+      { PrintException(ex, query, parameters); }
 
       return result;
     }
@@ -257,7 +291,7 @@ namespace OriginFrameworkServer
         }
       }
       catch (Exception ex)
-      { PrintException(ex); }
+      { PrintException(ex, query, parameters); }
 
       return result;
     }
