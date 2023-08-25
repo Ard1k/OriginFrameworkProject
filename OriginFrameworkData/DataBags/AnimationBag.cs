@@ -14,6 +14,7 @@ namespace OriginFrameworkData.DataBags
     public int Time { get; set; }
     public bool IsUpperBodyOnly { get; set; }
     public bool IsAllowRotation { get; set; }
+    public string SoundName { get; set; }
 
     public AnimationBag GetInstanceCopy()
     {

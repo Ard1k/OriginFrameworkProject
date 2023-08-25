@@ -8,7 +8,8 @@ namespace OriginFrameworkData.DataBags
 {
 	public enum eVehicleVendor : int
 	{
-		PDM = 0,
+		ByClass = 0,
+		PDM = 1,
 	}
 
 	public class VehicleVendorVehicle
@@ -43,6 +44,7 @@ namespace OriginFrameworkData.DataBags
 		public DateTime? RepopulateAt { get; set; }
 		public VehicleVendorVehicle CurrentVehicle { get; set; }
 		public int? SpawnedNetId { get; set; }
+		public VehicleOriginClass ClassSlot { get; set; }
 
 		/// <summary>
 		/// Konstruktor nepouzivat, pristupny pouze kvuli deserializaci
@@ -51,11 +53,12 @@ namespace OriginFrameworkData.DataBags
 		{ 
 		}
 
-		public VehicleVendorSlot(eVehicleVendor vendorType, PosBag position)
+		public VehicleVendorSlot(eVehicleVendor vendorType, PosBag position, VehicleOriginClass vehClass)
 		{
       SlotId = _nextId++;
 			Position = position.GetInstanceCopy();
 			VendorType = vendorType;
+			ClassSlot = vehClass;
     }
 	}
 }

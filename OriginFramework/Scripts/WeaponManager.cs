@@ -96,6 +96,7 @@ namespace OriginFramework
       RemoveAllPedWeapons(Game.PlayerPed.Handle, true);
       if (equippedDefinition.UseAnim != null)
       {
+        TriggerServerEvent("InteractSound_SV:PlayWithinDistance", 100, equippedDefinition.UseAnim.SoundName ?? "pistol_out", 0.4);
         while (!ProgressBar.Start(equippedDefinition.UseAnim.Time, equippedDefinition.Name, false, null, equippedDefinition.UseAnim))
           await Delay(0);
 
@@ -115,6 +116,7 @@ namespace OriginFramework
 
         if (equippedDefinition?.PutAwayAnim != null)
         {
+          TriggerServerEvent("InteractSound_SV:PlayWithinDistance", 100, equippedDefinition.PutAwayAnim.SoundName ?? "pistol_holster", 0.4);
           while (!ProgressBar.Start(equippedDefinition.PutAwayAnim.Time, equippedDefinition.Name, false, null, equippedDefinition.PutAwayAnim))
             await Delay(0);
 

@@ -263,6 +263,8 @@ namespace OriginFrameworkData.DataBags
     public bool IsMoney { get; set; }
     public eItemCarryType CarryType { get; set; }
     public InventoryCarryInfo CarryInfo { get; set; }
+    public bool IsKeyAuto { get; set; }
+    public bool IsKeyRemote { get; set; }
 
     public ItemDefinition GetInstanceCopy()
     {
@@ -502,7 +504,8 @@ namespace OriginFrameworkData.DataBags
           Speed = 4f,
           IsAllowRotation = true,
           IsUpperBodyOnly = true,
-          Time = 2000
+          Time = 2000,
+          SoundName = "pistol_out"
         },
         PutAwayAnim = new AnimationBag
         {
@@ -511,7 +514,8 @@ namespace OriginFrameworkData.DataBags
           Speed = 8f,
           IsAllowRotation = true,
           IsUpperBodyOnly = true,
-          Time = 1400
+          Time = 1400,
+          SoundName = "pistol_holster"
         }
       };
       _items[11] = new ItemDefinition
@@ -767,7 +771,31 @@ namespace OriginFrameworkData.DataBags
         Texture = "carkey_basic",
         StackSize = 1,
         Color = new InventoryColor(0, 255, 255, 255),
-        UsableType = eUsableType.CarKey
+        UsableType = eUsableType.CarKey,
+        IsKeyAuto = false,
+        IsKeyRemote = false
+      };
+      _items[24] = new ItemDefinition
+      {
+        ItemId = 24,
+        Name = "Klíče",
+        Texture = "carkey_remote",
+        StackSize = 1,
+        Color = new InventoryColor(0, 255, 255, 255),
+        UsableType = eUsableType.CarKey,
+        IsKeyAuto = false,
+        IsKeyRemote = true
+      };
+      _items[25] = new ItemDefinition
+      {
+        ItemId = 25,
+        Name = "Klíče",
+        Texture = "carkey_luxury",
+        StackSize = 1,
+        Color = new InventoryColor(0, 255, 255, 255),
+        UsableType = eUsableType.CarKey,
+        IsKeyAuto = true,
+        IsKeyRemote = true
       };
       #endregion
 

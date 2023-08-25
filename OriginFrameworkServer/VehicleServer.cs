@@ -44,6 +44,18 @@ namespace OriginFrameworkServer
 
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
 
+      DefinedVehicles.KnownVehiclesByHash = new Dictionary<int, VehicleInformation>();
+      foreach (var veh in DefinedVehicles.KnownVehicles)
+      {
+        var hashKey = GetHashKey(veh.Key);
+        if (DefinedVehicles.KnownVehiclesByHash.ContainsKey(hashKey))
+        {
+          Debug.WriteLine($"VehicleClient: Duplicate vehicle hash {veh.Key} ({hashKey})");
+          continue;
+        }
+        DefinedVehicles.KnownVehiclesByHash.Add(hashKey, veh.Value);
+      }
+
       #region register commands
       RegisterCommand("car", new Action<int, List<object>, string>((source, args, raw) =>
       {
@@ -368,7 +380,7 @@ namespace OriginFrameworkServer
 
       var modelHash = (int)vehData.model;
 
-      var keysResult = await InventoryServer.TryGiveCarKeys(character, 23, plate);
+      var keysResult = await InventoryServer.TryGiveCarKeys(character, modelHash, plate);
 
       await Delay(0);
 
@@ -474,7 +486,7 @@ namespace OriginFrameworkServer
 
       var modelHash = (int)vehData.model;
 
-      var keysResult = await InventoryServer.TryGiveCarKeys(character, 23, vehData.plate);
+      var keysResult = await InventoryServer.TryGiveCarKeys(character, modelHash, vehData.plate);
 
       await Delay(0);
 

@@ -139,14 +139,14 @@ namespace OriginFrameworkServer
           if (isFirst)
             keysParam += $"{keyType.ItemId}";
           else
-            keysParam += $",{keyType.ItemId}";
+            keysParam += $", {keyType.ItemId}";
 
           isFirst = false;
         }
 
-        var param = new Dictionary<string, object>();
-        param.Add("@keys", keysParam);
-        await VSql.ExecuteAsync("DELETE FROM `inventory_item` WHERE `item_id` in (@keys)", param);
+        //var param = new Dictionary<string, object>();
+        //param.Add("@keys", keysParam);
+        await VSql.ExecuteAsync($"DELETE FROM `inventory_item` WHERE `item_id` in ({keysParam})", null);
       }
     }
 

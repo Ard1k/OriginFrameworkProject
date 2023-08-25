@@ -358,6 +358,7 @@ namespace OriginFramework
     {
       LoggedCharacter = character;
       TriggerServerEvent("ofw_instance:TransferToPublicInstance");
+      TriggerEvent("ofw_character:LoggedIn");
       if (LoggedCharacter.IsNew)
       {
         await SpawnLoggedCharacter(true);

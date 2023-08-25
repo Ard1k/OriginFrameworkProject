@@ -911,6 +911,10 @@ namespace OriginFramework
         CloseTooltip();
         TriggerServerEvent("ofw_identity:ShowCard", it.Id);
       }
+      else if (definition.UsableType == eUsableType.CarKey && it.RelatedTo != null)
+      {
+        VehicleClient.CarKeyUsed(it.RelatedTo, definition);
+      }
     }
 
     private void CloseTooltip()
@@ -1017,13 +1021,13 @@ namespace OriginFramework
             _rows.Add(new { s1 = "Platnost do", s2 = item.Metadata.First(m => m.StartsWith("_valid:")).Substring(7) });
           if (item.Metadata.Any(m => m.StartsWith("_sn:")))
             _rows.Add(new { s1 = "S/N", s2 = item.Metadata.First(m => m.StartsWith("_sn:")).Substring(4) });
-        }
 
-        foreach (var m in item.Metadata.Where(m => m != null && !m.StartsWith("_")))
-        {
-          string[] parts = m.Split(':');
-          if (parts.Length == 2)
-            _rows.Add(new { s1 = parts[0], s2 = parts[1] });
+          foreach (var m in item.Metadata.Where(m => m != null && !m.StartsWith("_")))
+          {
+            string[] parts = m.Split(':');
+            if (parts.Length == 2)
+              _rows.Add(new { s1 = parts[0], s2 = parts[1] });
+          }
         }
 
         switch (itDef.CarryType)

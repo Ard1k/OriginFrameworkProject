@@ -13,6 +13,7 @@ using System.Xml.Linq;
 using System.Diagnostics;
 using Debug = CitizenFX.Core.Debug;
 using System.Security.Cryptography;
+using System.Net.NetworkInformation;
 
 namespace OriginFrameworkServer
 {
@@ -1304,7 +1305,7 @@ namespace OriginFrameworkServer
       return result;
     }
 
-    public static async Task<string> TryGiveCarKeys(CharacterBag character, int itemId, string licencePlate, bool withoutSyncLock = false)
+    public static async Task<string> TryGiveCarKeys(CharacterBag character, int model, string licencePlate, bool withoutSyncLock = false)
     {
       if (licencePlate == null || licencePlate.Length > 8)
       {
@@ -1312,15 +1313,33 @@ namespace OriginFrameworkServer
         return "Nelze předat klíče";
       }
 
-      string[] metadata = new string[]
-        {
-          $"Klíče: Vypadají jako klíče od auta",
+      int itemId = 23;
+
+      List<string> metadata = new List<string>
+      {
           $"SPZ:{licencePlate.ToUpper()}",
-        };
+      };
+
+      if (model != 0 && DefinedVehicles.KnownVehiclesByHash.ContainsKey(model))
+      {
+        var vehInfo = DefinedVehicles.KnownVehiclesByHash[model];
+        if (vehInfo.Brand != null)
+          metadata.Add($"Značka:{vehInfo.Brand}");
+
+        if (vehInfo.BrandModel != null)
+          metadata.Add($"Model:{vehInfo.BrandModel}");
+        else if (vehInfo.Model != null)
+          metadata.Add($"Model:{vehInfo.Model}");
+
+        metadata.Add($"Class:{vehInfo.Class.ToString()}");
+
+        if (vehInfo.KeyItemId != 0)
+          itemId = vehInfo.KeyItemId;
+      }
 
       if (withoutSyncLock)
       {
-        string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata, licencePlate);
+        string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata.ToArray(), licencePlate);
         if (result == null)
           return null;
         else
@@ -1330,7 +1349,7 @@ namespace OriginFrameworkServer
       {
         using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
         {
-          string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata, licencePlate);
+          string result = await _scriptInstance.GiveItem($"char_{character.Id}", itemId, 1, metadata.ToArray(), licencePlate);
           if (result == null)
             return null;
           else

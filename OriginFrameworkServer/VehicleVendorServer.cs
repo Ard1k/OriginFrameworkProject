@@ -20,16 +20,16 @@ namespace OriginFrameworkServer
     public static List<VehicleVendorSlot> Slots = new List<VehicleVendorSlot>
     {
       //PDM u okna
-      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -48.9077f, Y = -1100.5353f, Z = 25.5363f, Heading = 300f }),
-      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -46.3535f, Y = -1102.3384f, Z = 25.5363f, Heading = 300f }),
+      new VehicleVendorSlot(eVehicleVendor.ByClass, new PosBag { X = -48.9077f, Y = -1100.5353f, Z = 25.5363f, Heading = 300f }, VehicleOriginClass.E),
+      new VehicleVendorSlot(eVehicleVendor.ByClass, new PosBag { X = -46.3535f, Y = -1102.3384f, Z = 25.5363f, Heading = 300f }, VehicleOriginClass.E),
 
       //PDM naproti oknu
-      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -47.7329f, Y = -1093.4386f, Z = 25.5138f, Heading = 200f }),
-      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -43.8934f, Y = -1094.8088f, Z = 25.4759f, Heading = 200f }),
-      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -40.7237f, Y = -1095.4818f, Z = 25.4835f, Heading = 200f }),
+      new VehicleVendorSlot(eVehicleVendor.ByClass, new PosBag { X = -47.7329f, Y = -1093.4386f, Z = 25.5138f, Heading = 200f }, VehicleOriginClass.E),
+      new VehicleVendorSlot(eVehicleVendor.ByClass, new PosBag { X = -43.8934f, Y = -1094.8088f, Z = 25.4759f, Heading = 200f }, VehicleOriginClass.E),
+      new VehicleVendorSlot(eVehicleVendor.ByClass, new PosBag { X = -40.7237f, Y = -1095.4818f, Z = 25.4835f, Heading = 200f }, VehicleOriginClass.E),
 
       //PDM v cele
-      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -51.2714f, Y = -1095.1326f, Z = 25.4835f, Heading = 200f }),
+      new VehicleVendorSlot(eVehicleVendor.PDM, new PosBag { X = -51.2714f, Y = -1095.1326f, Z = 25.4835f, Heading = 200f }, VehicleOriginClass.Uncategorized),
     };
     
     private static Random rand = new Random();
@@ -88,25 +88,51 @@ namespace OriginFrameworkServer
       {
         if (slot.RepopulateAt == null || slot.RepopulateAt <= DateTime.Now)
         {
-          var stock = VehicleVendorStock.Stock.Where(s => s.Vendor == slot.VendorType)?.ToList();
-
-          if (stock == null || stock.Count <= 0)
-          {
-            //nemam co tu spawnout, tak si to vyradim at porad neco nehledam
-            slot.RepopulateAt = DateTime.MaxValue;
-            continue;
-          }
-
           VehicleVendorVehicle chosenOne = null;
-          while (chosenOne == null)
+          if (slot.VendorType != eVehicleVendor.ByClass)
           {
+            var stock = VehicleVendorStock.Stock.Where(s => s.Vendor == slot.VendorType)?.ToList();
+
+            if (stock == null || stock.Count <= 0)
+            {
+              //nemam co tu spawnout, tak si to vyradim at porad neco nehledam
+              slot.RepopulateAt = DateTime.MaxValue;
+              continue;
+            }
+
+            while (chosenOne == null)
+            {
+              var randomItem = stock[rand.Next(stock.Count)];
+
+              if (randomItem == null)
+                continue;
+
+              if (rand.NextDouble() <= (double)randomItem.SpawnChance)
+                chosenOne = randomItem;
+            }
+          }
+          else
+          {
+            var stock = DefinedVehicles.KnownVehicles.Where(s => s.Value.Class == slot.ClassSlot)?.ToList();
+
+            if (stock == null || stock.Count <= 0)
+            {
+              //nemam co tu spawnout, tak si to vyradim at porad neco nehledam
+              slot.RepopulateAt = DateTime.MaxValue;
+              continue;
+            }
+
             var randomItem = stock[rand.Next(stock.Count)];
 
-            if (randomItem == null)
-              continue;
-
-            if (rand.NextDouble() <= (double)randomItem.SpawnChance)
-              chosenOne = randomItem;
+            chosenOne = new VehicleVendorVehicle
+            {
+              SpawnForTime = new TimeSpan(1, 0, 0),
+              BankMoneyPrice = randomItem.Value.Value,
+              Price = randomItem.Value.Value * 5,
+              PriceItemId = 17, //cash
+              Model = randomItem.Key,
+              Vendor = eVehicleVendor.ByClass,
+            };
           }
 
           if (chosenOne != null)
@@ -229,7 +255,12 @@ namespace OriginFrameworkServer
         newPlate = GenerateNewPlate();
       }
 
-      string keysResult = await InventoryServer.TryGiveCarKeys(characterForKeys, 23, newPlate.ToLowerInvariant(), true);
+      var slot = Slots.Where(s => s.SlotId == slotId).FirstOrDefault();
+      int modelHash = 0;
+      if (slot?.CurrentVehicle?.Model != null)
+        modelHash = GetHashKey(slot.CurrentVehicle.Model);
+
+      string keysResult = await InventoryServer.TryGiveCarKeys(characterForKeys, modelHash, newPlate.ToLowerInvariant(), true);
       await Delay(0);
       if (keysResult != null)
       {
@@ -242,11 +273,11 @@ namespace OriginFrameworkServer
       {
         await Delay(0);
         player.TriggerEvent("ofw:SuccessNotification", "Auto zakoupeno");
-        var slot = Slots.Where(s => s.SlotId == slotId).FirstOrDefault();
         if (slot != null)
         {
           slot.CurrentVehicle = null;
           slot.SpawnedNetId = null;
+          slot.RepopulateAt = DateTime.Now.AddMinutes(3);
           TriggerClientEvent("ofw_vehvendor:SlotUpdated", JsonConvert.SerializeObject(slot));
         }
       }
