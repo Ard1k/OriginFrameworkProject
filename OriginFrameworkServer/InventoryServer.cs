@@ -13,7 +13,6 @@ using System.Xml.Linq;
 using System.Diagnostics;
 using Debug = CitizenFX.Core.Debug;
 using System.Security.Cryptography;
-using System.Net.NetworkInformation;
 
 namespace OriginFrameworkServer
 {

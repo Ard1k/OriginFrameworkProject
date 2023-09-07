@@ -17,6 +17,7 @@ namespace OriginFrameworkData.DataBags
     public int OwnerChar { get; set; }
     public int OwnerOrganization { get; set; }
     public bool IsOut { get; set; }
+    public VehicleDamageBag Damage { get; set; }
 
     public static GarageVehicleBag ParseFromSql(Dictionary<string, object> row)
     {
@@ -29,6 +30,7 @@ namespace OriginFrameworkData.DataBags
         Properties = JsonConvert.DeserializeObject<VehiclePropertiesBag>(Convert.ToString(row["properties"])),
         OwnerChar = Convert.ToInt32(row["owner_char"]),
         OwnerOrganization = Convert.ToInt32(row["owner_organization"]),
+        Damage = row["damage"] != null ? JsonConvert.DeserializeObject<VehicleDamageBag>(Convert.ToString(row["damage"])) : null,
       };
 
       return it;

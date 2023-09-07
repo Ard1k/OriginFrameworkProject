@@ -112,10 +112,6 @@ namespace OriginFramework
       bag.plate = GetVehicleNumberPlateText(vehicleId).Trim();
       bag.plateIndex = GetVehicleNumberPlateTextIndex(vehicleId);
 
-      bag.bodyHealth = (float)Math.Round(GetVehicleBodyHealth(vehicleId), 1);
-      bag.engineHealth = (float)Math.Round(GetVehicleEngineHealth(vehicleId), 1);
-      bag.fuelLevel = (float)Math.Round(GetVehicleFuelLevel(vehicleId), 1);
-      bag.dirtLevel = (float)Math.Round(GetVehicleDirtLevel(vehicleId), 1);
 
       bag.color1 = colorPrimary;
       bag.color2 = colorSecondary;
@@ -156,10 +152,10 @@ namespace OriginFramework
 
       if (props.plate != null) SetVehicleNumberPlateText(vehicleId, props.plate);
       if (props.plateIndex != null) SetVehicleNumberPlateTextIndex(vehicleId, props.plateIndex.Value);
-      if (props.bodyHealth != null) SetVehicleBodyHealth(vehicleId, props.bodyHealth.Value);
-      if (props.engineHealth != null) SetVehicleEngineHealth(vehicleId, props.engineHealth.Value);
-      if (props.fuelLevel != null) SetVehicleFuelLevel(vehicleId, props.fuelLevel.Value);
-      if (props.dirtLevel != null) SetVehicleDirtLevel(vehicleId, props.dirtLevel.Value);
+      //if (props.bodyHealth != null) SetVehicleBodyHealth(vehicleId, props.bodyHealth.Value);
+      //if (props.engineHealth != null) SetVehicleEngineHealth(vehicleId, props.engineHealth.Value);
+      //if (props.fuelLevel != null) SetVehicleFuelLevel(vehicleId, props.fuelLevel.Value);
+      //if (props.dirtLevel != null) SetVehicleDirtLevel(vehicleId, props.dirtLevel.Value);
       if (props.color1 != null) SetVehicleColours(vehicleId, props.color1.Value, colorSecondary);
       if (props.color2 != null) SetVehicleColours(vehicleId, props.color1 ?? colorPrimary, props.color2.Value);
       if (props.pearlescentColor != null) SetVehicleExtraColours(vehicleId, props.pearlescentColor.Value, wheelColor);
@@ -204,6 +200,82 @@ namespace OriginFramework
       }
 
       if (props.tyreSmokeColor != null) SetVehicleTyreSmokeColor(vehicleId, props.tyreSmokeColor[0], props.tyreSmokeColor[1], props.tyreSmokeColor[2]);
+    }
+
+    public static VehicleDamageBag GetVehicleDamage(int vehicleId)
+    {
+      if (!DoesEntityExist(vehicleId))
+        return null;
+
+      var bag = new VehicleDamageBag();
+
+      bag.bodyHealth = (float)Math.Round(GetVehicleBodyHealth(vehicleId), 1);
+      bag.engineHealth = (float)Math.Round(GetVehicleEngineHealth(vehicleId), 1);
+      bag.fuelLevel = (float)Math.Round(GetVehicleFuelLevel(vehicleId), 1);
+      bag.dirtLevel = (float)Math.Round(GetVehicleDirtLevel(vehicleId), 1);
+
+      bag.doorsMissing = new bool[6];
+      for (int i = 0; i < 6; i++)
+      {
+        bag.doorsMissing[i] = GetIsDoorValid(vehicleId, i) && IsVehicleDoorDamaged(vehicleId, i);
+      }
+
+      bag.tireBurst = new bool[8];
+      for (int i = 0; i < 8; i++)
+      {
+        bag.tireBurst[i] = IsVehicleTyreBurst(vehicleId, i, false);
+      }
+
+      bag.windowsBroken = new bool[14];
+      for (int i = 0; i < 14; i++)
+      {
+        bag.windowsBroken[i] = !IsVehicleWindowIntact(vehicleId, i);
+      }
+
+      return bag;
+    }
+
+    public static void SetVehicleDamage(int vehicleId, VehicleDamageBag bag)
+    {
+      if (bag == null)
+        return;
+
+      if (!DoesEntityExist(vehicleId))
+        return;
+
+      SetVehicleModKit(vehicleId, 0);
+
+      if (bag.bodyHealth != null) SetVehicleBodyHealth(vehicleId, bag.bodyHealth.Value);
+      if (bag.engineHealth != null) SetVehicleEngineHealth(vehicleId, bag.engineHealth.Value);
+      if (bag.fuelLevel != null) SetVehicleFuelLevel(vehicleId, bag.fuelLevel.Value);
+      if (bag.dirtLevel != null) SetVehicleDirtLevel(vehicleId, bag.dirtLevel.Value);
+
+      if (bag.doorsMissing != null)
+      {
+        for (int i = 0; i < bag.doorsMissing.Length; i++)
+        {
+          if (bag.doorsMissing[i] && GetIsDoorValid(vehicleId, i))
+            SetVehicleDoorBroken(vehicleId, i, true);
+        }
+      }
+
+      if (bag.tireBurst != null)
+      {
+        for (int i = 0; i < bag.tireBurst.Length; i++)
+        {
+          if (bag.tireBurst[i] && !IsVehicleTyreBurst(vehicleId, i, false))
+            SetVehicleTyreBurst(vehicleId, i, true, 1000);
+        }
+      }
+
+      if (bag.windowsBroken != null)
+      {
+        for (int i = 0; i < bag.windowsBroken.Length; i++)
+        {
+          if (bag.windowsBroken[i] && IsVehicleWindowIntact(vehicleId, i))
+            SmashVehicleWindow(vehicleId, i);
+        }
+      }
     }
 
     public static bool IsPlayerDrivingForklift()

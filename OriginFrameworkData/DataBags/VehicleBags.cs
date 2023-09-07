@@ -88,6 +88,18 @@ namespace OriginFrameworkData.DataBags
     }
   }
 
+  public class VehicleDamageBag
+  {
+    public float? bodyHealth { get; set; }
+    public float? engineHealth { get; set; }
+    public float? fuelLevel { get; set; }
+    public float? dirtLevel { get; set; }
+
+    public bool[] doorsMissing { get; set; }
+    public bool[] tireBurst { get; set; }
+    public bool[] windowsBroken { get; set; }
+  }
+
   public class VehiclePropertiesBag
   {
     public int model { get; set; }

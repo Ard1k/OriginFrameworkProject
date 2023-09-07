@@ -200,6 +200,7 @@ namespace OriginFramework
 
       var vehId = NetToVeh(vehNetId);
       Vehicles.SetVehicleProperties(vehId, veh.Properties);
+      Vehicles.SetVehicleDamage(vehId, veh.Damage); //musi byt po properties
       SetPedIntoVehicle(Game.PlayerPed.Handle, vehId, -1);
     }
 
@@ -219,6 +220,7 @@ namespace OriginFramework
       var plate = GetVehicleNumberPlateText(Game.PlayerPed.CurrentVehicle.Handle);
       var properties = Vehicles.GetVehicleProperties(Game.PlayerPed.CurrentVehicle.Handle);
       var propertiesString = JsonConvert.SerializeObject(properties);
+      var damageString = JsonConvert.SerializeObject(Vehicles.GetVehicleDamage(Game.PlayerPed.CurrentVehicle.Handle));
 
       NativeMenuManager.OpenNewMenu(menuName, () => {
         var menu = new NativeMenu
@@ -232,7 +234,7 @@ namespace OriginFramework
               IsClose = true,
               OnSelected = (item) =>
               {
-                TriggerServerEvent("ofw_garage:ReturnVehicle", plate, g.Place, propertiesString);
+                TriggerServerEvent("ofw_garage:ReturnVehicle", plate, g.Place, propertiesString, damageString);
               }
             },
             new NativeMenuItem

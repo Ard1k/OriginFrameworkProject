@@ -348,7 +348,7 @@ namespace OriginFrameworkServer
       param.Add("@place", garage);
       param.Add("@charId", character.Id);
       param.Add("@orgId", character.OrganizationId);
-      var result = await VSql.FetchAllAsync("SELECT `id`, `properties` FROM `vehicle` WHERE `plate` = @plate and (`owner_char` = @charId OR (@orgId is not null AND `owner_organization` = @orgId)) and `place` = @place" , param);
+      var result = await VSql.FetchAllAsync("SELECT `id`, `properties`, `damage` FROM `vehicle` WHERE `plate` = @plate and (`owner_char` = @charId OR (@orgId is not null AND `owner_organization` = @orgId)) and `place` = @place" , param);
 
       if (result == null || result.Count <= 0)
       {
@@ -375,6 +375,8 @@ namespace OriginFrameworkServer
         _ = callback(-1);
         return;
       }
+
+      var sDamage = (string)result[0]["damage"];
 
       VehiclePropertiesBag vehData = JsonConvert.DeserializeObject<VehiclePropertiesBag>(sProps, jsonSettings);
 
@@ -422,7 +424,7 @@ namespace OriginFrameworkServer
       }
 
       var veh = new Vehicle(vehID);
-      persistentVehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, GarageId = garageId });
+      persistentVehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, GarageId = garageId, Damage = sDamage });
 
       _ = callback(veh.NetworkId);
     }
@@ -454,7 +456,7 @@ namespace OriginFrameworkServer
       var param = new Dictionary<string, object>();
       param.Add("@charId", character.Id);
       param.Add("@orgId", character.OrganizationId);
-      var result = await VSql.FetchAllAsync("SELECT `id`, `properties`, `plate` FROM `vehicle` WHERE `owner_char` = @charId", param);
+      var result = await VSql.FetchAllAsync("SELECT `id`, `properties`, `plate`, `damage` FROM `vehicle` WHERE `owner_char` = @charId", param);
 
       if (result == null || result.Count <= 0)
       {
@@ -484,6 +486,7 @@ namespace OriginFrameworkServer
 
       VehiclePropertiesBag vehData = JsonConvert.DeserializeObject<VehiclePropertiesBag>(sProps, jsonSettings);
 
+      var sDamage = (string)result[0]["damage"];
       var modelHash = (int)vehData.model;
 
       var keysResult = await InventoryServer.TryGiveCarKeys(character, modelHash, vehData.plate);
@@ -528,9 +531,9 @@ namespace OriginFrameworkServer
       }
 
       var veh = new Vehicle(vehID);
-      var persistBag = new PersistentVehicleBag { NetID = veh.NetworkId, Plate = (string)result[0]["plate"], LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, GarageId = garageId, Properties = sProps };
+      var persistBag = new PersistentVehicleBag { NetID = veh.NetworkId, Plate = (string)result[0]["plate"], LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, GarageId = garageId, Properties = sProps, Damage = sDamage };
       persistentVehicles.Add(persistBag);
-      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.Properties);
+      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.Properties, persistBag.Damage);
       persistBag.IsInPropertiesSync = true;
       persistBag.LastPropertiesSync = GetGameTimer();
       _ = callback(veh.NetworkId);
@@ -606,7 +609,7 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_garage:ReturnVehicle")]
-    private async void ReturnVehicleToGarage([FromSource] Player source, string plate, string garage, string properties)
+    private async void ReturnVehicleToGarage([FromSource] Player source, string plate, string garage, string properties, string damage)
     {
       if (source == null)
       {
@@ -622,6 +625,10 @@ namespace OriginFrameworkServer
       VehiclePropertiesBag props = null;
       if (properties != null)
         props = JsonConvert.DeserializeObject<VehiclePropertiesBag>(properties);
+
+      VehicleDamageBag dmg = null;
+      if (damage != null)
+        dmg = JsonConvert.DeserializeObject<VehicleDamageBag>(damage);
 
       if (props == null)
       {
@@ -664,7 +671,8 @@ namespace OriginFrameworkServer
       var param2 = new Dictionary<string, object>();
       param2.Add("@plate", plate);
       param2.Add("@properties", JsonConvert.SerializeObject(savedProperties));
-      var result2 = await VSql.ExecuteAsync("UPDATE `vehicle` SET `properties` = @properties WHERE `plate` = @plate", param2);
+      param2.Add("@dmg", dmg != null ? JsonConvert.SerializeObject(dmg) : null);
+      var result2 = await VSql.ExecuteAsync("UPDATE `vehicle` SET `properties` = @properties, `damage` = @dmg WHERE `plate` = @plate", param2);
 
       if (persistVeh != null)
       {
@@ -869,6 +877,20 @@ namespace OriginFrameworkServer
       }
       catch { }
     }
+
+    [EventHandler("ofw_veh:UpdatePersistentVehicle")]
+    private async void UpdatePersistentVehicle([FromSource] Player source, int netId, string damage)
+    {
+      try
+      {
+        var persistVeh = persistentVehicles.FirstOrDefault(b => b.NetID == netId);
+        if (persistVeh == null)
+          return;
+
+        persistVeh.Damage = damage;
+      }
+      catch { }
+    }
     #endregion
 
     private async void OnResourceStop(string resourceName)
@@ -1018,7 +1040,7 @@ namespace OriginFrameworkServer
 
           if (iveh.Properties != null && iveh.Plate != null)
           {
-            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties, iveh.Damage);
             iveh.IsInPropertiesSync = true;
             iveh.LastPropertiesSync = GetGameTimer();
           }
@@ -1030,7 +1052,7 @@ namespace OriginFrameworkServer
         {
           if (GetGameTimer() - iveh.LastPropertiesSync.Value > 10000) //10s
           {
-            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties, iveh.Damage);
             iveh.LastPropertiesSync = GetGameTimer();
           }
         }
@@ -1066,7 +1088,7 @@ namespace OriginFrameworkServer
 
           if (iveh.Properties != null && iveh.Plate != null)
           {
-            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties);
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.Properties, iveh.Damage);
             iveh.IsInPropertiesSync = true;
             iveh.LastPropertiesSync = GetGameTimer();
           }
@@ -1151,7 +1173,7 @@ namespace OriginFrameworkServer
       persistVeh.Plate = newPlate;
 
       await Delay(0);
-      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistVeh.NetID, persistVeh.Plate, persistVeh.Properties);
+      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistVeh.NetID, persistVeh.Plate, persistVeh.Properties, persistVeh.Damage);
       persistVeh.IsInPropertiesSync = true;
       persistVeh.LastPropertiesSync = GetGameTimer();
 

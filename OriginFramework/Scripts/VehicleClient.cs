@@ -52,6 +52,7 @@ namespace OriginFramework
       DecorRegister("carjack_tried", 2);
 
       Tick += OnTick;
+      Tick += OnSlowTick;
 
       RegisterCommand("dv", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
@@ -104,8 +105,27 @@ namespace OriginFramework
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
     }
 
+    private async Task OnSlowTick()
+    {
+      await Delay(30000);
+      int curVeh = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
+
+      if (curVeh == 0)
+        return;
+
+      if (DoesEntityExist(curVeh) && NetworkGetEntityIsNetworked(curVeh))
+      {
+        int netId = VehToNet(curVeh);
+        if (netId != 0)
+        {
+          TriggerServerEvent("ofw_veh:UpdatePersistentVehicle", netId, JsonConvert.SerializeObject(Vehicles.GetVehicleDamage(curVeh)));
+        }
+      }
+    }
+
     static int lastEnteringVeh = 0;
     static int lastDrivenVeh = 0;
+
     private async Task OnTick()
     {
       int ped = Game.PlayerPed.Handle;
@@ -410,7 +430,7 @@ namespace OriginFramework
 
     //"ofw_veh:RespawnedCarRestoreProperties"
     [EventHandler("ofw_veh:RespawnedCarRestoreProperties")]
-    private async void RespawnedCarRestoreProperties(int vehNetId, string originalPlate, string properties)
+    private async void RespawnedCarRestoreProperties(int vehNetId, string originalPlate, string properties, string damage)
     {
       if (originalPlate == null)
         return;
@@ -432,8 +452,9 @@ namespace OriginFramework
         //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: Iam not entity owner");
         return;
       }
-
+      Debug.WriteLine(damage);
       var propertiesBag = JsonConvert.DeserializeObject<VehiclePropertiesBag>(properties);
+      var dmgBag = damage != null ? JsonConvert.DeserializeObject<VehicleDamageBag>(damage) : null;
       var veh = NetToVeh(vehNetId);
       originalPlate = originalPlate.Trim().ToLower();
 
@@ -450,6 +471,8 @@ namespace OriginFramework
         return;
 
       Vehicles.SetVehicleProperties(veh, propertiesBag);
+      Vehicles.SetVehicleDamage(veh, dmgBag);
+      LockVehicle(veh, true, true);
       TriggerServerEvent("ofw_veh:AckPropertiesSynced", originalPlate);
     }
 
