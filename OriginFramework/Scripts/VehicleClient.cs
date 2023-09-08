@@ -430,7 +430,7 @@ namespace OriginFramework
 
     //"ofw_veh:RespawnedCarRestoreProperties"
     [EventHandler("ofw_veh:RespawnedCarRestoreProperties")]
-    private async void RespawnedCarRestoreProperties(int vehNetId, string originalPlate, string properties, string damage)
+    private async void RespawnedCarRestoreProperties(int vehNetId, string originalPlate, bool keepUnlocked, string properties, string damage)
     {
       if (originalPlate == null)
         return;
@@ -472,7 +472,8 @@ namespace OriginFramework
 
       Vehicles.SetVehicleProperties(veh, propertiesBag);
       Vehicles.SetVehicleDamage(veh, dmgBag);
-      LockVehicle(veh, true, true);
+      if (!keepUnlocked)
+        LockVehicle(veh, true, true);
       TriggerServerEvent("ofw_veh:AckPropertiesSynced", originalPlate);
     }
 

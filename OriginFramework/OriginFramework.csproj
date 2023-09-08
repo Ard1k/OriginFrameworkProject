@@ -107,7 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CitizenFX.Core.Client">
-      <Version>1.0.6075</Version>
+      <Version>1.0.6370</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

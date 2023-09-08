@@ -97,7 +97,7 @@ namespace OriginFrameworkServer
                           "  `plate` varchar(8) NOT NULL, " +
                           "  `place` varchar(20) NOT NULL, " +
                           "  `properties` varchar(2000) NOT NULL, " +
-                          "  `damage` varchar(2000) NOT NULL, " +
+                          "  `damage` varchar(2000) NULL, " +
                           "  `odometer` int NOT NULL DEFAULT(0), " +
                           "  `owner_char` int NULL, " +
                           "  `owner_organization` int NULL, " +
