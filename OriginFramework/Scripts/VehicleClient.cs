@@ -452,7 +452,7 @@ namespace OriginFramework
         //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: Iam not entity owner");
         return;
       }
-      Debug.WriteLine(damage);
+      //Debug.WriteLine(damage);
       var propertiesBag = JsonConvert.DeserializeObject<VehiclePropertiesBag>(properties);
       var dmgBag = damage != null ? JsonConvert.DeserializeObject<VehicleDamageBag>(damage) : null;
       var veh = NetToVeh(vehNetId);
@@ -467,7 +467,8 @@ namespace OriginFramework
       if (propertiesBag == null)
         return;
 
-      if (GetEntityCoords(veh, false).DistanceToSquared2D(Game.PlayerPed.Position) > 10000)
+      var dist = GetEntityCoords(veh, false).DistanceToSquared2D(Game.PlayerPed.Position);
+      if (dist > 10000f)
         return;
 
       Vehicles.SetVehicleProperties(veh, propertiesBag);

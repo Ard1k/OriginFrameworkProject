@@ -81,6 +81,7 @@ namespace OriginFramework
     MMenu = 18,
     AtmClient = 19,
     CarryClient = 20,
-    BlipClient = 21
+    BlipClient = 21,
+    TaxClient = 22,
   }
 }

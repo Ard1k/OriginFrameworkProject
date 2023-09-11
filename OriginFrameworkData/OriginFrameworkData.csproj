@@ -50,6 +50,7 @@
     <Compile Include="DataBags\GarageVehicleBag.cs" />
     <Compile Include="DataBags\AtmBag.cs" />
     <Compile Include="DataBags\IdentityShowCardBag.cs" />
+    <Compile Include="DataBags\TaxBag.cs" />
     <Compile Include="DataBags\VehicleVendorBags.cs" />
     <Compile Include="DataBags\OrganizationBags.cs" />
     <Compile Include="DataBags\PolyzoneBag.cs" />

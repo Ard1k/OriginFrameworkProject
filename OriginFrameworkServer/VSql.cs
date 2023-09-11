@@ -48,7 +48,7 @@ namespace OriginFrameworkServer
 
       VSql.Init();
       await EnsureDB_cfw_jsondata_table();
-      EnsureDB_tables();
+      await EnsureDB_tables();
       CleanupDBOnStart();
 
       tablesEnsured = true;
@@ -60,7 +60,7 @@ namespace OriginFrameworkServer
     {
       return VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `cfw_jsondata` (`key` varchar(60) NOT NULL, `data` TEXT NOT NULL, PRIMARY KEY (`key`)) DEFAULT CHARSET=latin1;", null);
     }
-    private async void EnsureDB_tables()
+    private async Task<bool> EnsureDB_tables()
     {
       await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `organization` " +
                     " (`id` int NOT NULL AUTO_INCREMENT, " +
@@ -126,6 +126,18 @@ namespace OriginFrameworkServer
                           " CONSTRAINT `fk_organization_vehiclerights_vehicle_id` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicle` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT," +
                           " CONSTRAINT `fk_organization_vehiclerights_character_id` FOREIGN KEY (`character_id`) REFERENCES `character` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT " +
                           " );", null);
+
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `tax_rates` " +
+                          " (`cars` int NOT NULL, " +
+                          "  `clothes` int NOT NULL, " +
+                          "  `weapons` int NOT NULL, " +
+                          "  `food` int NOT NULL, " +
+                          "  `medical` int NOT NULL, " +
+                          "  `fuel` int NOT NULL, " +
+                          "  `income` int NOT NULL " +
+                          " );", null);
+
+      return true;
     }
 
     private async void CleanupDBOnStart()
