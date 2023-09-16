@@ -137,6 +137,11 @@ namespace OriginFrameworkServer
                           "  `income` int NOT NULL " +
                           " );", null);
 
+      await VSql.ExecuteAsync("CREATE TABLE IF NOT EXISTS `tax_paid` " +
+                          " (`amount` int NOT NULL, " +
+                          "  `tax_type` int NOT NULL " +
+                          " );", null);
+
       return true;
     }
 

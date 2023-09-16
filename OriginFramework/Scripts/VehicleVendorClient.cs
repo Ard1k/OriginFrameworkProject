@@ -164,7 +164,7 @@ namespace OriginFramework
           menu.Items.Add(new NativeMenuItem
           {
             Name = slot.CurrentVehicle.PriceItemId == 17 ? "Hotově" : $"Výměnou za {ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].Name}",
-            NameRight = $"{ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].FormatAmount(slot.CurrentVehicle.Price.Value)}",
+            NameRight = $"{ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].FormatAmount(TaxClient.CurrentTaxes.GetPriceAfterTax(slot.CurrentVehicle.Price.Value, slot.CurrentVehicle.PriceItemId == 17 ? eTaxType.Cars : 0))}",
             IconRight = ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].Texture,
             IconRightTextureDict = "inventory_textures",
             IsUnselectable = true
@@ -176,7 +176,7 @@ namespace OriginFramework
           menu.Items.Add(new NativeMenuItem
           {
             Name = "Převodem",
-            NameRight = $"{ItemsDefinitions.Items[17].FormatAmount(slot.CurrentVehicle.BankMoneyPrice.Value)}",
+            NameRight = $"{ItemsDefinitions.Items[17].FormatAmount(TaxClient.CurrentTaxes.GetPriceAfterTax(slot.CurrentVehicle.BankMoneyPrice.Value, eTaxType.Cars))}",
             IconRight = ItemsDefinitions.Items[17].Texture,
             IconRightTextureDict = "inventory_textures",
             IsUnselectable = true
@@ -217,7 +217,7 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = slot.CurrentVehicle.PriceItemId == 17 ? "Hotově" : $"Výměnou za {ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].Name}",
-          NameRight = $"{ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].FormatAmount(slot.CurrentVehicle.Price.Value)}",
+          NameRight = $"{ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].FormatAmount(TaxClient.CurrentTaxes.GetPriceAfterTax(slot.CurrentVehicle.Price.Value, slot.CurrentVehicle.PriceItemId == 17 ? eTaxType.Cars : 0))}",
           IconRight = ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].Texture,
           IconRightTextureDict = "inventory_textures",
           GetSubMenu = () => { return getPurchaseConfirmMenu(slot, isCompany, false); }
@@ -229,7 +229,7 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = "Převodem",
-          NameRight = $"{ItemsDefinitions.Items[17].FormatAmount(slot.CurrentVehicle.BankMoneyPrice.Value)}",
+          NameRight = $"{ItemsDefinitions.Items[17].FormatAmount(TaxClient.CurrentTaxes.GetPriceAfterTax(slot.CurrentVehicle.BankMoneyPrice.Value, eTaxType.Cars))}",
           IconRight = ItemsDefinitions.Items[17].Texture,
           IconRightTextureDict = "inventory_textures",
           GetSubMenu = () => { return getPurchaseConfirmMenu(slot, isCompany, true); }
@@ -266,7 +266,7 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = "Cena",
-          NameRight = $"{ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].FormatAmount(slot.CurrentVehicle.Price.Value)}",
+          NameRight = $"{ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].FormatAmount(TaxClient.CurrentTaxes.GetPriceAfterTax(slot.CurrentVehicle.Price.Value, slot.CurrentVehicle.PriceItemId == 17 ? eTaxType.Cars : 0))}",
           IconRight = ItemsDefinitions.Items[slot.CurrentVehicle.PriceItemId.Value].Texture,
           IconRightTextureDict = "inventory_textures",
           IsUnselectable = true
@@ -277,7 +277,7 @@ namespace OriginFramework
         menu.Items.Add(new NativeMenuItem
         {
           Name = "Cena",
-          NameRight = $"{ItemsDefinitions.Items[17].FormatAmount(slot.CurrentVehicle.BankMoneyPrice.Value)}",
+          NameRight = $"{ItemsDefinitions.Items[17].FormatAmount(TaxClient.CurrentTaxes.GetPriceAfterTax(slot.CurrentVehicle.BankMoneyPrice.Value, eTaxType.Cars))}",
           IconRight = ItemsDefinitions.Items[17].Texture,
           IconRightTextureDict = "inventory_textures",
           IsUnselectable = true

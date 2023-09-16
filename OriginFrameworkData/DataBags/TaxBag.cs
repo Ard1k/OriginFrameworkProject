@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
@@ -35,10 +36,37 @@ namespace OriginFrameworkData.DataBags
 
       return it;
     }
+
+    public int GetPriceAfterTax(int price, eTaxType taxType)
+    {
+      switch (taxType)
+      {
+        case eTaxType.Income:
+          return price + (price * Income / 100);
+        case eTaxType.Cars:
+          return price + (price * Cars / 100);
+        case eTaxType.Clothes:
+          return price + (price * Clothes / 100);
+        case eTaxType.Weapons:
+          return price + (price * Weapons / 100);
+        case eTaxType.Food:
+          return price + (price * Food / 100);
+        case eTaxType.Medical:
+          return price + (price * Medical / 100);
+        case eTaxType.Fuel:
+          return price + (price * Fuel / 100);
+        default:
+          {
+            return price;
+          }
+      }
+    }
   }
 
 	public enum eTaxType : int
 	{
+    None = 0,
+
 		Cars = 1,
     Clothes = 2,
     Weapons = 3,

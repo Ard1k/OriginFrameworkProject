@@ -1161,26 +1161,32 @@ namespace OriginFrameworkServer
     }
 
     #region public
-    public static async void PayBankOrganization(Player player, int organizationId, int amount, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
+    public static async void PayBankOrganization(Player player, int organizationId, int amount, eTaxType taxType, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
     {
       if (amount <= 0)
       {
         OnError(player, "Neplatná částka");
         return;
       }
+
+      int amountAfterTax = TaxServer.CurrentTaxes.GetPriceAfterTax(amount, taxType);
+      int amountTax = amountAfterTax - amount;
+
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
         var param = new Dictionary<string, object>();
         param.Add("@orgId", organizationId);
         var bankResult = await VSql.FetchScalarAsync("select `bank_money` from `organization` where id = @orgId", param);
         int bankMoney = Convert.ToInt32(bankResult);
-        if (bankMoney < amount)
+        if (bankMoney < amountAfterTax)
         {
           await Delay(0);
           OnError(player, "Na účtě není tolik peněz");
           return;
         }
-        param.Add("@amount", amount);
+        param.Add("@amount", amountAfterTax);
+        param.Add("@tax", amountTax);
+        param.Add("@tax_type", taxType);
         await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` - @amount where id = @orgId", param);
         await Delay(0);
         
@@ -1190,28 +1196,38 @@ namespace OriginFrameworkServer
         {
           await VSql.ExecuteAsync("update `organization` set `bank_money` = `bank_money` + @amount where id = @orgId", param);
         }
+        else
+        {
+          await VSql.ExecuteAsync("insert into `tax_paid` (`amount`, `tax_type`) values (@tax, @tax_type)", param);
+        }
       }
     }
-    public static async void PayBankCharacter(Player player, int characterId, int amount, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
+    public static async void PayBankCharacter(Player player, int characterId, int amount, eTaxType taxType, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
     {
       if (amount <= 0)
       {
         OnError(player, "Neplatná částka");
         return;
       }
+
+      int amountAfterTax = TaxServer.CurrentTaxes.GetPriceAfterTax(amount, taxType);
+      int amountTax = amountAfterTax - amount;
+
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
         var param = new Dictionary<string, object>();
         param.Add("@charId", characterId);
         var bankResult = await VSql.FetchScalarAsync("select `bank_money` from `character` where id = @charId", param);
         int bankMoney = Convert.ToInt32(bankResult);
-        if (bankMoney < amount)
+        if (bankMoney < amountAfterTax)
         {
           await Delay(0);
           OnError(player, "Na účtě není tolik peněz");
           return;
         }
-        param.Add("@amount", amount);
+        param.Add("@amount", amountAfterTax);
+        param.Add("@tax", amountTax);
+        param.Add("@tax_type", taxType);
         await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` - @amount where id = @charId", param);
         await Delay(0);
 
@@ -1221,10 +1237,14 @@ namespace OriginFrameworkServer
         {
           await VSql.ExecuteAsync("update `character` set `bank_money` = `bank_money` + @amount where id = @charId", param);
         }
+        else
+        {
+          await VSql.ExecuteAsync("insert into `tax_paid` (`amount`, `tax_type`) values (@tax, @tax_type)", param);
+        }
       }
     }
 
-    public static async void PayItem(Player player, string fromPlace, int itemId, int amount, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
+    public static async void PayItem(Player player, string fromPlace, int itemId, int amount, eTaxType taxType, Func<Player, Task<bool>> OnSuccess, Action<Player, string> OnError)
     {
       if (amount <= 0)
       {
@@ -1237,9 +1257,12 @@ namespace OriginFrameworkServer
         return;
       }
 
+      int amountAfterTax = itemId == 17 ? TaxServer.CurrentTaxes.GetPriceAfterTax(amount, taxType) : amount;
+      int amountTax = amountAfterTax - amount;
+
       using (var sl = await SyncLocker.GetLockerWhenAvailible(syncLock))
       {
-        var resRemove = await _scriptInstance.RemoveItem(fromPlace, itemId, amount);
+        var resRemove = await _scriptInstance.RemoveItem(fromPlace, itemId, amountAfterTax);
         if (resRemove != null)
         { 
           await Delay(0);
@@ -1252,7 +1275,17 @@ namespace OriginFrameworkServer
         if (!wasSuccess)
         {
           await Delay(0);
-          await _scriptInstance.GiveItem(fromPlace, itemId, amount);
+          await _scriptInstance.GiveItem(fromPlace, itemId, amountAfterTax);
+        }
+        else
+        {
+          if (itemId == 17) //cash
+          {
+            var param = new Dictionary<string, object>();
+            param.Add("@tax", amountTax);
+            param.Add("@tax_type", taxType);
+            await VSql.ExecuteAsync("insert into `tax_paid` (`amount`, `tax_type`) values (@tax, @tax_type)", param);
+          }
         }
       }
     }

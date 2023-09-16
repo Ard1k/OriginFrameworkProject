@@ -228,9 +228,9 @@ namespace OriginFrameworkServer
         }
 
         if (isOrganization)
-          InventoryServer.PayBankOrganization(sourcePlayer, character.OrganizationId.Value, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, character, slot.SlotId, null, character.OrganizationId); }, OnError);
+          InventoryServer.PayBankOrganization(sourcePlayer, character.OrganizationId.Value, slot.CurrentVehicle.BankMoneyPrice.Value, eTaxType.Cars, (p) => { return CarPurchased(p, character, slot.SlotId, null, character.OrganizationId); }, OnError);
         else
-          InventoryServer.PayBankCharacter(sourcePlayer, character.Id, slot.CurrentVehicle.BankMoneyPrice.Value, (p) => { return CarPurchased(p, character, slot.SlotId, character.Id, null); }, OnError);
+          InventoryServer.PayBankCharacter(sourcePlayer, character.Id, slot.CurrentVehicle.BankMoneyPrice.Value, eTaxType.Cars, (p) => { return CarPurchased(p, character, slot.SlotId, character.Id, null); }, OnError);
       }
       else
       {
@@ -241,9 +241,9 @@ namespace OriginFrameworkServer
         }
 
         if (isOrganization)
-          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, character, slot.SlotId, null, character.OrganizationId); }, OnError);
+          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, eTaxType.Cars, (p) => { return CarPurchased(p, character, slot.SlotId, null, character.OrganizationId); }, OnError);
         else
-          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, (p) => { return CarPurchased(p, character, slot.SlotId, character.Id, null); }, OnError);
+          InventoryServer.PayItem(sourcePlayer, $"char_{character.Id}", slot.CurrentVehicle.PriceItemId.Value, slot.CurrentVehicle.Price.Value, eTaxType.Cars, (p) => { return CarPurchased(p, character, slot.SlotId, character.Id, null); }, OnError);
       }
     }
 
