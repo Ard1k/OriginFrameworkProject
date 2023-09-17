@@ -30,9 +30,16 @@ namespace OriginFrameworkServer
       }
     };
 
+    private Random rand = new Random();
+    private static List<VehColor> cachedColors = null;
+
     public VehicleServer()
     {
       EventHandlers["onResourceStart"] += new Action<string>(OnResourceStart);
+      rand.Next();
+      rand.Next();
+      rand.Next();
+      cachedColors = VehColor.Defined.Where(c => c.IsUnused == false).ToList();
     }
 
     private async void OnResourceStart(string resourceName)
@@ -57,7 +64,7 @@ namespace OriginFrameworkServer
       }
 
       #region register commands
-      RegisterCommand("car", new Action<int, List<object>, string>((source, args, raw) =>
+      RegisterCommand("car", new Action<int, List<object>, string>(async (source, args, raw) =>
       {
         var sourcePlayer = Players.Where(p => p.Handle == source.ToString()).FirstOrDefault();
         if (sourcePlayer == null)
@@ -74,17 +81,34 @@ namespace OriginFrameworkServer
 
         var ped = Ped.FromPlayerHandle(source.ToString());
         var pos = ped.Position;
+        int modelHash = GetHashKey(args[0].ToString());
 
-        var vehID = SpawnPersistentVehicle(GetHashKey(args[0].ToString()), new Vector3(pos.X, pos.Y, pos.Z), ped.Heading);
+        var vehID = SpawnPersistentVehicle(modelHash, new Vector3(pos.X, pos.Y, pos.Z), ped.Heading);
 
-        Task.Run(async () =>
+        string plate = null;
+        while (plate == null)
         {
-          while (!DoesEntityExist(vehID))
+          string genPlate = $"SPW{rand.Next(10000, 100000)}"; //TODO lepsi reseni
+          bool plateExists = await VehicleServer.DoesPlateExist(genPlate, false);
+          if (!plateExists)
+            plate = genPlate;
+        }
+
+        await Delay(0);
+
+        while (!DoesEntityExist(vehID))
             await Delay(0);
 
-          var veh = new Vehicle(vehID);
-          persistentVehicles.Add(new PersistentVehicleBag { NetID = veh.NetworkId, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model });
-        });
+        var veh = new Vehicle(vehID);
+        
+        int color1 = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+        int color2 = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+        int colorp = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+        int colorw = cachedColors[rand.Next(cachedColors.Count)].ColorIndex;
+
+        var persistBag = new PersistentVehicleBag { NetID = veh.NetworkId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, KeepUnlocked = true, BrokenLock = true, Properties = JsonConvert.SerializeObject(new VehiclePropertiesBag { plate = plate, model = modelHash, color1 = color1, color2 = color2, pearlescentColor = colorp, wheelColor = colorw }) };
+        persistentVehicles.Add(persistBag);
+        TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.KeepUnlocked, persistBag.BrokenLock, persistBag.Properties, persistBag.Damage);
       }), false);
 
       RegisterCommand("getcar", new Action<int, List<object>, string>(async (source, args, raw) =>
@@ -533,7 +557,7 @@ namespace OriginFrameworkServer
       var veh = new Vehicle(vehID);
       var persistBag = new PersistentVehicleBag { NetID = veh.NetworkId, Plate = (string)result[0]["plate"], LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, GarageId = garageId, Properties = sProps, Damage = sDamage };
       persistentVehicles.Add(persistBag);
-      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.KeepUnlocked, persistBag.Properties, persistBag.Damage);
+      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.KeepUnlocked, persistBag.BrokenLock, persistBag.Properties, persistBag.Damage);
       persistBag.IsInPropertiesSync = true;
       persistBag.LastPropertiesSync = GetGameTimer();
       _ = callback(veh.NetworkId);
@@ -854,7 +878,7 @@ namespace OriginFrameworkServer
     }
 
     [EventHandler("ofw_veh:AddPersistentVehicle")]
-    private async void AddPersistentVehicle([FromSource] Player source, int netId, string plate, string properties)
+    private async void AddPersistentVehicle([FromSource] Player source, int netId, string plate, bool keepUnlocked, bool brokenLock, string properties, string damage)
     {
       try
       {
@@ -871,9 +895,10 @@ namespace OriginFrameworkServer
         {
           if (existing.Plate == null) existing.Plate = plate;
           if (existing.Properties == null) existing.Properties = properties;
+          if (existing.Damage == null) existing.Damage = damage;
         }
         else
-          persistentVehicles.Add(new PersistentVehicleBag { NetID = netId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, Properties = properties });
+          persistentVehicles.Add(new PersistentVehicleBag { NetID = netId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), KeepUnlocked = keepUnlocked, BrokenLock = brokenLock, ModelHash = veh.Model, Properties = properties, Damage = damage });
       }
       catch { }
     }
@@ -1040,7 +1065,7 @@ namespace OriginFrameworkServer
 
           if (iveh.Properties != null && iveh.Plate != null)
           {
-            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.KeepUnlocked, iveh.Properties, iveh.Damage);
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.KeepUnlocked, iveh.BrokenLock, iveh.Properties, iveh.Damage);
             iveh.IsInPropertiesSync = true;
             iveh.LastPropertiesSync = GetGameTimer();
           }
@@ -1052,7 +1077,7 @@ namespace OriginFrameworkServer
         {
           if (GetGameTimer() - iveh.LastPropertiesSync.Value > 10000) //10s
           {
-            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.KeepUnlocked, iveh.Properties, iveh.Damage);
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.KeepUnlocked, iveh.BrokenLock, iveh.Properties, iveh.Damage);
             iveh.LastPropertiesSync = GetGameTimer();
           }
         }
@@ -1088,7 +1113,7 @@ namespace OriginFrameworkServer
 
           if (iveh.Properties != null && iveh.Plate != null)
           {
-            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.KeepUnlocked, iveh.Properties, iveh.Damage);
+            TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", iveh.NetID, iveh.Plate, iveh.KeepUnlocked, iveh.BrokenLock, iveh.Properties, iveh.Damage);
             iveh.IsInPropertiesSync = true;
             iveh.LastPropertiesSync = GetGameTimer();
           }
@@ -1173,7 +1198,7 @@ namespace OriginFrameworkServer
       persistVeh.Plate = newPlate;
 
       await Delay(0);
-      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistVeh.NetID, persistVeh.Plate, persistVeh.KeepUnlocked, persistVeh.Properties, persistVeh.Damage);
+      TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistVeh.NetID, persistVeh.Plate, persistVeh.KeepUnlocked, persistVeh.BrokenLock, persistVeh.Properties, persistVeh.Damage);
       persistVeh.IsInPropertiesSync = true;
       persistVeh.LastPropertiesSync = GetGameTimer();
 

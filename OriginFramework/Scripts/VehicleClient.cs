@@ -49,7 +49,8 @@ namespace OriginFramework
 
       EventHandlers["onResourceStop"] += new Action<string>(OnResourceStop);
 
-      DecorRegister("carjack_tried", 2);
+      DecorRegister(Decorators.CarjackTried, 2);
+      DecorRegister(Decorators.BrokenLock, 2);
 
       Tick += OnTick;
       Tick += OnSlowTick;
@@ -91,8 +92,9 @@ namespace OriginFramework
 
           string plate = GetVehicleNumberPlateText(veh).ToLower().Trim();
           var props = Vehicles.GetVehicleProperties(veh);
+          var damage = Vehicles.GetVehicleDamage(veh);
 
-          TriggerServerEvent("ofw_veh:AddPersistentVehicle", VehToNet(veh), plate, JsonConvert.SerializeObject(props));
+          TriggerServerEvent("ofw_veh:AddPersistentVehicle", VehToNet(veh), plate, true, true, JsonConvert.SerializeObject(props), JsonConvert.SerializeObject(damage));
         }
       }), false);
 
@@ -277,6 +279,9 @@ namespace OriginFramework
 
     private bool CanStartCurrentCar(int veh)
     {
+      if (DecorExistOn(veh, Decorators.BrokenLock) && DecorGetBool(veh, Decorators.BrokenLock))
+        return true;
+
       return IsVehicleKeyAvailable(veh, false);
     }
 
@@ -294,7 +299,7 @@ namespace OriginFramework
     {
       if (enteringVeh > 0 && enteringVeh != lastEnteringVeh)
       {
-        if (IsVehicleKeyAvailable(enteringVeh, true) && API.GetPedInVehicleSeat(enteringVeh, -1) == 0)
+        if ((IsVehicleKeyAvailable(enteringVeh, true) || (DecorExistOn(enteringVeh, Decorators.BrokenLock) && DecorGetBool(enteringVeh, Decorators.BrokenLock))) && API.GetPedInVehicleSeat(enteringVeh, -1) == 0)
         {
           string model = API.GetDisplayNameFromVehicleModel((uint)GetEntityModel(enteringVeh)).ToLowerInvariant();
           if (GetVehicleDoorsLockedForPlayer(enteringVeh, ped))
@@ -344,7 +349,7 @@ namespace OriginFramework
 
     private void HandleCarjackLockLogic(int veh)
     {
-      if (!DecorExistOn(veh, "carjack_tried"))
+      if (!DecorExistOn(veh, Decorators.CarjackTried))
       {
         int hash = GetEntityModel(veh);
         int vehClass = GetVehicleClass(veh);
@@ -354,7 +359,7 @@ namespace OriginFramework
 
         bool isLocked = lockChance >= rand;
 
-        DecorSetBool(veh, "carjack_tried", true);
+        DecorSetBool(veh, Decorators.CarjackTried, true);
         Debug.WriteLine($"IsLocked = {isLocked}, chance {rand}/{lockChance}");
         if (isLocked)
         {
@@ -363,6 +368,16 @@ namespace OriginFramework
         else
         {
           //register know and give key
+          DecorSetBool(veh, Decorators.BrokenLock, true);
+
+          if (!NetworkGetEntityIsNetworked(veh))
+            return;
+
+          string plate = GetVehicleNumberPlateText(veh).ToLower().Trim();
+          var props = Vehicles.GetVehicleProperties(veh);
+          var damage = Vehicles.GetVehicleDamage(veh);
+
+          TriggerServerEvent("ofw_veh:AddPersistentVehicle", VehToNet(veh), plate, true, true, JsonConvert.SerializeObject(props), JsonConvert.SerializeObject(damage));
         }
       }
     }
@@ -430,32 +445,38 @@ namespace OriginFramework
 
     //"ofw_veh:RespawnedCarRestoreProperties"
     [EventHandler("ofw_veh:RespawnedCarRestoreProperties")]
-    private async void RespawnedCarRestoreProperties(int vehNetId, string originalPlate, bool keepUnlocked, string properties, string damage)
+    private async void RespawnedCarRestoreProperties(int vehNetId, string originalPlate, bool keepUnlocked, bool brokenLock, string properties, string damage)
     {
-      if (originalPlate == null)
-        return;
-
-      if (string.IsNullOrEmpty(properties))
-      {
-        //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: no properties sent");
-        return;
-      }
-
       if (vehNetId == 0 || !NetworkDoesEntityExistWithNetworkId(vehNetId))
       {
         //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: invalid vehicle network id");
         return;
       }
-
       if (Game.Player.Handle != NetworkGetEntityOwner(NetToVeh(vehNetId)))
       {
         //Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: Iam not entity owner");
         return;
       }
+
+      var veh = NetToVeh(vehNetId);
+      if (brokenLock && !DecorExistOn(veh, Decorators.BrokenLock))
+      {
+        DecorSetBool(veh, Decorators.BrokenLock, true);
+      }
+
+      if (originalPlate == null)
+        return;
+
+      if (string.IsNullOrEmpty(properties))
+      {
+        Debug.WriteLine("ofw_veh:RespawnedCarRestoreProperties: no properties sent");
+        return;
+      }
+
       //Debug.WriteLine(damage);
       var propertiesBag = JsonConvert.DeserializeObject<VehiclePropertiesBag>(properties);
       var dmgBag = damage != null ? JsonConvert.DeserializeObject<VehicleDamageBag>(damage) : null;
-      var veh = NetToVeh(vehNetId);
+      
       originalPlate = originalPlate.Trim().ToLower();
 
       if (GetVehicleNumberPlateText(veh)?.Trim().ToLower() == originalPlate)

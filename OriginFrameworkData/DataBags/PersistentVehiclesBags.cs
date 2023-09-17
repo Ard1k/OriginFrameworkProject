@@ -21,6 +21,7 @@ namespace OriginFrameworkData.DataBags
 		public long? LastPropertiesSync { get; set; }
 		public string Damage { get; set; }
 		public bool KeepUnlocked { get; set; }
+		public bool BrokenLock { get; set; }
 
 		public PersistentVehicleBag() 
 		{

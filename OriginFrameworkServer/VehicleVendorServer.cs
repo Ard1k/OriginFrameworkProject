@@ -250,7 +250,7 @@ namespace OriginFrameworkServer
     private async Task<bool> CarPurchased(Player player, CharacterBag characterForKeys, int slotId, int? ownerChar, int? ownerOrg)
     {
       var newPlate = GenerateNewPlate();
-      while (newPlate.StartsWith("PDM") || await VehicleServer.DoesPlateExist(newPlate, true))
+      while (newPlate.StartsWith("PDM") || newPlate.StartsWith("SPW") || newPlate.StartsWith("JOB") || await VehicleServer.DoesPlateExist(newPlate, true))
       {
         newPlate = GenerateNewPlate();
       }
@@ -292,7 +292,7 @@ namespace OriginFrameworkServer
     public static async Task<bool> GiveFirstCar(int charId)
     {
       var newPlate = GenerateNewPlate();
-      while (newPlate.StartsWith("PDM") || await VehicleServer.DoesPlateExist(newPlate, true))
+      while (newPlate.StartsWith("PDM") || newPlate.StartsWith("SPW") || newPlate.StartsWith("JOB") || await VehicleServer.DoesPlateExist(newPlate, true))
       {
         newPlate = GenerateNewPlate();
       }
