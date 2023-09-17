@@ -83,5 +83,6 @@ namespace OriginFramework
     CarryClient = 20,
     BlipClient = 21,
     TaxClient = 22,
+    TuningShopClient = 23
   }
 }

@@ -91,11 +91,9 @@ namespace OriginFramework
 
     private async Task OnSlowTick()
     {
-      int bestWeapon = GetBestPedWeapon(Game.PlayerPed.Handle, false);
+      //int bestWeapon = GetBestPedWeapon(Game.PlayerPed.Handle, false);
 
-
-
-      await Delay(1000);
+      //await Delay(1000);
     }
 
     public static void AddPolyZone(PolyzoneBag bag)

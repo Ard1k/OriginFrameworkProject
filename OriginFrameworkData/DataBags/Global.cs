@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace OriginFrameworkData.DataBags
 {
-	public class PosBag
+	public struct PosBag
 	{
 		public float X { get; set; }
 		public float Y { get; set; }
 		public float Z { get; set; }
 		public float Heading { get; set; }
 
-		public PosBag() { }
+		//public PosBag() { }
 		public PosBag(float x, float y, float z, float heading)
 		{
       X = x;
@@ -22,20 +22,26 @@ namespace OriginFrameworkData.DataBags
       Heading = heading;
     }
 
+		public bool IsEmpty()
+		{
+			return X + Y + Z == 0;
+		}
+
+		//pozustatek kdyz to byla trida
 		public PosBag GetInstanceCopy()
 		{
 			return new PosBag(this.X, this.Y, this.Z, this.Heading);
 		}
   }
 
-	public class DimensionsBag
+	public struct DimensionsBag
 	{
 		public float Width { get; set; }
 		public float Length { get; set; }
 		public float Height { get; set; }
 	}
 
-	public class ColorBag
+	public struct ColorBag
 	{
 		public int R { get; set; }
     public int G { get; set; }
@@ -43,14 +49,14 @@ namespace OriginFrameworkData.DataBags
     public int A { get; set; }
 	}
 
-	public class PosCameraBag : PosBag
-	{
-		public float RotationX { get; set; }
-		public float RotationY { get; set; }
-		public float RotationZ { get; set; }
-	}
+	//public struct PosCameraBag : PosBag
+	//{
+	//	public float RotationX { get; set; }
+	//	public float RotationY { get; set; }
+	//	public float RotationZ { get; set; }
+	//}
 
-  public class MinMaxBag
+  public struct MinMaxBag
   {
     public int Min { get; set; }
     public int Max { get; set; }
@@ -61,4 +67,9 @@ namespace OriginFrameworkData.DataBags
       Max = max;
     }
   }
+
+	public struct CompoundAreaBag
+	{
+		
+	}
 }

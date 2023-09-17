@@ -1006,7 +1006,7 @@ namespace OriginFrameworkServer
 
         if (NetworkGetEntityFromNetworkId(iveh.NetID) <= 0 || GetEntityModel(NetworkGetEntityFromNetworkId(iveh.NetID)) != iveh.ModelHash)
         {
-          if (iveh.ModelHash == 0 || iveh.LastKnownPos == null)
+          if (iveh.ModelHash == 0 || iveh.LastKnownPos.IsEmpty())
           {
             persistentVehicles.Remove(iveh);
             Debug.WriteLine($"PersistentVehicles: Removing no longer existing vehicle from sync [NetID: {iveh.NetID}, Model: {iveh.ModelHash}]");
@@ -1085,10 +1085,12 @@ namespace OriginFrameworkServer
         var vehID = NetworkGetEntityFromNetworkId(iveh.NetID);
         var vehEnt = new Vehicle(vehID);
 
-        iveh.LastKnownPos.X = vehEnt.Position.X;
-        iveh.LastKnownPos.Y = vehEnt.Position.Y;
-        iveh.LastKnownPos.Z = vehEnt.Position.Z;
-        iveh.LastKnownPos.Heading = vehEnt.Heading;
+        var lastPos = iveh.LastKnownPos;
+        lastPos.X = vehEnt.Position.X;
+        lastPos.Y = vehEnt.Position.Y;
+        lastPos.Z = vehEnt.Position.Z;
+        lastPos.Heading = vehEnt.Heading;
+        iveh.LastKnownPos = lastPos;
 
         if (GetEntityRoutingBucket(vehID) != 0)
         {

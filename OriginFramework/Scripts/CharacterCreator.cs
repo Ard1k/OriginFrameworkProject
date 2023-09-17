@@ -340,7 +340,9 @@ namespace OriginFramework
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMax[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, NewCharacter.Skin[c]);
+              var mmBag = minMax[txFrom];
+              mmBag.Max = SkinManager.GetComponentMaxValue(txFrom, NewCharacter.Skin[c]);
+              minMax[txFrom] = mmBag;
 
               if (NewCharacter.Skin[txFrom] > minMax[txFrom].Max)
               {
@@ -364,7 +366,9 @@ namespace OriginFramework
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMax[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, NewCharacter.Skin[c]);
+              var mmBag = minMax[txFrom];
+              mmBag.Max = SkinManager.GetComponentMaxValue(txFrom, NewCharacter.Skin[c]);
+              minMax[txFrom] = mmBag;
 
               if (NewCharacter.Skin[txFrom] > minMax[txFrom].Max)
               {

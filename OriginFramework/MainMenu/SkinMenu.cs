@@ -52,7 +52,9 @@ namespace OriginFramework.Menus
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMax[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, values[c]);
+              var mmBag = minMax[txFrom];
+              mmBag.Max = SkinManager.GetComponentMaxValue(txFrom, values[c]);
+              minMax[txFrom] = mmBag;
 
               if (values[txFrom] > minMax[txFrom].Max)
               {
@@ -76,7 +78,9 @@ namespace OriginFramework.Menus
             if (SkinManager.Components[c].TextureFrom != null)
             {
               string txFrom = SkinManager.Components[c].TextureFrom;
-              minMax[txFrom].Max = SkinManager.GetComponentMaxValue(txFrom, values[c]);
+              var mmBag = minMax[txFrom];
+              mmBag.Max = SkinManager.GetComponentMaxValue(txFrom, values[c]);
+              minMax[txFrom] = mmBag;
 
               if (values[txFrom] > minMax[txFrom].Max)
               {
