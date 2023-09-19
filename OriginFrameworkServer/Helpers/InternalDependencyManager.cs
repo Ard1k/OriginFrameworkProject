@@ -34,6 +34,7 @@ namespace OriginFrameworkServer
 
     public static void Started(eScriptArea script)
     {
+      Debug.WriteLine($"started: {script.ToString()}");
       loadedScriptAreas.Add(script);
     }
 

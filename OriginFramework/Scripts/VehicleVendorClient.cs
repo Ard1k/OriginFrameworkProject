@@ -28,6 +28,8 @@ namespace OriginFramework
     {
       if (CitizenFX.Core.Native.API.GetCurrentResourceName() != resourceName) return;
 
+      AddTextEntry("VEHSHOP_FORSALE", "NA PRODEJ");
+
       var slotsString = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_vehvendor:SyncSlots");
       if (slotsString != null)
       { 
@@ -82,6 +84,8 @@ namespace OriginFramework
     private async Task DrawTextOnVehTick()
     {
       var playerPos = Game.PlayerPed.Position;
+      float closestDist = float.MaxValue;
+      int closestVehId = 0;
 
       for (int i = 0; i < Slots.Count; i++)
       {
@@ -99,11 +103,29 @@ namespace OriginFramework
         var veh = new Vehicle(vehId);
 
         var distance = Vector3.DistanceSquared(veh.Position, playerPos);
-        if (distance < 2500 && veh.IsOnScreen)
+        if (distance < 100 && distance < closestDist)
         {
-          if (HasEntityClearLosToEntity(Game.PlayerPed.Handle, vehId, 17)) //Hoodne draha operace, co na to vykon scriptu?
-            DrawVendorVehicleName(veh.Position, distance, $"{FontsManager.FiraSansString}NA PRODEJ");
+          closestDist = distance;
+          closestVehId = vehId;
         }
+
+        //if (distance < 2500 && veh.IsOnScreen)
+        //{
+        //  if (HasEntityClearLosToEntity(Game.PlayerPed.Handle, vehId, 17)) //Hoodne draha operace, co na to vykon scriptu?
+        //  {
+        //    //DrawVendorVehicleName(veh.Position, distance, $"{FontsManager.FiraSansString}NA PRODEJ");
+            
+            
+        //  }
+        //}
+      }
+
+      if (closestVehId != 0)
+      {
+        SetFloatingHelpTextToEntity(1, closestVehId, 0f, -0.2f);
+        SetFloatingHelpTextStyle(1, 1, 2, -1, 3, 0);
+        BeginTextCommandDisplayHelp("VEHSHOP_FORSALE");
+        EndTextCommandDisplayHelp(2, false, false, -1);
       }
     }
 

@@ -120,7 +120,8 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color0"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { color1 = RequestedProperties.color1 });
+            item.IsDisableSelected = true;
+            InstallTuning(new VehiclePropertiesBag { color1 = RequestedProperties.color1 }, item);
           },
         });
       }
@@ -134,7 +135,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color1"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { color2 = RequestedProperties.color2 });
+            InstallTuning(new VehiclePropertiesBag { color2 = RequestedProperties.color2 }, item);
           },
         });
       }
@@ -148,7 +149,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["color2"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { pearlescentColor = RequestedProperties.pearlescentColor });
+            InstallTuning(new VehiclePropertiesBag { pearlescentColor = RequestedProperties.pearlescentColor }, item);
           },
         });
       }
@@ -162,7 +163,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["colorw"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag { wheelColor = RequestedProperties.wheelColor });
+            InstallTuning(new VehiclePropertiesBag { wheelColor = RequestedProperties.wheelColor }, item);
           },
         });
       }
@@ -178,7 +179,7 @@ namespace OriginFramework
           OnSelected = (item) => {
             var vp = new VehiclePropertiesBag() { wheels = RequestedProperties.wheels };
             vp.tunings[23] = RequestedProperties.tunings[23];
-            InstallTuning(vp);
+            InstallTuning(vp, item);
           },
         });
       }
@@ -192,7 +193,7 @@ namespace OriginFramework
           IconRight = ItemsDefinitions.Items[VehTuningTypeDefinition.DefinedSpecial["customtires"].PriceItemId].Texture,
           IconRightTextureDict = "inventory_textures",
           OnSelected = (item) => {
-            InstallTuning(new VehiclePropertiesBag() { customTires = RequestedProperties.customTires });
+            InstallTuning(new VehiclePropertiesBag() { customTires = RequestedProperties.customTires }, item);
           },
         });
       }
@@ -232,7 +233,7 @@ namespace OriginFramework
           OnSelected = (item) => {
             var vp = new VehiclePropertiesBag();
             vp.tunings[i2] = RequestedProperties?.tunings[i2];
-            InstallTuning(vp);
+            InstallTuning(vp, item);
           },
         });
       }
@@ -240,14 +241,21 @@ namespace OriginFramework
       return items;
     }
 
-    private static async void InstallTuning(VehiclePropertiesBag requestedTuning)
+    private static async void InstallTuning(VehiclePropertiesBag requestedTuning, NativeMenuItem menuItem)
     {
       if (CurrentVehicleNet == 0)
         return;
 
+      if (menuItem != null)
+        menuItem.IsDisableSelected = true;
+
       string result = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_veh:InstallRequestedTuning", CurrentVehicleNet, CurrentVehicleModel, JsonConvert.SerializeObject(requestedTuning));
       if (string.IsNullOrEmpty(result) || result != "true")
+      {
+        if (menuItem != null)
+          menuItem.IsDisableSelected = false;
         return;
+      }
 
       RequestedProperties.Substract(requestedTuning);
       NativeMenuManager.OpenNewMenu(MenuName, getTuningInstallMenu);

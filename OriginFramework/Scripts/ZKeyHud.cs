@@ -50,6 +50,11 @@ namespace OriginFramework
           else
             TextUtils.Draw3dTextNonPrespective(adjustedCoords, displayIDHeight, idScale, p.ServerId.ToString(), 255, 255, 255, 200);
         }
+
+        if (CharacterCaretaker.LoggedCharacter?.AdminLevel > 0)
+        {
+          TextUtils.DrawTextOnScreen($"X:{Game.PlayerPed.Position.X.ToString("0.0")}, Y:{Game.PlayerPed.Position.Y.ToString("0.0")}, Z:{Game.PlayerPed.Position.Z.ToString("0.0")}", 0.5f, 0.95f, 0.3f, CitizenFX.Core.UI.Alignment.Center); 
+        }
       }
     }
 

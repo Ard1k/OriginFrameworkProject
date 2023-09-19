@@ -48,6 +48,7 @@ namespace OriginFramework.Menus
     public bool IsActive { get; set; }
     public bool IsColorAsUnavailable { get; set; }
     public bool IsRefresh { get; set; }
+    public bool IsDisableSelected { get; set; }
 
     public bool IsTextInput { get; set; }
     public string TextInputRequest { get; set; } = "Enter text";

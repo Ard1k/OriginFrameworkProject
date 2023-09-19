@@ -313,6 +313,24 @@ namespace OriginFrameworkServer
         await Delay(0);
       }
 
+      try
+      {
+        var persisVeh = persistentVehicles.Where(p => p.NetID == vehNetId).FirstOrDefault();
+        if (persisVeh != null && persisVeh.Properties != null)
+        {
+          var persistProperties = JsonConvert.DeserializeObject<VehiclePropertiesBag>(persisVeh.Properties, jsonSettings);
+          if (persistProperties != null)
+          {
+            persistProperties.Add(installTuning);
+            persisVeh.Properties = JsonConvert.SerializeObject(persistProperties, Formatting.None, jsonSettings);
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        Debug.WriteLine($"ofw_veh:InstallRequestedTuning: persisten properties update exception: {ex.Message}");
+      }
+
       int veh2 = NetworkGetEntityFromNetworkId(vehNetId);
       int entityOwner = NetworkGetEntityOwner(veh2);
       {

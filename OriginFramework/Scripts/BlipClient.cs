@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using Newtonsoft.Json;
+using OriginFramework.ClientDataBags;
 using OriginFramework.Helpers;
 using OriginFramework.Menus;
 using OriginFrameworkData.DataBags;
@@ -17,20 +18,9 @@ namespace OriginFramework.Scripts
 {
   public class BlipClient : BaseScript
   {
-    public class BlipDef
+    public static List<BlipBag> Blips { get; set; } = new List<BlipBag>()
     {
-      public Vector3 PosVector3 { get; set; }
-      public int Id { get; set; }
-      public string UniqueId { get; set; }
-      public string Label { get; set; }
-      public int BlipId { get; set; }
-      public int Color { get; set; }
-      public float Scale { get; set; }
-    }
-
-    public static List<BlipDef> Blips { get; set; } = new List<BlipDef>()
-    {
-      new BlipDef { BlipId = 825, Scale = 1f, Color = 33, PosVector3 = new Vector3(-34f, -1105f, 26.42f), Label = "Regular cars", UniqueId = "STATIC_PDM" },
+      new BlipBag { BlipId = 825, Scale = 1f, Color = 33, PosVector3 = new Vector3(-34f, -1105f, 26.42f), Label = "Regular cars", UniqueId = "STATIC_PDM" },
     };
 
     public BlipClient()
@@ -51,7 +41,7 @@ namespace OriginFramework.Scripts
       InternalDependencyManager.Started(eScriptArea.BlipClient);
     }
 
-    public static void AddBlip(BlipDef blip)
+    public static void AddBlip(BlipBag blip)
     {
       if (blip.UniqueId != null)
       {
@@ -67,7 +57,7 @@ namespace OriginFramework.Scripts
       }
     }
 
-    private static void EnsureBlip(BlipDef blip)
+    private static void EnsureBlip(BlipBag blip)
     {
       RemoveCurrentBlipIfExists(blip);
 
@@ -82,7 +72,7 @@ namespace OriginFramework.Scripts
       EndTextCommandSetBlipName(blip.Id);
     }
 
-    private static void RemoveCurrentBlipIfExists(BlipDef blip)
+    private static void RemoveCurrentBlipIfExists(BlipBag blip)
     {
       if (blip.Id != 0 && DoesBlipExist(blip.Id))
       {

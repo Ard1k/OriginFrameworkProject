@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientDataBags\BlipBag.cs" />
+    <Compile Include="ClientDataBags\TuningShopBag.cs" />
     <Compile Include="Functions\Callbacks.cs" />
     <Compile Include="Functions\Blips.cs" />
     <Compile Include="Functions\DrawUtils.cs" />

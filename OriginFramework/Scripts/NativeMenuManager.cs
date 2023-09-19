@@ -190,7 +190,7 @@ namespace OriginFramework
             CurrentMenu.Items[CurrentMenu.SelectedIndex].OnHover();
         } while (CurrentMenu.Items[CurrentMenu.SelectedIndex].IsUnselectable == true);
       }
-      else if (autoPressSelect || IsControlJustPressed(0, control_nav_select) || (control_nav_select2 > 0 && IsControlJustPressed(0, control_nav_select2)))
+      else if (!CurrentMenu.Items[CurrentMenu.SelectedIndex].IsDisableSelected && (autoPressSelect || IsControlJustPressed(0, control_nav_select) || (control_nav_select2 > 0 && IsControlJustPressed(0, control_nav_select2))))
       {
         PlaySound(-1, "SELECT", "HUD_MINI_GAME_SOUNDSET", false, 0, true);
         bool isBack = CurrentMenu.Items[CurrentMenu.SelectedIndex].IsBack == true;

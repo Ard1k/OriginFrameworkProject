@@ -163,6 +163,19 @@ namespace OriginFramework
       return IsInsidePolygon(polygonList, boneLRCoords) && (boneRR == -1 || IsInsidePolygon(polygonList, boneRRCoords)) && (boneRF == -1 || IsInsidePolygon(polygonList, boneRFCoords)) && IsInsidePolygon(polygonList, boneLFCoords);
     }
 
+    public static void DrawPolygon(List<Vector3> polygon)
+    {
+      if (polygon == null || polygon.Count <= 0)
+        return;
+
+      for (int i = 0; i < polygon.Count; i++)
+      {
+        Vector3 nextPolygon = i == polygon.Count - 1 ? polygon[0] : polygon[i + 1];
+
+        DrawLine(polygon[i].X, polygon[i].Y, polygon[i].Z, nextPolygon.X, nextPolygon.Y, nextPolygon.Z, 0, 255, 255, 255);
+      }
+    }
+
     private static List<Vector3> GetBoxMarkerPolygon(PosBag pos, DimensionsBag dim)
     {
       //Tohle cely by se teoreticky dalo cashovat...
@@ -212,7 +225,7 @@ namespace OriginFramework
       return new Vector3(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos, v.Z);
     }
 
-    private static bool IsInsidePolygon(List<Vector3> polygon, Vector3 point)
+    public static bool IsInsidePolygon(List<Vector3> polygon, Vector3 point)
     {
       bool isInside = false;
       int polygonLength = polygon.Count;

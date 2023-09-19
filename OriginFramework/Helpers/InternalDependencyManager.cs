@@ -27,7 +27,7 @@ namespace OriginFramework
         await BaseScript.Delay(0);
         counter++;
 
-        if (counter > 300)
+        if (counter > 5000)
         {
           Debug.WriteLine($"!!! Dependency Issue: {script.ToString("g")} could not load!");
           return false;
@@ -44,6 +44,8 @@ namespace OriginFramework
 
     private static bool CheckForEssentials(eScriptArea script)
     {
+      //Debug.WriteLine(String.Join("|", loadedScriptAreas.Select(s => s.ToString()).ToArray()));
+
       if (SettingsManager.Settings == null)
         return false;
 

@@ -46,6 +46,8 @@ namespace OriginFramework
       if (!await InternalDependencyManager.CanStart(eScriptArea.Main))
         return;
 
+      await Delay(0);
+
       Debug.WriteLine($"Waiting for oid...");
       MyOriginId = await Callbacks.ServerAsyncCallbackToSync<int>("ofw_oid:GetMyOriginID");
       Debug.WriteLine($"OID retrieved: {MyOriginId}");

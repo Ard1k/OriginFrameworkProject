@@ -1,5 +1,6 @@
 ﻿using CitizenFX.Core;
 using Newtonsoft.Json;
+using OriginFramework.ClientDataBags;
 using OriginFramework.Menus;
 using OriginFramework.Scripts;
 using OriginFrameworkData;
@@ -75,7 +76,7 @@ namespace OriginFramework
       foreach (var g in Garages)
       {
         BlipClient.AddBlip(
-          new BlipClient.BlipDef
+          new BlipBag
           {
             PosVector3 = OfwFunctions.PosBagToVector3(g.GarageLocation),
             Color = 29,
