@@ -21,6 +21,7 @@ namespace OriginFramework
     public static int CurrentVehicleClass = 0;
     public static int CurrentVehicleModel = 0;
     public static VehiclePropertiesBag RequestedProperties = null;
+    public static VehiclePropertiesBag RequestedTuning = null;
 
     public TuningInstallClient()
     {
@@ -49,7 +50,7 @@ namespace OriginFramework
       if (NetworkDoesEntityExistWithNetworkId(CurrentVehicleNet))
         vehCheck = NetToVeh(CurrentVehicleNet);
 
-      if (vehCheck == 0 || GetEntityModel(vehCheck) != CurrentVehicleModel || (RequestedProperties != null && !NativeMenuManager.IsMenuOpen(MenuName)))
+      if (vehCheck == 0 || GetEntityModel(vehCheck) != CurrentVehicleModel || (RequestedProperties != null && !NativeMenuManager.IsMenuOpen(MenuName) && !(MiniGame.CurrentGame is MiniGameVehicleTuning)))
       {
         CurrentVehicleNet = 0;
         CurrentVehicleModel = 0;
@@ -67,7 +68,7 @@ namespace OriginFramework
 
       if (vehicle == null || vehicle == 0)
       {
-        Notify.Alert("Pro instalaci tuningu musíš být ve vozidle");
+        Notify.Alert("Vozidlo nenalezeno");
         return;
       }
 
@@ -246,19 +247,42 @@ namespace OriginFramework
       if (CurrentVehicleNet == 0)
         return;
 
-      if (menuItem != null)
-        menuItem.IsDisableSelected = true;
+      NativeMenuManager.CloseAndUnlockMenu(MenuName);
 
-      string result = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_veh:InstallRequestedTuning", CurrentVehicleNet, CurrentVehicleModel, JsonConvert.SerializeObject(requestedTuning));
+      RequestedTuning = requestedTuning;
+      MiniGame.StartVehicleTuning(InstallationSucces, 0);
+
+      //if (CurrentVehicleNet == 0)
+      //  return;
+
+      //if (menuItem != null)
+      //  menuItem.IsDisableSelected = true;
+
+      //string result = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_veh:InstallRequestedTuning", CurrentVehicleNet, CurrentVehicleModel, JsonConvert.SerializeObject(requestedTuning));
+      //if (string.IsNullOrEmpty(result) || result != "true")
+      //{
+      //  if (menuItem != null)
+      //    menuItem.IsDisableSelected = false;
+      //  return;
+      //}
+
+      //RequestedProperties.Substract(requestedTuning);
+      //NativeMenuManager.OpenNewMenu(MenuName, getTuningInstallMenu);
+    }
+
+    private static async Task<bool> InstallationSucces()
+    {
+      string result = await Callbacks.ServerAsyncCallbackToSync<string>("ofw_veh:InstallRequestedTuning", CurrentVehicleNet, CurrentVehicleModel, JsonConvert.SerializeObject(RequestedTuning));
+
       if (string.IsNullOrEmpty(result) || result != "true")
       {
-        if (menuItem != null)
-          menuItem.IsDisableSelected = false;
-        return;
+        return false;
       }
 
-      RequestedProperties.Substract(requestedTuning);
+      RequestedProperties.Substract(RequestedTuning);
       NativeMenuManager.OpenNewMenu(MenuName, getTuningInstallMenu);
+
+      return true;
     }
   }
 }

@@ -68,7 +68,8 @@ namespace OriginFramework
       if (!HasStreamedTextureDictLoaded("inventory_textures"))
         RequestStreamedTextureDict("inventory_textures", true);
       IsOpening = true;
-      CurrentVehicle = GetVehiclePedIsIn(Game.PlayerPed.Handle, false);
+      CurrentVehicle = GetVehiclePedIsIn(Game.PlayerPed.Handle, false); //musi sedet aby byl zarucen owner entity
+
       if (CurrentVehicle == 0)
       {
         Notify.Alert("Pro otevření katalogu musíš být ve vozidle");

@@ -9,7 +9,6 @@ version '0.0.5'
 ui_page 'nui/index.html'
 
 files {
-	'MenuAPI.dll',
 	'Newtonsoft.Json.dll',
 	'OriginFrameworkData.dll',
 	'config.json',

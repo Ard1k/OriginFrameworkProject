@@ -2,6 +2,7 @@
 using CitizenFX.Core.Native;
 using Newtonsoft.Json;
 using OriginFramework.Menus;
+using OriginFramework.Scripts;
 using OriginFrameworkData.DataBags;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,9 @@ namespace OriginFramework
   {
     Random random = new Random();
     private static bool _canStartCurrentCarChecked = false;
+
+    public static string MenuName { get { return "vehicle_menu"; } }
+    public static int MenuFocusedVehicle { get; set; }
 
     public VehicleClient()
     {
@@ -140,11 +144,99 @@ namespace OriginFramework
       AutolockCar(curVeh);
       HandleLockKeypress(curVeh);
       PreventVehicleLeave(curVeh);
+      HandleVehicleMenu(false);
+      DrawVehicleMenuLinePointer();
 
       if (curVeh != 0 && GetPedInVehicleSeat(curVeh, -1) == ped)
         lastDrivenVeh = curVeh;
 
       lastEnteringVeh = enteringVeh;
+    }
+
+    public void DrawVehicleMenuLinePointer()
+    {
+      if (Game.PlayerPed.IsInVehicle() || MenuFocusedVehicle == 0 || (!NativeMenuManager.IsMenuOpen(MenuName) && !NativeMenuManager.IsMenuOpen(TuningInstallClient.MenuName)))
+        return;
+
+      Vector3 vehPos = GetEntityCoords(MenuFocusedVehicle, false);
+      float screenX = 0, screenY = 0, lineThickness = 0.0003f;
+      if (World3dToScreen2d(vehPos.X, vehPos.Y, vehPos.Z, ref screenX, ref screenY))
+      {
+        DrawLine_2d(screenX, screenY, NativeMenuManager.LineAnchorX + lineThickness/2, NativeMenuManager.LineAnchorY, lineThickness, 255, 255, 255, 150);
+      }
+    }
+
+    public static void HandleVehicleMenu(bool forceOpen)
+    {
+      if (!Game.IsControlJustPressed(0, Control.PhoneCameraFocusLock) && !forceOpen) //L
+        return;
+
+      if (NativeMenuManager.IsMenuOpen(MenuName))
+      {
+        NativeMenuManager.CloseAndUnlockMenu(MenuName);
+        return;
+      }
+
+      if (Game.PlayerPed.IsInVehicle())
+      {
+        int veh = Game.PlayerPed.CurrentVehicle.Handle;
+        MenuFocusedVehicle = veh;
+      }
+      else
+      {
+        int vehFront = Vehicles.GetVehicleInFront(null);
+        MenuFocusedVehicle = vehFront;
+      }
+
+      if (MenuFocusedVehicle != 0)
+      {
+        NativeMenuManager.OpenNewMenu(MenuName, getVehicleMenu);
+      }
+    }
+
+    private static NativeMenu getVehicleMenu()
+    {
+      if (MenuFocusedVehicle == 0)
+        return null;
+
+      var menu = new NativeMenu
+      {
+        MenuTitle = $"Menu vozidla {GetDisplayNameFromVehicleModel((uint)GetEntityModel(MenuFocusedVehicle))} [{GetVehicleNumberPlateText(MenuFocusedVehicle)}]",
+        Items = new List<NativeMenuItem>
+          {
+            new NativeMenuItem
+            {
+              Name = "Zavřít",
+              IsClose = true,
+            }
+          }
+      };
+
+      if (TuningShopClient.CurrentShop != null && MenuFocusedVehicle != 0)
+      {
+        menu.Items.Insert(0, new NativeMenuItem
+        {
+          Name = "Instalovat tuning",
+          OnSelected = (item) =>
+          {
+            TuningInstallClient.OpenTuningInstall(MenuFocusedVehicle);
+          }
+        });
+      }
+
+      if (TuningShopClient.CurrentShop != null && Game.PlayerPed.IsInVehicle())
+      {
+        menu.Items.Insert(0, new NativeMenuItem
+        {
+          Name = "Katalog tuningu",
+          OnSelected = (item) =>
+          {
+            TuningCatalogClient.OpenCatalog();
+          }
+        });
+      }
+
+      return menu;
     }
 
     public void PreventVehicleLeave(int veh)
@@ -497,6 +589,19 @@ namespace OriginFramework
       if (!keepUnlocked)
         LockVehicle(veh, true, true);
       TriggerServerEvent("ofw_veh:AckPropertiesSynced", originalPlate);
+    }
+
+    [EventHandler("ofw_veh:EnterSpawnedVehicle")]
+    private async void EnterSpawnedVehicle(int vehNetId)
+    {
+      if (vehNetId == 0 || !NetworkDoesEntityExistWithNetworkId(vehNetId))
+      {
+        return;
+      }
+
+      var veh = NetToVeh(vehNetId);
+
+      SetPedIntoVehicle(Game.PlayerPed.Handle, veh, -1);
     }
 
     public static void LockVehicle(int vehHandle, bool disableLightsFlash, bool suppressNotification)

@@ -72,12 +72,15 @@ namespace OriginFramework
       float safezone_y = 1f / 20f;
       float xScale = 1f / calcX;
       float yScale = 1f / calcY;
-
+      float maxAspectRatio = 16f / 9f;
+      float aspectOffset = Screen.AspectRatio <= maxAspectRatio ? 0f : (1f - (maxAspectRatio / Screen.AspectRatio)) / 2f;
+     
       float width = xScale * (calcX / (4.001f * Screen.AspectRatio));
       float height = yScale * (calcY / 5.674f);
-      x1 = xScale * (calcX * (safezone_x * (Math.Abs(safezone - 1.0f) * 10)));
+      
+      x1 = xScale * (calcX * (safezone_x * (Math.Abs(safezone - 1.0f) * 10))) + aspectOffset;
       y2 = 1.0f - yScale * (calcY * (safezone_y * (Math.Abs(safezone - 1.0f) * 10)));
-      x2 = x1 + width;
+      x2 = (x1 + width);
       y1 = y2 - height;
     }
   }

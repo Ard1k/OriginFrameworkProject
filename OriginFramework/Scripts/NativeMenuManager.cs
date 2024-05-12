@@ -21,6 +21,9 @@ namespace OriginFramework
     private static bool IsInputtingText { get; set; }
     private static bool IsSubMenuLoading { get; set; }
 
+    public static float LineAnchorX { get { return xOffset - xLenght / 2; } }
+    public static float LineAnchorY { get { return yOffset - yHeight / 2; } }
+
     private static float xOffset = 0.75f;
     private static float xLenght = 0.20f;
     private static float xExtraLenght = 0.11f;

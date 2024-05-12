@@ -72,6 +72,7 @@
     <Compile Include="Scripts\AtmClient.cs" />
     <Compile Include="Scripts\CarryClient.cs" />
     <Compile Include="Scripts\IdentityCards.cs" />
+    <Compile Include="Scripts\MiniGame.cs" />
     <Compile Include="Scripts\TuningShopClient.cs" />
     <Compile Include="Scripts\TaxClient.cs" />
     <Compile Include="Scripts\WeatherTimeClient.cs" />

@@ -60,21 +60,19 @@ namespace OriginFramework.Scripts
 
       Tick += OnTick;
       Tick += OnSlowTick;
-      //AddTextEntry("TUNING_SHOP_CATALOG", $"~INPUT_CELLPHONE_CAMERA_GRID~ {FontsManager.FiraSansString}Zobrazit katalog"); //183
-      //AddTextEntry("TUNING_SHOP_INSTALL", $"~INPUT_SPRINT~ + ~INPUT_CELLPHONE_CAMERA_GRID~ {FontsManager.FiraSansString}Instalovat tuning"); //183
-      AddTextEntry("TUNING_SHOP_INSTANDCAT", $"~INPUT_CELLPHONE_CAMERA_GRID~ {FontsManager.FiraSansString}Katalog / ~INPUT_SPRINT~ ~INPUT_CELLPHONE_CAMERA_GRID~ {FontsManager.FiraSansString}Tunit"); //21 + 183
+      AddTextEntry("TUNING_SHOP_INSTANDCAT", $"~INPUT_CELLPHONE_CAMERA_GRID~ {FontsManager.FiraSansString}Katalog"); //183
 
       InternalDependencyManager.Started(eScriptArea.TuningShopClient);
     }
 
     private async Task OnTick()
     {
-      //foreach (var shop in Shops)
-      //{
-      //  OfwFunctions.DrawPolygon(shop.ShopPolygon);
+      foreach (var shop in Shops)
+      {
+        OfwFunctions.DrawPolygon(shop.ShopPolygon);
 
-      //  TextUtils.DrawTextOnScreen($"CURRENTSHOP:{CurrentShop?.Blip?.Label ?? "---"}", 0.5f, 0.8f, 0.3f, CitizenFX.Core.UI.Alignment.Center);
-      //}
+        TextUtils.DrawTextOnScreen($"CURRENTSHOP:{CurrentShop?.Blip?.Label ?? "---"}", 0.5f, 0.8f, 0.3f, CitizenFX.Core.UI.Alignment.Center);
+      }
 
       if (CurrentShop != null)
       {
@@ -82,13 +80,14 @@ namespace OriginFramework.Scripts
         {
           DisplayHelpTextThisFrame("TUNING_SHOP_INSTANDCAT", true);
 
-          if (Game.IsControlPressed(0, Control.Sprint) && Game.IsControlJustPressed(0, Control.PhoneCameraGrid)) //SHIFT + G
+          //if (Game.IsControlPressed(0, Control.Sprint) && Game.IsControlJustPressed(0, Control.PhoneCameraGrid)) //SHIFT + G
+          //{
+          //  TuningInstallClient.OpenTuningInstall(Game.PlayerPed.CurrentVehicle.Handle);
+          //}
+          if (Game.IsControlJustPressed(0, Control.PhoneCameraGrid)) //G
           {
-            TuningInstallClient.OpenTuningInstall(Game.PlayerPed.CurrentVehicle.Handle);
-          }
-          else if (Game.IsControlJustPressed(0, Control.PhoneCameraGrid)) //G
-          {
-            TuningCatalogClient.OpenCatalog();
+            VehicleClient.HandleVehicleMenu(true);
+            //TuningCatalogClient.OpenCatalog();
           }
         }
       }

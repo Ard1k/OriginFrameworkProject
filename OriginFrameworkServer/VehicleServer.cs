@@ -109,6 +109,7 @@ namespace OriginFrameworkServer
         var persistBag = new PersistentVehicleBag { NetID = veh.NetworkId, Plate = plate, LastKnownPos = new PosBag(veh.Position.X, veh.Position.Y, veh.Position.Z, veh.Heading), ModelHash = veh.Model, KeepUnlocked = true, BrokenLock = true, Properties = JsonConvert.SerializeObject(new VehiclePropertiesBag { plate = plate, model = modelHash, color1 = color1, color2 = color2, pearlescentColor = colorp, wheelColor = colorw }) };
         persistentVehicles.Add(persistBag);
         TriggerClientEvent("ofw_veh:RespawnedCarRestoreProperties", persistBag.NetID, persistBag.Plate, persistBag.KeepUnlocked, persistBag.BrokenLock, persistBag.Properties, persistBag.Damage);
+        sourcePlayer.TriggerEvent("ofw_veh:EnterSpawnedVehicle", veh.NetworkId);
       }), false);
 
       RegisterCommand("getcar", new Action<int, List<object>, string>(async (source, args, raw) =>
